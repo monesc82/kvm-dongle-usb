@@ -1,7 +1,3 @@
-#ifndef INTERFACCIA_HTML_H
-#define INTERFACCIA_HTML_H
-
-const char* HTML_INTERFACCIA = R"rawliteral(
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -12,7 +8,7 @@ const char* HTML_INTERFACCIA = R"rawliteral(
     <meta name="theme-color" content="#f5f5f5">
     <title>KVM Dongle</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,0.06); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; --header-height: 44px; --tab-height: 40px; --bottom-bar-height: 56px; }
         html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); }
         .app { display: flex; flex-direction: column; height: 100%; max-width: 700px; margin: 0 auto; background: var(--bg); position: relative; }
@@ -49,7 +45,7 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         .slider-row .val { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 28px; text-align: center; }
         .kbd-section { flex-shrink: 0; }
         .kbd-section .label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; font-weight: 600; }
-        .kbd-row { display: flex; gap: 4px; margin-bottom: 4px; }
+        .kbd-row { display: flex; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
         .kbd-row .k { flex: 1; padding: 8px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font); min-height: 34px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); color: var(--text); }
         .kbd-row .k:active { background: var(--accent); color: #fff; transform: scale(0.95); }
         .kbd-row .k.verde { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
@@ -384,7 +380,7 @@ const char* HTML_INTERFACCIA = R"rawliteral(
             </button>
         </div>
 
-        <div class="log" id="log">▶ KVM Dongle v6.0 — Wi-Fi + BLE</div>
+        <div class="log" id="log">▶ KVM Dongle v6.1</div>
 
     </div>
 
@@ -392,18 +388,12 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         // ============================================================
         // STATO GLOBALE
         // ============================================================
-        let bleDevice = null,
-            bleRx = null,
-            bleTx = null,
-            connesso = false;
-        let holdTouch = false;
-        let holdTouchBtn = null;
+        let bleDevice = null, bleRx = null, bleTx = null, connesso = false;
+        let holdTouch = false, holdTouchBtn = null;
         let holdMods = {};
-        let holdGlobalActive = false;
-        let capsLockActive = false;
+        let holdGlobalActive = false, capsLockActive = false;
         let sens = 4;
-        let macroCustom = [];
-        let credenziali = [];
+        let macroCustom = [], credenziali = [];
 
         // ============================================================
         // FUNZIONE INVI - Supporta sia BLE che WiFi
@@ -411,31 +401,28 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         function invia(stringaComando) {
             console.log("Inviato: " + stringaComando);
             
-            // Se siamo in modalità WiFi (Siamo su ESP32)
-            if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            const hostname = window.location.hostname;
+            
+            // Se siamo sul dongle via Wi-Fi
+            if (hostname === '192.168.4.1') {
                 fetch('/api?run=' + encodeURIComponent(stringaComando))
                     .then(response => response.json())
                     .then(data => {
-                        if (data.status === 'ok') {
-                            log('▶ ' + stringaComando);
-                        } else {
-                            log('❌ Errore: ' + stringaComando);
-                        }
+                        if (data.status === 'ok') log('📡 Wi-Fi ▶ ' + stringaComando);
+                        else log('❌ Errore: ' + stringaComando);
                     })
-                    .catch(err => {
-                        log('❌ Errore rete: ' + err.message);
-                    });
+                    .catch(err => log('❌ Errore rete: ' + err.message));
                 return;
             }
             
-            // Fallback: BLE
+            // Altrimenti BLE
             if (!connesso || !bleRx) {
                 log('❌ Non connesso via BLE');
                 return;
             }
             try {
                 bleRx.writeValue(new TextEncoder().encode(stringaComando + '\n'));
-                log('▶ ' + stringaComando.substring(0, 40) + (stringaComando.length > 40 ? '…' : ''));
+                log('📶 BLE ▶ ' + stringaComando.substring(0, 40) + (stringaComando.length > 40 ? '…' : ''));
             } catch (e) {
                 log('❌ ' + e.message);
             }
@@ -631,7 +618,7 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         }
 
         // ============================================================
-        // CHAT - TRADUZIONE ACCENTI DEFINITIVA
+        // CHAT - TRADUZIONE ACCENTI
         // ============================================================
         function traduciAccenti(testo) {
             const mappa = {
@@ -695,31 +682,41 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         }
 
         // ============================================================
-        // MACRO - PERSISTENZA SU ESP32 (WiFi)
+        // MACRO - PERSISTENZA SU ESP32 (WiFi) o localStorage (BLE)
         // ============================================================
         function salvaMacroCustom() {
             const nome = document.getElementById('macroNome').value.trim();
             const seq = document.getElementById('macroSeq').value.trim();
             if (!nome || !seq) { alert('Inserisci nome e sequenza'); return; }
             
-            // Salva via WiFi su ESP32
-            fetch('/save_macro', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'nome=' + encodeURIComponent(nome) + '&seq=' + encodeURIComponent(seq)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    document.getElementById('macroNome').value = '';
-                    document.getElementById('macroSeq').value = '';
-                    aggiornaMacroCustom();
-                    log('✅ Macro salvata: ' + nome);
-                } else {
-                    log('❌ Errore salvataggio macro');
-                }
-            })
-            .catch(err => log('❌ Errore: ' + err.message));
+            // Se siamo in modalità Wi-Fi (sul dongle)
+            if (window.location.hostname === '192.168.4.1') {
+                fetch('/save_macro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'nome=' + encodeURIComponent(nome) + '&seq=' + encodeURIComponent(seq)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        document.getElementById('macroNome').value = '';
+                        document.getElementById('macroSeq').value = '';
+                        aggiornaMacroCustom();
+                        log('✅ Macro salvata: ' + nome);
+                    } else {
+                        log('❌ Errore salvataggio macro');
+                    }
+                })
+                .catch(err => log('❌ Errore: ' + err.message));
+            } else {
+                // Modalità BLE: salva in localStorage (fallback)
+                macroCustom.push({ nome, seq });
+                localStorage.setItem('kvm_macro', JSON.stringify(macroCustom));
+                document.getElementById('macroNome').value = '';
+                document.getElementById('macroSeq').value = '';
+                aggiornaMacroCustom();
+                log('✅ Macro salvata in locale: ' + nome);
+            }
         }
 
         function rimuoviMacroCustom(i) {
@@ -727,19 +724,26 @@ const char* HTML_INTERFACCIA = R"rawliteral(
             if (!macro) return;
             if (!confirm('Rimuovere "' + macro.nome + '"?')) return;
             
-            fetch('/delete_macro', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'nome=' + encodeURIComponent(macro.nome)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    aggiornaMacroCustom();
-                    log('🗑️ Macro eliminata: ' + macro.nome);
-                }
-            })
-            .catch(err => log('❌ Errore: ' + err.message));
+            if (window.location.hostname === '192.168.4.1') {
+                fetch('/delete_macro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'nome=' + encodeURIComponent(macro.nome)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        aggiornaMacroCustom();
+                        log('🗑️ Macro eliminata: ' + macro.nome);
+                    }
+                })
+                .catch(err => log('❌ Errore: ' + err.message));
+            } else {
+                macroCustom.splice(i, 1);
+                localStorage.setItem('kvm_macro', JSON.stringify(macroCustom));
+                aggiornaMacroCustom();
+                log('🗑️ Macro eliminata: ' + macro.nome);
+            }
         }
 
         function eseguiMacroCustom(i) {
@@ -749,31 +753,42 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         }
 
         function aggiornaMacroCustom() {
-            fetch('/load_macros')
-                .then(response => response.json())
-                .then(data => {
-                    macroCustom = data;
-                    const grid = document.getElementById('macroCustomGrid');
-                    grid.innerHTML = '';
-                    if (!Array.isArray(data)) return;
-                    
-                    data.forEach((m, i) => {
-                        const div = document.createElement('div');
-                        div.className = 'm custom';
-                        div.innerHTML =
-                            `<span class="icona">⚡</span>${m.nome}<br><span style="font-size:8px;color:var(--muted);">${m.seq.substring(0,12)}${m.seq.length>12?'…':''}</span>`;
-                        div.onclick = () => eseguiMacroCustom(i);
-                        div.addEventListener('contextmenu', (e) => { e.preventDefault(); rimuoviMacroCustom(i); });
-                        let timer;
-                        div.addEventListener('touchstart', (e) => { timer = setTimeout(() => { rimuoviMacroCustom(i); }, 800); });
-                        div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
-                        div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
-                        grid.appendChild(div);
+            if (window.location.hostname === '192.168.4.1') {
+                fetch('/load_macros')
+                    .then(response => response.json())
+                    .then(data => {
+                        macroCustom = data || [];
+                        renderMacroCustom();
+                    })
+                    .catch(err => {
+                        log('❌ Errore caricamento macro: ' + err.message);
+                        macroCustom = JSON.parse(localStorage.getItem('kvm_macro') || '[]');
+                        renderMacroCustom();
                     });
-                })
-                .catch(err => {
-                    log('❌ Errore caricamento macro: ' + err.message);
-                });
+            } else {
+                macroCustom = JSON.parse(localStorage.getItem('kvm_macro') || '[]');
+                renderMacroCustom();
+            }
+        }
+
+        function renderMacroCustom() {
+            const grid = document.getElementById('macroCustomGrid');
+            grid.innerHTML = '';
+            if (!Array.isArray(macroCustom)) return;
+            
+            macroCustom.forEach((m, i) => {
+                const div = document.createElement('div');
+                div.className = 'm custom';
+                div.innerHTML =
+                    `<span class="icona">⚡</span>${m.nome}<br><span style="font-size:8px;color:var(--muted);">${m.seq ? m.seq.substring(0,12) + (m.seq.length>12?'…':'') : ''}</span>`;
+                div.onclick = () => eseguiMacroCustom(i);
+                div.addEventListener('contextmenu', (e) => { e.preventDefault(); rimuoviMacroCustom(i); });
+                let timer;
+                div.addEventListener('touchstart', (e) => { timer = setTimeout(() => { rimuoviMacroCustom(i); }, 800); });
+                div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
+                div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
+                grid.appendChild(div);
+            });
         }
 
         // ============================================================
@@ -784,7 +799,7 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         }
 
         // ============================================================
-        // CREDENZIALI - PERSISTENZA SU ESP32
+        // CREDENZIALI
         // ============================================================
         function salvaCredenziale() {
             const nome = document.getElementById('credNome').value.trim();
@@ -792,24 +807,34 @@ const char* HTML_INTERFACCIA = R"rawliteral(
             const pass = document.getElementById('credPass').value.trim();
             if (!nome || !pass) { alert('Inserisci nome e password'); return; }
             
-            fetch('/save_cred', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'nome=' + encodeURIComponent(nome) + '&user=' + encodeURIComponent(user) + '&pass=' + encodeURIComponent(pass)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    document.getElementById('credNome').value = '';
-                    document.getElementById('credUser').value = '';
-                    document.getElementById('credPass').value = '';
-                    aggiornaCredenziali();
-                    log('🔑 Credenziale salvata: ' + nome);
-                } else {
-                    log('❌ Errore salvataggio credenziale');
-                }
-            })
-            .catch(err => log('❌ Errore: ' + err.message));
+            if (window.location.hostname === '192.168.4.1') {
+                fetch('/save_cred', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'nome=' + encodeURIComponent(nome) + '&user=' + encodeURIComponent(user) + '&pass=' + encodeURIComponent(pass)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        document.getElementById('credNome').value = '';
+                        document.getElementById('credUser').value = '';
+                        document.getElementById('credPass').value = '';
+                        aggiornaCredenziali();
+                        log('🔑 Credenziale salvata: ' + nome);
+                    } else {
+                        log('❌ Errore salvataggio credenziale');
+                    }
+                })
+                .catch(err => log('❌ Errore: ' + err.message));
+            } else {
+                credenziali.push({ nome, user, pass });
+                localStorage.setItem('kvm_cred', JSON.stringify(credenziali));
+                document.getElementById('credNome').value = '';
+                document.getElementById('credUser').value = '';
+                document.getElementById('credPass').value = '';
+                aggiornaCredenziali();
+                log('🔑 Credenziale salvata in locale: ' + nome);
+            }
         }
 
         function rimuoviCred(i) {
@@ -817,19 +842,26 @@ const char* HTML_INTERFACCIA = R"rawliteral(
             if (!cred) return;
             if (!confirm('Rimuovere "' + cred.nome + '"?')) return;
             
-            fetch('/delete_cred', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'nome=' + encodeURIComponent(cred.nome)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    aggiornaCredenziali();
-                    log('🗑️ Credenziale eliminata: ' + cred.nome);
-                }
-            })
-            .catch(err => log('❌ Errore: ' + err.message));
+            if (window.location.hostname === '192.168.4.1') {
+                fetch('/delete_cred', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'nome=' + encodeURIComponent(cred.nome)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        aggiornaCredenziali();
+                        log('🗑️ Credenziale eliminata: ' + cred.nome);
+                    }
+                })
+                .catch(err => log('❌ Errore: ' + err.message));
+            } else {
+                credenziali.splice(i, 1);
+                localStorage.setItem('kvm_cred', JSON.stringify(credenziali));
+                aggiornaCredenziali();
+                log('🗑️ Credenziale eliminata: ' + cred.nome);
+            }
         }
 
         function inviaCred(i) {
@@ -848,30 +880,41 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         }
 
         function aggiornaCredenziali() {
-            fetch('/load_creds')
-                .then(response => response.json())
-                .then(data => {
-                    credenziali = data;
-                    const grid = document.getElementById('credGrid');
-                    grid.innerHTML = '';
-                    if (!Array.isArray(data)) return;
-                    
-                    data.forEach((c, i) => {
-                        const div = document.createElement('div');
-                        div.className = 'c';
-                        div.innerHTML = `<span class="icona">🔑</span>${c.nome}`;
-                        div.onclick = () => inviaCred(i);
-                        div.addEventListener('contextmenu', (e) => { e.preventDefault(); rimuoviCred(i); });
-                        let timer;
-                        div.addEventListener('touchstart', (e) => { timer = setTimeout(() => { rimuoviCred(i); }, 800); });
-                        div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
-                        div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
-                        grid.appendChild(div);
+            if (window.location.hostname === '192.168.4.1') {
+                fetch('/load_creds')
+                    .then(response => response.json())
+                    .then(data => {
+                        credenziali = data || [];
+                        renderCredenziali();
+                    })
+                    .catch(err => {
+                        log('❌ Errore caricamento credenziali: ' + err.message);
+                        credenziali = JSON.parse(localStorage.getItem('kvm_cred') || '[]');
+                        renderCredenziali();
                     });
-                })
-                .catch(err => {
-                    log('❌ Errore caricamento credenziali: ' + err.message);
-                });
+            } else {
+                credenziali = JSON.parse(localStorage.getItem('kvm_cred') || '[]');
+                renderCredenziali();
+            }
+        }
+
+        function renderCredenziali() {
+            const grid = document.getElementById('credGrid');
+            grid.innerHTML = '';
+            if (!Array.isArray(credenziali)) return;
+            
+            credenziali.forEach((c, i) => {
+                const div = document.createElement('div');
+                div.className = 'c';
+                div.innerHTML = `<span class="icona">🔑</span>${c.nome}`;
+                div.onclick = () => inviaCred(i);
+                div.addEventListener('contextmenu', (e) => { e.preventDefault(); rimuoviCred(i); });
+                let timer;
+                div.addEventListener('touchstart', (e) => { timer = setTimeout(() => { rimuoviCred(i); }, 800); });
+                div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
+                div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
+                grid.appendChild(div);
+            });
         }
 
         // ============================================================
@@ -890,17 +933,14 @@ const char* HTML_INTERFACCIA = R"rawliteral(
         // TRACKPAD
         // ============================================================
         const trackpad = document.getElementById('trackpadArea');
-        let pointers = {},
-            lastTap = 0;
+        let pointers = {}, lastTap = 0;
 
         trackpad.addEventListener('pointerdown', function(e) {
             e.preventDefault();
             trackpad.setPointerCapture(e.pointerId);
             pointers[e.pointerId] = {
-                x: e.clientX,
-                y: e.clientY,
-                startX: e.clientX,
-                startY: e.clientY,
+                x: e.clientX, y: e.clientY,
+                startX: e.clientX, startY: e.clientY,
                 moved: false
             };
         });
@@ -1023,41 +1063,36 @@ const char* HTML_INTERFACCIA = R"rawliteral(
             invia('SC:' + v);
         }
 
-// ============================================================
-// INIT - CORRETTO v6.1
-// ============================================================
-// Carica dati all'avvio
-aggiornaMacroCustom();
-aggiornaCredenziali();
-aggiornaQWERTY();
-log('✅ KVM Dongle v6.1 — Wi-Fi + BLE + Archiviazione Flash');
+        // ============================================================
+        // INIT
+        // ============================================================
+        aggiornaMacroCustom();
+        aggiornaCredenziali();
+        aggiornaQWERTY();
+        log('✅ KVM Dongle v6.1');
 
-// 🔥 RILEVA CORRETTAMENTE LA MODALITÀ
-const hostname = window.location.hostname;
+        // Rilevamento automatico modalità
+        const hostname = window.location.hostname;
 
-if (hostname === '192.168.4.1') {
-    // Modalità Wi-Fi (connesso al dongle)
-    log('🌐 Modalità Wi-Fi (connesso al dongle)');
-    document.getElementById('statoBtn').disabled = true;
-    document.getElementById('statoBtn').textContent = '● WiFi';
-    document.getElementById('statoBtn').className = 'connesso';
-} else {
-    // Modalità BLE (pagina da Internet)
-    log('🌐 Modalità BLE (pagina da Internet)');
-    document.getElementById('statoBtn').disabled = false;
-    document.getElementById('statoBtn').textContent = 'Connetti';
-    document.getElementById('statoBtn').className = '';
-    
-    if (!navigator.bluetooth) {
-        log('⚠️ Web Bluetooth non supportato');
-        log('   Android → Chrome | iPhone → Bluefy');
-        document.getElementById('statoBtn').disabled = true;
-        document.getElementById('statoBtn').style.opacity = '.4';
-    }
-}
+        if (hostname === '192.168.4.1') {
+            log('🌐 Modalità Wi-Fi (connesso al dongle)');
+            document.getElementById('statoBtn').disabled = true;
+            document.getElementById('statoBtn').textContent = '● WiFi';
+            document.getElementById('statoBtn').className = 'connesso';
+        } else {
+            log('🌐 Modalità BLE (pagina da Internet)');
+            document.getElementById('statoBtn').disabled = false;
+            document.getElementById('statoBtn').textContent = 'Connetti';
+            document.getElementById('statoBtn').className = '';
+            
+            if (!navigator.bluetooth) {
+                log('⚠️ Web Bluetooth non supportato');
+                log('   Android → Chrome | iPhone → Bluefy');
+                document.getElementById('statoBtn').disabled = true;
+                document.getElementById('statoBtn').style.opacity = '.4';
+            }
+        }
     </script>
+
 </body>
 </html>
-)rawliteral";
-
-#endif
