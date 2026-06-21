@@ -1023,27 +1023,38 @@ const char* HTML_INTERFACCIA = R"rawliteral(
             invia('SC:' + v);
         }
 
-        // ============================================================
-        // INIT
-        // ============================================================
-        // Carica dati all'avvio
-        aggiornaMacroCustom();
-        aggiornaCredenziali();
-        aggiornaQWERTY();
-        log('✅ KVM Dongle v6.0 — Wi-Fi + BLE + Archiviazione Flash');
+// ============================================================
+// INIT - CORRETTO v6.1
+// ============================================================
+// Carica dati all'avvio
+aggiornaMacroCustom();
+aggiornaCredenziali();
+aggiornaQWERTY();
+log('✅ KVM Dongle v6.1 — Wi-Fi + BLE + Archiviazione Flash');
 
-        // Controlla se siamo in modalità WiFi
-        if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            log('🌐 Modalità WiFi: ' + window.location.hostname);
-            document.getElementById('statoBtn').disabled = true;
-            document.getElementById('statoBtn').textContent = '● WiFi';
-            document.getElementById('statoBtn').className = 'connesso';
-        } else if (!navigator.bluetooth) {
-            log('⚠️ Web Bluetooth non supportato');
-            log('   Android → Chrome | iPhone → Bluefy');
-            document.getElementById('statoBtn').disabled = true;
-            document.getElementById('statoBtn').style.opacity = '.4';
-        }
+// 🔥 RILEVA CORRETTAMENTE LA MODALITÀ
+const hostname = window.location.hostname;
+
+if (hostname === '192.168.4.1') {
+    // Modalità Wi-Fi (connesso al dongle)
+    log('🌐 Modalità Wi-Fi (connesso al dongle)');
+    document.getElementById('statoBtn').disabled = true;
+    document.getElementById('statoBtn').textContent = '● WiFi';
+    document.getElementById('statoBtn').className = 'connesso';
+} else {
+    // Modalità BLE (pagina da Internet)
+    log('🌐 Modalità BLE (pagina da Internet)');
+    document.getElementById('statoBtn').disabled = false;
+    document.getElementById('statoBtn').textContent = 'Connetti';
+    document.getElementById('statoBtn').className = '';
+    
+    if (!navigator.bluetooth) {
+        log('⚠️ Web Bluetooth non supportato');
+        log('   Android → Chrome | iPhone → Bluefy');
+        document.getElementById('statoBtn').disabled = true;
+        document.getElementById('statoBtn').style.opacity = '.4';
+    }
+}
     </script>
 </body>
 </html>
