@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f5f5f5">
-    <title>KVM Dongle</title>
+    <title>KVM Dongle v5.19</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,0.06); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; --header-height: 44px; --tab-height: 40px; --bottom-bar-height: 56px; }
@@ -59,6 +59,28 @@
         .kbd-row .k.wide { flex: 1.8; }
         .kbd-row .k.caps-btn { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
         .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
+        /* 🔥 STILI PER LAYOUT E MODALITÀ */
+        .kbd-row .k.layout-btn, .kbd-row .k.mode-btn {
+            flex: 0 0 auto;
+            padding: 4px 10px;
+            font-size: 10px;
+            min-height: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            font-family: var(--font);
+            transition: all 0.2s ease;
+        }
+        .kbd-row .k.layout-btn:active, .kbd-row .k.mode-btn:active { transform: scale(0.95); }
+        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+        }
+        .kbd-row .k.layout-btn:hover, .kbd-row .k.mode-btn:hover { border-color: var(--accent); }
         #qwertyContainer { display: none; }
         #qwertyContainer .kbd-row .k { font-size: 13px; min-height: 38px; }
         .toggle-qwerty { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 0; text-align: center; width: 100%; border-top: 1px solid var(--border); font-family: var(--font); margin-top: 4px; }
@@ -90,7 +112,7 @@
         #panel-chat .chat-area .chat-actions .btn:active { opacity: 0.7; }
         #panel-chat .chat-area .chat-actions .btn.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
         .log { background: var(--surface); border-top: 1px solid var(--border); padding: 4px 10px; height: 30px; overflow-y: auto; font-family: monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; line-height: 1.8; }
-        @media (prefers-color-scheme: dark) { :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); } .kbd-row .k.verde { background: #1e3a2a; border-color: #2d5a3d; color: #81c784; } .kbd-row .k.rosso { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } .kbd-row .k.blu { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.giallo { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .kbd-row .k.arancio { background: #3a2a1e; border-color: #5a3d2d; color: #ffcc80; } .kbd-row .k.mod { background: #3a3a3c; border-color: #4a4a4c; color: #64b5f6; } .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; } .kbd-row .k.space { background: #3a3a3c; border-color: #4a4a4c; } .kbd-row .k.caps-btn { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; } .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); } .macro-grid .m.custom { background: #3a3a1e; border-color: #5a5a2d; } .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); } .controls-row .btn { background: var(--surface); border-color: var(--border); color: var(--text); } #panel-trackpad .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; } #panel-chat .chat-area textarea { background: #1a1a1c; border-color: #3a3a3c; color: #f5f5f5; } .macro-add input { background: var(--surface); border-color: var(--border); color: var(--text); } .cred-row input { background: var(--surface); border-color: var(--border); color: var(--text); } .log { background: var(--surface); border-color: var(--border); color: var(--muted); } .bottom-bar { background: var(--surface); border-color: var(--border); } .bottom-bar .btn.hold-btn { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; } .bottom-bar .btn.reset-btn { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } }
+        @media (prefers-color-scheme: dark) { :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); } .kbd-row .k.verde { background: #1e3a2a; border-color: #2d5a3d; color: #81c784; } .kbd-row .k.rosso { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } .kbd-row .k.blu { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.giallo { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .kbd-row .k.arancio { background: #3a2a1e; border-color: #5a3d2d; color: #ffcc80; } .kbd-row .k.mod { background: #3a3a3c; border-color: #4a4a4c; color: #64b5f6; } .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; } .kbd-row .k.space { background: #3a3a3c; border-color: #4a4a4c; } .kbd-row .k.caps-btn { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; } .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; } .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); } .macro-grid .m.custom { background: #3a3a1e; border-color: #5a5a2d; } .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); } .controls-row .btn { background: var(--surface); border-color: var(--border); color: var(--text); } #panel-trackpad .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; } #panel-chat .chat-area textarea { background: #1a1a1c; border-color: #3a3a3c; color: #f5f5f5; } .macro-add input { background: var(--surface); border-color: var(--border); color: var(--text); } .cred-row input { background: var(--surface); border-color: var(--border); color: var(--text); } .log { background: var(--surface); border-color: var(--border); color: var(--muted); } .bottom-bar { background: var(--surface); border-color: var(--border); } .bottom-bar .btn.hold-btn { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; } .bottom-bar .btn.reset-btn { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } }
         @media (orientation: landscape) and (max-height: 500px) { :root { --header-height: 36px; --tab-height: 32px; --bottom-bar-height: 44px; } .logo { font-size: 13px; } .tab { font-size: 7px; } .tab .icon { font-size: 14px; } .panel { padding: 4px 6px; gap: 4px; } #panel-trackpad .trackpad-area { min-height: 50px; } .kbd-row .k { min-height: 26px; padding: 4px 0; font-size: 10px; } #qwertyContainer .kbd-row .k { font-size: 12px; min-height: 30px; } .controls-row .btn { padding: 6px 4px; font-size: 10px; min-height: 28px; } .macro-grid { grid-template-columns: repeat(3, 1fr); } .terminal-grid { grid-template-columns: repeat(3, 1fr); } .cred-grid { grid-template-columns: repeat(3, 1fr); } .macro-add input { padding: 4px 8px; font-size: 10px; } .macro-add .btn-add { padding: 4px 10px; font-size: 11px; } .cred-row input { padding: 4px 8px; font-size: 10px; } .cred-row .btn-add { padding: 4px 10px; font-size: 11px; } #panel-chat .chat-area textarea { min-height: 40px; font-size: 13px; } .log { height: 24px; font-size: 8px; padding: 2px 8px; } .bottom-bar .btn { font-size: 11px; padding: 6px 4px; min-height: 34px; } .bottom-bar .btn .sub { font-size: 7px; } }
         @media (min-width: 480px) and (orientation: portrait) { .macro-grid { grid-template-columns: repeat(3, 1fr); } .cred-grid { grid-template-columns: repeat(3, 1fr); } #panel-trackpad .trackpad-area { min-height: 180px; } }
     </style>
@@ -113,6 +135,7 @@
 
         <div class="panels">
 
+            <!-- TRACKPAD -->
             <div id="panel-trackpad" class="panel attivo">
                 <div class="trackpad-area" id="trackpadArea">
                     <div class="hint">🖱️ Trascina per muovere<br>👆 1 dito = Click SX<br>👆👆 2 dita = Click DX</div>
@@ -140,6 +163,7 @@
                 </div>
             </div>
 
+            <!-- TASTIERA -->
             <div id="panel-tastiera" class="panel">
                 <div class="kbd-section">
                     <div class="label">Modificatori</div>
@@ -151,6 +175,7 @@
                         <button class="k caps-btn" id="btnCaps" onclick="toggleCaps()">⇪</button>
                     </div>
                 </div>
+
                 <div class="kbd-section">
                     <div class="label">Funzione</div>
                     <div class="kbd-row">
@@ -170,6 +195,7 @@
                         <button class="k giallo" onclick="inviaTastoConMod('F12')">F12</button>
                     </div>
                 </div>
+
                 <div class="kbd-section">
                     <div class="label">Speciali</div>
                     <div class="kbd-row">
@@ -180,6 +206,7 @@
                         <button class="k rosso" onclick="inviaTastoConMod('DEL')">⌦ Canc</button>
                     </div>
                 </div>
+
                 <div class="kbd-section">
                     <div class="label">Navigazione</div>
                     <div class="kbd-row">
@@ -195,6 +222,42 @@
                         <button class="k blu" onclick="inviaTastoConMod('RIGHT')">▶</button>
                     </div>
                 </div>
+
+                <!-- ============================================================ -->
+                <!-- 🔥 MENU LAYOUT E MODALITÀ (RECUPERATO!) -->
+                <!-- ============================================================ -->
+                <div class="kbd-section">
+                    <div class="label">⌨️ Layout Tastiera</div>
+                    <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
+                        <button class="k layout-btn active" data-layout="IT" onclick="setLayout('IT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇮🇹 IT</button>
+                        <button class="k layout-btn" data-layout="US" onclick="setLayout('US')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇺🇸 US</button>
+                        <button class="k layout-btn" data-layout="UK" onclick="setLayout('UK')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇬🇧 UK</button>
+                        <button class="k layout-btn" data-layout="FR" onclick="setLayout('FR')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇫🇷 FR</button>
+                        <button class="k layout-btn" data-layout="DE" onclick="setLayout('DE')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇩🇪 DE</button>
+                        <button class="k layout-btn" data-layout="ES" onclick="setLayout('ES')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇪🇸 ES</button>
+                        <button class="k layout-btn" data-layout="PT" onclick="setLayout('PT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇵🇹 PT</button>
+                        <button class="k layout-btn" data-layout="EMBEDDED" onclick="setLayout('EMBEDDED')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📺 TV</button>
+                        <button class="k layout-btn" data-layout="ASCII" onclick="setLayout('ASCII')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📟 ASCII</button>
+                    </div>
+                </div>
+
+                <div class="kbd-section">
+                    <div class="label">📡 Modalità Invio</div>
+                    <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
+                        <button class="k mode-btn active" data-mode="AUTO" onclick="setModo('AUTO')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🤖 Auto</button>
+                        <button class="k mode-btn" data-mode="ALT" onclick="setModo('ALT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">💻 Windows</button>
+                        <button class="k mode-btn" data-mode="UNICODE" onclick="setModo('UNICODE')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🌐 Unicode</button>
+                        <button class="k mode-btn" data-mode="ASCII" onclick="setModo('ASCII')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📟 ASCII</button>
+                    </div>
+                </div>
+
+                <div class="kbd-section">
+                    <div class="label" id="statusLabel">📌 Stato: Layout IT | Modalità AUTO</div>
+                </div>
+                <!-- ============================================================ -->
+                <!-- FINE MENU LAYOUT E MODALITÀ -->
+                <!-- ============================================================ -->
+
                 <button class="toggle-qwerty" id="toggleQwerty" onclick="toggleQWERTY()">
                     <span class="arrow" id="qwertyArrow">▶</span> Mostra tastiera
                 </button>
@@ -253,6 +316,7 @@
                         <button class="k space" onclick="inviaTastoConMod('SPACE')">␣ Spazio</button>
                     </div>
                 </div>
+
                 <div class="kbd-section">
                     <div class="label">Combinazioni rapide</div>
                     <div class="kbd-row">
@@ -279,6 +343,7 @@
                 </div>
             </div>
 
+            <!-- MACRO -->
             <div id="panel-macro" class="panel">
                 <div class="kbd-section">
                     <div class="label">⚡ Macro predefinite</div>
@@ -320,6 +385,7 @@
                 </div>
             </div>
 
+            <!-- TERMINAL -->
             <div id="panel-terminal" class="panel">
                 <div class="kbd-section">
                     <div class="label">🟦 Windows (CMD / PowerShell)</div>
@@ -359,6 +425,7 @@
                 </div>
             </div>
 
+            <!-- CHAT -->
             <div id="panel-chat" class="panel">
                 <div class="chat-area">
                     <textarea id="chatText" placeholder="Scrivi qui... (supporta dettatura)"></textarea>
@@ -380,7 +447,7 @@
             </button>
         </div>
 
-        <div class="log" id="log">▶ KVM Dongle v6.1</div>
+        <div class="log" id="log">▶ KVM Dongle v5.19 — Multi-Layout</div>
 
     </div>
 
@@ -393,17 +460,56 @@
         let holdMods = {};
         let holdGlobalActive = false, capsLockActive = false;
         let sens = 4;
-        let macroCustom = [], credenziali = [];
+        
+        // 🔥 TUTTO SULL'ESP32! Niente localStorage
+        let macroCustom = [];
+        let credenziali = [];
 
         // ============================================================
-        // FUNZIONE INVI - Supporta sia BLE che WiFi
+        // LAYOUT E MODALITÀ (CHIAMATE DAL MENU)
+        // ============================================================
+        function setLayout(layout) {
+            invia('LAYOUT:' + layout);
+            log('⌨️ Layout: ' + layout);
+
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.layout === layout) {
+                    btn.classList.add('active');
+                }
+            });
+
+            const statusLabel = document.getElementById('statusLabel');
+            if (statusLabel) {
+                const currentMode = document.querySelector('.mode-btn.active')?.dataset.mode || 'AUTO';
+                statusLabel.textContent = '📌 Stato: Layout ' + layout + ' | Modalità ' + currentMode;
+            }
+        }
+
+        function setModo(modo) {
+            invia('MODE:' + modo);
+            log('📡 Modalità: ' + modo);
+
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === modo) {
+                    btn.classList.add('active');
+                }
+            });
+
+            const statusLabel = document.getElementById('statusLabel');
+            if (statusLabel) {
+                const currentLayout = document.querySelector('.layout-btn.active')?.dataset.layout || 'IT';
+                statusLabel.textContent = '📌 Stato: Layout ' + currentLayout + ' | Modalità ' + modo;
+            }
+        }
+
+        // ============================================================
+        // INVIO COMANDI
         // ============================================================
         function invia(stringaComando) {
-            console.log("Inviato: " + stringaComando);
-            
             const hostname = window.location.hostname;
-            
-            // Se siamo sul dongle via Wi-Fi
+
             if (hostname === '192.168.4.1') {
                 fetch('/api?run=' + encodeURIComponent(stringaComando))
                     .then(response => response.json())
@@ -414,8 +520,7 @@
                     .catch(err => log('❌ Errore rete: ' + err.message));
                 return;
             }
-            
-            // Altrimenti BLE
+
             if (!connesso || !bleRx) {
                 log('❌ Non connesso via BLE');
                 return;
@@ -488,7 +593,7 @@
         });
 
         // ============================================================
-        // BLE
+        // CONNESSIONE BLE
         // ============================================================
         async function toggleConnessione() {
             if (connesso) {
@@ -507,16 +612,90 @@
                 const svc = await srv.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
                 bleRx = await svc.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
                 bleTx = await svc.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+                
+                // 🔥 ABILITA LE NOTIFICHE
                 await bleTx.startNotifications();
+                
+                // 🔥 RICEZIONE DATI
                 bleTx.addEventListener('characteristicvaluechanged', e => {
                     const data = new TextDecoder().decode(e.target.value);
                     log('◀ ' + data);
+                    
+                    // CREDENZIALI
+                    if (data.startsWith('CRED_DATA:')) {
+                        const jsonStr = data.substring(10);
+                        try {
+                            credenziali = JSON.parse(jsonStr);
+                            renderCredenziali();
+                            log('✅ Credenziali caricate: ' + credenziali.length);
+                        } catch(e) {
+                            log('❌ Errore parsing credenziali');
+                        }
+                        return;
+                    }
+                    if (data.startsWith('CRED_SAVED:')) {
+                        log('🔑 Credenziale salvata: ' + data.substring(11));
+                        setTimeout(aggiornaCredenziali, 500);
+                        return;
+                    }
+                    if (data.startsWith('CRED_DELETED:')) {
+                        log('🗑️ Credenziale eliminata: ' + data.substring(13));
+                        setTimeout(aggiornaCredenziali, 500);
+                        return;
+                    }
+                    
+                    // MACRO
+                    if (data.startsWith('MACRO_DATA:')) {
+                        const jsonStr = data.substring(11);
+                        try {
+                            macroCustom = JSON.parse(jsonStr);
+                            renderMacroCustom();
+                            log('✅ Macro caricate: ' + macroCustom.length);
+                        } catch(e) {
+                            log('❌ Errore parsing macro');
+                        }
+                        return;
+                    }
+                    if (data.startsWith('MACRO_SAVED:')) {
+                        log('💾 Macro salvata: ' + data.substring(12));
+                        setTimeout(aggiornaMacroCustom, 500);
+                        return;
+                    }
+                    if (data.startsWith('MACRO_DELETED:')) {
+                        log('🗑️ Macro eliminata: ' + data.substring(14));
+                        setTimeout(aggiornaMacroCustom, 500);
+                        return;
+                    }
+                    
+                    // LOGIN
+                    if (data.startsWith('LOGIN_STARTED')) {
+                        log('🔑 Login avviato...');
+                        return;
+                    }
+                    if (data.startsWith('LOGIN_COMPLETE')) {
+                        log('✅ Login completato!');
+                        return;
+                    }
+                    
+                    // PONG
+                    if (data.trim() === 'PONG') {
+                        log('🏓 PONG ricevuto!');
+                        return;
+                    }
                 });
+                
                 connesso = true;
                 btn.textContent = '● Connesso';
                 btn.className = 'connesso';
                 log('✅ Connesso via BLE');
-                setTimeout(() => invia('PING'), 500);
+                
+                setTimeout(() => {
+                    invia('PING');
+                    setTimeout(() => {
+                        aggiornaMacroCustom();
+                        aggiornaCredenziali();
+                    }, 500);
+                }, 500);
             } catch (e) {
                 btn.textContent = 'Connetti';
                 btn.className = '';
@@ -627,7 +806,7 @@
                 'À': '[ALT+0192]', 'È': '[ALT+0200]', 'É': '[ALT+0201]',
                 'Ì': '[ALT+0204]', 'Ò': '[ALT+0210]', 'Ù': '[ALT+0217]'
             };
-            
+
             let risultato = '';
             for (let i = 0; i < testo.length; i++) {
                 let car = testo.charAt(i);
@@ -639,7 +818,7 @@
         function inviaChat() {
             const text = document.getElementById('chatText').value;
             if (!text) { log('❌ Testo vuoto'); return; }
-            
+
             const textTradotto = traduciAccenti(text);
             document.getElementById('chatText').value = '';
             invia('T:' + textTradotto);
@@ -682,93 +861,41 @@
         }
 
         // ============================================================
-        // MACRO - PERSISTENZA SU ESP32 (WiFi) o localStorage (BLE)
+        // MACRO SU LITTLEFS
         // ============================================================
+        function eseguiMacro(id) {
+            invia('MACRO:' + id);
+        }
+
         function salvaMacroCustom() {
             const nome = document.getElementById('macroNome').value.trim();
             const seq = document.getElementById('macroSeq').value.trim();
             if (!nome || !seq) { alert('Inserisci nome e sequenza'); return; }
             
-            // Se siamo in modalità Wi-Fi (sul dongle)
-            if (window.location.hostname === '192.168.4.1') {
-                fetch('/save_macro', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'nome=' + encodeURIComponent(nome) + '&seq=' + encodeURIComponent(seq)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        document.getElementById('macroNome').value = '';
-                        document.getElementById('macroSeq').value = '';
-                        aggiornaMacroCustom();
-                        log('✅ Macro salvata: ' + nome);
-                    } else {
-                        log('❌ Errore salvataggio macro');
-                    }
-                })
-                .catch(err => log('❌ Errore: ' + err.message));
-            } else {
-                // Modalità BLE: salva in localStorage (fallback)
-                macroCustom.push({ nome, seq });
-                localStorage.setItem('kvm_macro', JSON.stringify(macroCustom));
-                document.getElementById('macroNome').value = '';
-                document.getElementById('macroSeq').value = '';
-                aggiornaMacroCustom();
-                log('✅ Macro salvata in locale: ' + nome);
-            }
+            invia('MACRO_SAVE:' + nome + ':' + seq);
+            document.getElementById('macroNome').value = '';
+            document.getElementById('macroSeq').value = '';
+            
+            setTimeout(aggiornaMacroCustom, 1000);
+            log('💾 Macro salvata su ESP32: ' + nome);
+        }
+
+        function aggiornaMacroCustom() {
+            invia('MACRO_LIST');
         }
 
         function rimuoviMacroCustom(i) {
-            const macro = macroCustom[i];
-            if (!macro) return;
-            if (!confirm('Rimuovere "' + macro.nome + '"?')) return;
-            
-            if (window.location.hostname === '192.168.4.1') {
-                fetch('/delete_macro', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'nome=' + encodeURIComponent(macro.nome)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        aggiornaMacroCustom();
-                        log('🗑️ Macro eliminata: ' + macro.nome);
-                    }
-                })
-                .catch(err => log('❌ Errore: ' + err.message));
-            } else {
-                macroCustom.splice(i, 1);
-                localStorage.setItem('kvm_macro', JSON.stringify(macroCustom));
-                aggiornaMacroCustom();
-                log('🗑️ Macro eliminata: ' + macro.nome);
-            }
+            if (!macroCustom[i]) return;
+            if (!confirm('Rimuovere "' + macroCustom[i].nome + '"?')) return;
+            invia('MACRO_DEL:' + macroCustom[i].nome);
+            setTimeout(aggiornaMacroCustom, 1000);
+            log('🗑️ Macro eliminata da ESP32');
         }
 
         function eseguiMacroCustom(i) {
             const macro = macroCustom[i];
             if (!macro) return;
             invia('MACRO:' + macro.nome);
-        }
-
-        function aggiornaMacroCustom() {
-            if (window.location.hostname === '192.168.4.1') {
-                fetch('/load_macros')
-                    .then(response => response.json())
-                    .then(data => {
-                        macroCustom = data || [];
-                        renderMacroCustom();
-                    })
-                    .catch(err => {
-                        log('❌ Errore caricamento macro: ' + err.message);
-                        macroCustom = JSON.parse(localStorage.getItem('kvm_macro') || '[]');
-                        renderMacroCustom();
-                    });
-            } else {
-                macroCustom = JSON.parse(localStorage.getItem('kvm_macro') || '[]');
-                renderMacroCustom();
-            }
         }
 
         function renderMacroCustom() {
@@ -792,14 +919,7 @@
         }
 
         // ============================================================
-        // MACRO PREDEFINITE
-        // ============================================================
-        function eseguiMacro(id) {
-            invia('MACRO:' + id);
-        }
-
-        // ============================================================
-        // CREDENZIALI
+        // CREDENZIALI SU LITTLEFS
         // ============================================================
         function salvaCredenziale() {
             const nome = document.getElementById('credNome').value.trim();
@@ -807,95 +927,33 @@
             const pass = document.getElementById('credPass').value.trim();
             if (!nome || !pass) { alert('Inserisci nome e password'); return; }
             
-            if (window.location.hostname === '192.168.4.1') {
-                fetch('/save_cred', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'nome=' + encodeURIComponent(nome) + '&user=' + encodeURIComponent(user) + '&pass=' + encodeURIComponent(pass)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        document.getElementById('credNome').value = '';
-                        document.getElementById('credUser').value = '';
-                        document.getElementById('credPass').value = '';
-                        aggiornaCredenziali();
-                        log('🔑 Credenziale salvata: ' + nome);
-                    } else {
-                        log('❌ Errore salvataggio credenziale');
-                    }
-                })
-                .catch(err => log('❌ Errore: ' + err.message));
-            } else {
-                credenziali.push({ nome, user, pass });
-                localStorage.setItem('kvm_cred', JSON.stringify(credenziali));
-                document.getElementById('credNome').value = '';
-                document.getElementById('credUser').value = '';
-                document.getElementById('credPass').value = '';
-                aggiornaCredenziali();
-                log('🔑 Credenziale salvata in locale: ' + nome);
-            }
+            invia('CRED_SAVE:' + nome + ':' + user + ':' + pass);
+            
+            document.getElementById('credNome').value = '';
+            document.getElementById('credUser').value = '';
+            document.getElementById('credPass').value = '';
+            
+            setTimeout(aggiornaCredenziali, 1000);
+            log('🔑 Credenziale salvata su ESP32: ' + nome);
+        }
+
+        function aggiornaCredenziali() {
+            invia('CRED_LIST');
         }
 
         function rimuoviCred(i) {
-            const cred = credenziali[i];
-            if (!cred) return;
-            if (!confirm('Rimuovere "' + cred.nome + '"?')) return;
-            
-            if (window.location.hostname === '192.168.4.1') {
-                fetch('/delete_cred', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'nome=' + encodeURIComponent(cred.nome)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        aggiornaCredenziali();
-                        log('🗑️ Credenziale eliminata: ' + cred.nome);
-                    }
-                })
-                .catch(err => log('❌ Errore: ' + err.message));
-            } else {
-                credenziali.splice(i, 1);
-                localStorage.setItem('kvm_cred', JSON.stringify(credenziali));
-                aggiornaCredenziali();
-                log('🗑️ Credenziale eliminata: ' + cred.nome);
-            }
+            if (!credenziali[i]) return;
+            if (!confirm('Rimuovere "' + credenziali[i].nome + '"?')) return;
+            invia('CRED_DEL:' + credenziali[i].nome);
+            setTimeout(aggiornaCredenziali, 1000);
+            log('🗑️ Credenziale eliminata da ESP32');
         }
 
         function inviaCred(i) {
             const c = credenziali[i];
             if (!c) return;
-            if (c.user) {
-                invia('T:' + c.user);
-                setTimeout(() => invia('K:TAB'), 300);
-                setTimeout(() => invia('T:' + c.pass), 600);
-                setTimeout(() => invia('K:ENTER'), 900);
-            } else {
-                invia('T:' + c.pass);
-                setTimeout(() => invia('K:ENTER'), 300);
-            }
-            log('🔑 Invio: ' + c.nome);
-        }
-
-        function aggiornaCredenziali() {
-            if (window.location.hostname === '192.168.4.1') {
-                fetch('/load_creds')
-                    .then(response => response.json())
-                    .then(data => {
-                        credenziali = data || [];
-                        renderCredenziali();
-                    })
-                    .catch(err => {
-                        log('❌ Errore caricamento credenziali: ' + err.message);
-                        credenziali = JSON.parse(localStorage.getItem('kvm_cred') || '[]');
-                        renderCredenziali();
-                    });
-            } else {
-                credenziali = JSON.parse(localStorage.getItem('kvm_cred') || '[]');
-                renderCredenziali();
-            }
+            invia('LOGIN:' + c.user + ':' + c.pass);
+            log('🔑 Login automatico per: ' + c.nome);
         }
 
         function renderCredenziali() {
@@ -1066,12 +1124,9 @@
         // ============================================================
         // INIT
         // ============================================================
-        aggiornaMacroCustom();
-        aggiornaCredenziali();
         aggiornaQWERTY();
-        log('✅ KVM Dongle v6.1');
+        log('✅ KVM Dongle v5.19 — Multi-Layout');
 
-        // Rilevamento automatico modalità
         const hostname = window.location.hostname;
 
         if (hostname === '192.168.4.1') {
@@ -1079,12 +1134,16 @@
             document.getElementById('statoBtn').disabled = true;
             document.getElementById('statoBtn').textContent = '● WiFi';
             document.getElementById('statoBtn').className = 'connesso';
+            setTimeout(() => {
+                aggiornaMacroCustom();
+                aggiornaCredenziali();
+            }, 1000);
         } else {
             log('🌐 Modalità BLE (pagina da Internet)');
             document.getElementById('statoBtn').disabled = false;
             document.getElementById('statoBtn').textContent = 'Connetti';
             document.getElementById('statoBtn').className = '';
-            
+
             if (!navigator.bluetooth) {
                 log('⚠️ Web Bluetooth non supportato');
                 log('   Android → Chrome | iPhone → Bluefy');
@@ -1092,6 +1151,10 @@
                 document.getElementById('statoBtn').style.opacity = '.4';
             }
         }
+
+        // Inizializza griglie vuote
+        renderCredenziali();
+        renderMacroCustom();
     </script>
 
 </body>
