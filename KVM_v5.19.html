@@ -113,7 +113,7 @@
 
         <div class="panels">
 
-            <!-- PANEL TRACKPAD -->
+            <!-- TRACKPAD -->
             <div id="panel-trackpad" class="panel attivo">
                 <div class="trackpad-area" id="trackpadArea">
                     <div class="hint">🖱️ Trascina per muovere<br>👆 1 dito = Click SX<br>👆👆 2 dita = Click DX</div>
@@ -141,7 +141,7 @@
                 </div>
             </div>
 
-            <!-- PANEL TASTIERA -->
+            <!-- TASTIERA -->
             <div id="panel-tastiera" class="panel">
                 <div class="kbd-section">
                     <div class="label">Modificatori</div>
@@ -283,7 +283,7 @@
                 </div>
             </div>
 
-            <!-- PANEL MACRO -->
+            <!-- MACRO -->
             <div id="panel-macro" class="panel">
                 <div class="kbd-section">
                     <div class="label">⚡ Macro predefinite</div>
@@ -304,8 +304,6 @@
                         <div class="m" onclick="eseguiMacro('bios_f12')"><span class="icona">🔧</span>Boot F12</div>
                     </div>
                 </div>
-
-                <!-- 🔥 MACRO PERSONALIZZATE -->
                 <div class="kbd-section">
                     <div class="label">⚡ Macro personalizzate</div>
                     <div class="macro-grid" id="macroCustomGrid"></div>
@@ -315,8 +313,6 @@
                         <button class="btn-add" onclick="salvaMacroCustom()">+</button>
                     </div>
                 </div>
-
-                <!-- 🔥 CREDENZIALI SALVATE SU LITTLEFS -->
                 <div class="kbd-section">
                     <div class="label">🔑 Credenziali salvate</div>
                     <div class="cred-grid" id="credGrid"></div>
@@ -326,14 +322,10 @@
                         <input type="password" id="credPass" placeholder="Password">
                         <button class="btn-add" onclick="salvaCredenziale()">+</button>
                     </div>
-                    <div style="margin-top: 4px; display: flex; gap: 6px;">
-                        <button class="btn" onclick="aggiornaCredenziali()" style="flex: 1; padding: 6px; font-size: 10px;">🔄 Aggiorna</button>
-                        <button class="btn" onclick="mostraCredenzialiLog()" style="flex: 1; padding: 6px; font-size: 10px;">📋 Mostra tutte</button>
-                    </div>
                 </div>
             </div>
 
-            <!-- PANEL TERMINAL -->
+            <!-- TERMINAL -->
             <div id="panel-terminal" class="panel">
                 <div class="kbd-section">
                     <div class="label">🟦 Windows (CMD / PowerShell)</div>
@@ -373,7 +365,7 @@
                 </div>
             </div>
 
-            <!-- PANEL CHAT -->
+            <!-- CHAT -->
             <div id="panel-chat" class="panel">
                 <div class="chat-area">
                     <textarea id="chatText" placeholder="Scrivi qui... (supporta dettatura)"></textarea>
@@ -409,16 +401,14 @@
         let holdGlobalActive = false, capsLockActive = false;
         let sens = 4;
         
-        // 🔥 NIENTE localStorage! Tutto su ESP32
+        // 🔥 TUTTO SULL'ESP32! Niente localStorage
         let macroCustom = [];
         let credenziali = [];
 
         // ============================================================
-        // FUNZIONE INVI
+        // INVIO COMANDI
         // ============================================================
         function invia(stringaComando) {
-            console.log("Inviato: " + stringaComando);
-
             const hostname = window.location.hostname;
 
             if (hostname === '192.168.4.1') {
@@ -504,7 +494,7 @@
         });
 
         // ============================================================
-        // BLE
+        // CONNESSIONE BLE
         // ============================================================
         async function toggleConnessione() {
             if (connesso) {
@@ -523,102 +513,96 @@
                 const svc = await srv.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
                 bleRx = await svc.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
                 bleTx = await svc.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+                
+                // 🔥 ABILITA LE NOTIFICHE
                 await bleTx.startNotifications();
                 
-bleTx.addEventListener('characteristicvaluechanged', e => {
-    const data = new TextDecoder().decode(e.target.value);
-    
-    // 🔥 AGGIUNGI QUESTA RIGA PER IL DEBUG
-    console.log("🔵 DATO RICEVUTO DAL BLE:", data);
-    
-    log('◀ ' + data);
-    
-    // ============================================================
-    // 🔥 RICEZIONE DATI DA LITTLEFS - CREDENZIALI
-    // ============================================================
-    if (data.startsWith('CRED_DATA:')) {
-        const jsonStr = data.substring(10);
-        console.log("📋 Parsing CRED_DATA:", jsonStr);
-        try {
-            credenziali = JSON.parse(jsonStr);
-            renderCredenziali();
-            log('✅ Credenziali caricate da ESP32: ' + credenziali.length);
-        } catch(e) {
-            console.error("❌ Errore parsing credenziali:", e);
-            log('❌ Errore parsing credenziali: ' + e.message);
+                // 🔥 RICEZIONE DATI
+                bleTx.addEventListener('characteristicvaluechanged', e => {
+                    const data = new TextDecoder().decode(e.target.value);
+                    log('◀ ' + data);
+                    
+                    // CREDENZIALI
+                    if (data.startsWith('CRED_DATA:')) {
+                        const jsonStr = data.substring(10);
+                        try {
+                            credenziali = JSON.parse(jsonStr);
+                            renderCredenziali();
+                            log('✅ Credenziali caricate: ' + credenziali.length);
+                        } catch(e) {
+                            log('❌ Errore parsing credenziali');
+                        }
+                        return;
+                    }
+                    if (data.startsWith('CRED_SAVED:')) {
+                        log('🔑 Credenziale salvata: ' + data.substring(11));
+                        setTimeout(aggiornaCredenziali, 500);
+                        return;
+                    }
+                    if (data.startsWith('CRED_DELETED:')) {
+                        log('🗑️ Credenziale eliminata: ' + data.substring(13));
+                        setTimeout(aggiornaCredenziali, 500);
+                        return;
+                    }
+                    
+                    // MACRO
+                    if (data.startsWith('MACRO_DATA:')) {
+                        const jsonStr = data.substring(11);
+                        try {
+                            macroCustom = JSON.parse(jsonStr);
+                            renderMacroCustom();
+                            log('✅ Macro caricate: ' + macroCustom.length);
+                        } catch(e) {
+                            log('❌ Errore parsing macro');
+                        }
+                        return;
+                    }
+                    if (data.startsWith('MACRO_SAVED:')) {
+                        log('💾 Macro salvata: ' + data.substring(12));
+                        setTimeout(aggiornaMacroCustom, 500);
+                        return;
+                    }
+                    if (data.startsWith('MACRO_DELETED:')) {
+                        log('🗑️ Macro eliminata: ' + data.substring(14));
+                        setTimeout(aggiornaMacroCustom, 500);
+                        return;
+                    }
+                    
+                    // LOGIN
+                    if (data.startsWith('LOGIN_STARTED')) {
+                        log('🔑 Login avviato...');
+                        return;
+                    }
+                    if (data.startsWith('LOGIN_COMPLETE')) {
+                        log('✅ Login completato!');
+                        return;
+                    }
+                    
+                    // PONG
+                    if (data.trim() === 'PONG') {
+                        log('🏓 PONG ricevuto!');
+                        return;
+                    }
+                });
+                
+                connesso = true;
+                btn.textContent = '● Connesso';
+                btn.className = 'connesso';
+                log('✅ Connesso via BLE');
+                
+                setTimeout(() => {
+                    invia('PING');
+                    setTimeout(() => {
+                        aggiornaMacroCustom();
+                        aggiornaCredenziali();
+                    }, 500);
+                }, 500);
+            } catch (e) {
+                btn.textContent = 'Connetti';
+                btn.className = '';
+                log('❌ ' + e.message);
+            }
         }
-        return;
-    }
-    
-    if (data.startsWith('CRED_SAVED:')) {
-        log('🔑 Credenziale salvata: ' + data.substring(11));
-        setTimeout(aggiornaCredenziali, 500);
-        return;
-    }
-    
-    if (data.startsWith('CRED_DELETED:')) {
-        log('🗑️ Credenziale eliminata: ' + data.substring(13));
-        setTimeout(aggiornaCredenziali, 500);
-        return;
-    }
-    
-    // ============================================================
-    // 🔥 RICEZIONE DATI DA LITTLEFS - MACRO
-    // ============================================================
-    if (data.startsWith('MACRO_DATA:')) {
-        const jsonStr = data.substring(11);
-        console.log("📋 Parsing MACRO_DATA:", jsonStr);
-        try {
-            macroCustom = JSON.parse(jsonStr);
-            renderMacroCustom();
-            log('✅ Macro caricate da ESP32: ' + macroCustom.length);
-        } catch(e) {
-            console.error("❌ Errore parsing macro:", e);
-            log('❌ Errore parsing macro');
-        }
-        return;
-    }
-    
-    if (data.startsWith('MACRO_SAVED:')) {
-        log('💾 Macro salvata: ' + data.substring(12));
-        setTimeout(aggiornaMacroCustom, 500);
-        return;
-    }
-    
-    if (data.startsWith('MACRO_DELETED:')) {
-        log('🗑️ Macro eliminata: ' + data.substring(14));
-        setTimeout(aggiornaMacroCustom, 500);
-        return;
-    }
-    
-    // ============================================================
-    // 🔥 LOGIN
-    // ============================================================
-    if (data.startsWith('LOGIN_STARTED')) {
-        log('🔑 Login avviato...');
-        return;
-    }
-    
-    if (data.startsWith('LOGIN_COMPLETE')) {
-        log('✅ Login completato!');
-        return;
-    }
-    
-    // ============================================================
-    // 🔥 PING
-    // ============================================================
-    if (data.trim() === 'PONG') {
-        log('🏓 PONG ricevuto!');
-        return;
-    }
-    
-    // ============================================================
-    // 🔥 ALTRI MESSAGGI (se non riconosciuti)
-    // ============================================================
-    if (data.trim() !== '') {
-        log('◀ ' + data.trim());
-    }
-});
 
         function onDisconnesso() {
             connesso = false;
@@ -778,7 +762,7 @@ bleTx.addEventListener('characteristicvaluechanged', e => {
         }
 
         // ============================================================
-        // 🔥 MACRO SU LITTLEFS
+        // MACRO SU LITTLEFS
         // ============================================================
         function eseguiMacro(id) {
             invia('MACRO:' + id);
@@ -836,7 +820,7 @@ bleTx.addEventListener('characteristicvaluechanged', e => {
         }
 
         // ============================================================
-        // 🔥 CREDENZIALI SU LITTLEFS
+        // CREDENZIALI SU LITTLEFS
         // ============================================================
         function salvaCredenziale() {
             const nome = document.getElementById('credNome').value.trim();
@@ -889,17 +873,6 @@ bleTx.addEventListener('characteristicvaluechanged', e => {
                 div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
                 div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
                 grid.appendChild(div);
-            });
-        }
-
-        function mostraCredenzialiLog() {
-            if (credenziali.length === 0) {
-                log('📋 Nessuna credenziale salvata');
-                return;
-            }
-            log('📋 Credenziali salvate (' + credenziali.length + '):');
-            credenziali.forEach((c, i) => {
-                log('   ' + (i+1) + '. ' + c.nome + ' → ' + c.user + ' / ' + c.pass);
             });
         }
 
@@ -1062,7 +1035,6 @@ bleTx.addEventListener('characteristicvaluechanged', e => {
             document.getElementById('statoBtn').disabled = true;
             document.getElementById('statoBtn').textContent = '● WiFi';
             document.getElementById('statoBtn').className = 'connesso';
-            // Carica dati all'avvio in modalità Wi-Fi
             setTimeout(() => {
                 aggiornaMacroCustom();
                 aggiornaCredenziali();
@@ -1081,7 +1053,7 @@ bleTx.addEventListener('characteristicvaluechanged', e => {
             }
         }
 
-        // Inizializza la griglia delle credenziali vuota
+        // Inizializza griglie vuote
         renderCredenziali();
         renderMacroCustom();
     </script>
