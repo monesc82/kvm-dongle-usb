@@ -59,10 +59,6 @@
         .kbd-row .k.wide { flex: 1.8; }
         .kbd-row .k.caps-btn { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
         .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .kbd-row .k.layout-btn, .kbd-row .k.mode-btn { flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-family: var(--font); transition: all 0.2s ease; }
-        .kbd-row .k.layout-btn:active, .kbd-row .k.mode-btn:active { transform: scale(0.95); }
-        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3); }
-        .kbd-row .k.layout-btn:hover, .kbd-row .k.mode-btn:hover { border-color: var(--accent); }
         #qwertyContainer { display: none; }
         #qwertyContainer .kbd-row .k { font-size: 13px; min-height: 38px; }
         .toggle-qwerty { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 0; text-align: center; width: 100%; border-top: 1px solid var(--border); font-family: var(--font); margin-top: 4px; }
@@ -94,7 +90,7 @@
         #panel-chat .chat-area .chat-actions .btn:active { opacity: 0.7; }
         #panel-chat .chat-area .chat-actions .btn.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
         .log { background: var(--surface); border-top: 1px solid var(--border); padding: 4px 10px; height: 30px; overflow-y: auto; font-family: monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; line-height: 1.8; }
-        @media (prefers-color-scheme: dark) { :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); } .kbd-row .k.verde { background: #1e3a2a; border-color: #2d5a3d; color: #81c784; } .kbd-row .k.rosso { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } .kbd-row .k.blu { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.giallo { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .kbd-row .k.arancio { background: #3a2a1e; border-color: #5a3d2d; color: #ffcc80; } .kbd-row .k.mod { background: #3a3a3c; border-color: #4a4a4c; color: #64b5f6; } .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; } .kbd-row .k.space { background: #3a3a3c; border-color: #4a4a4c; } .kbd-row .k.caps-btn { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; } .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; } .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); } .macro-grid .m.custom { background: #3a3a1e; border-color: #5a5a2d; } .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); } .controls-row .btn { background: var(--surface); border-color: var(--border); color: var(--text); } #panel-trackpad .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; } #panel-chat .chat-area textarea { background: #1a1a1c; border-color: #3a3a3c; color: #f5f5f5; } .macro-add input { background: var(--surface); border-color: var(--border); color: var(--text); } .cred-row input { background: var(--surface); border-color: var(--border); color: var(--text); } .log { background: var(--surface); border-color: var(--border); color: var(--muted); } .bottom-bar { background: var(--surface); border-color: var(--border); } .bottom-bar .btn.hold-btn { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; } .bottom-bar .btn.reset-btn { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } }
+        @media (prefers-color-scheme: dark) { :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); } .kbd-row .k.verde { background: #1e3a2a; border-color: #2d5a3d; color: #81c784; } .kbd-row .k.rosso { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } .kbd-row .k.blu { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.giallo { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .kbd-row .k.arancio { background: #3a2a1e; border-color: #5a3d2d; color: #ffcc80; } .kbd-row .k.mod { background: #3a3a3c; border-color: #4a4a4c; color: #64b5f6; } .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; } .kbd-row .k.space { background: #3a3a3c; border-color: #4a4a4c; } .kbd-row .k.caps-btn { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; } .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; } .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); } .macro-grid .m.custom { background: #3a3a1e; border-color: #5a5a2d; } .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); } .controls-row .btn { background: var(--surface); border-color: var(--border); color: var(--text); } #panel-trackpad .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; } #panel-chat .chat-area textarea { background: #1a1a1c; border-color: #3a3a3c; color: #f5f5f5; } .macro-add input { background: var(--surface); border-color: var(--border); color: var(--text); } .cred-row input { background: var(--surface); border-color: var(--border); color: var(--text); } .log { background: var(--surface); border-color: var(--border); color: var(--muted); } .bottom-bar { background: var(--surface); border-color: var(--border); } .bottom-bar .btn.hold-btn { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; } .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; } .bottom-bar .btn.reset-btn { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; } }
         @media (orientation: landscape) and (max-height: 500px) { :root { --header-height: 36px; --tab-height: 32px; --bottom-bar-height: 44px; } .logo { font-size: 13px; } .tab { font-size: 7px; } .tab .icon { font-size: 14px; } .panel { padding: 4px 6px; gap: 4px; } #panel-trackpad .trackpad-area { min-height: 50px; } .kbd-row .k { min-height: 26px; padding: 4px 0; font-size: 10px; } #qwertyContainer .kbd-row .k { font-size: 12px; min-height: 30px; } .controls-row .btn { padding: 6px 4px; font-size: 10px; min-height: 28px; } .macro-grid { grid-template-columns: repeat(3, 1fr); } .terminal-grid { grid-template-columns: repeat(3, 1fr); } .cred-grid { grid-template-columns: repeat(3, 1fr); } .macro-add input { padding: 4px 8px; font-size: 10px; } .macro-add .btn-add { padding: 4px 10px; font-size: 11px; } .cred-row input { padding: 4px 8px; font-size: 10px; } .cred-row .btn-add { padding: 4px 10px; font-size: 11px; } #panel-chat .chat-area textarea { min-height: 40px; font-size: 13px; } .log { height: 24px; font-size: 8px; padding: 2px 8px; } .bottom-bar .btn { font-size: 11px; padding: 6px 4px; min-height: 34px; } .bottom-bar .btn .sub { font-size: 7px; } }
         @media (min-width: 480px) and (orientation: portrait) { .macro-grid { grid-template-columns: repeat(3, 1fr); } .cred-grid { grid-template-columns: repeat(3, 1fr); } #panel-trackpad .trackpad-area { min-height: 180px; } }
     </style>
@@ -117,9 +113,7 @@
 
         <div class="panels">
 
-            <!-- =========================== -->
-            <!-- PANEL TRACKPAD               -->
-            <!-- =========================== -->
+            <!-- PANEL TRACKPAD -->
             <div id="panel-trackpad" class="panel attivo">
                 <div class="trackpad-area" id="trackpadArea">
                     <div class="hint">🖱️ Trascina per muovere<br>👆 1 dito = Click SX<br>👆👆 2 dita = Click DX</div>
@@ -147,11 +141,8 @@
                 </div>
             </div>
 
-            <!-- =========================== -->
-            <!-- PANEL TASTIERA               -->
-            <!-- =========================== -->
+            <!-- PANEL TASTIERA -->
             <div id="panel-tastiera" class="panel">
-                <!-- Modificatori -->
                 <div class="kbd-section">
                     <div class="label">Modificatori</div>
                     <div class="kbd-row">
@@ -162,8 +153,6 @@
                         <button class="k caps-btn" id="btnCaps" onclick="toggleCaps()">⇪</button>
                     </div>
                 </div>
-
-                <!-- Funzione -->
                 <div class="kbd-section">
                     <div class="label">Funzione</div>
                     <div class="kbd-row">
@@ -183,8 +172,6 @@
                         <button class="k giallo" onclick="inviaTastoConMod('F12')">F12</button>
                     </div>
                 </div>
-
-                <!-- Speciali -->
                 <div class="kbd-section">
                     <div class="label">Speciali</div>
                     <div class="kbd-row">
@@ -195,8 +182,6 @@
                         <button class="k rosso" onclick="inviaTastoConMod('DEL')">⌦ Canc</button>
                     </div>
                 </div>
-
-                <!-- Navigazione -->
                 <div class="kbd-section">
                     <div class="label">Navigazione</div>
                     <div class="kbd-row">
@@ -213,37 +198,6 @@
                     </div>
                 </div>
 
-                <!-- MENU LAYOUT E MODALITÀ -->
-                <div class="kbd-section">
-                    <div class="label">⌨️ Layout Tastiera</div>
-                    <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
-                        <button class="k layout-btn active" data-layout="IT" onclick="setLayout('IT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇮🇹 IT</button>
-                        <button class="k layout-btn" data-layout="US" onclick="setLayout('US')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇺🇸 US</button>
-                        <button class="k layout-btn" data-layout="UK" onclick="setLayout('UK')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇬🇧 UK</button>
-                        <button class="k layout-btn" data-layout="FR" onclick="setLayout('FR')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇫🇷 FR</button>
-                        <button class="k layout-btn" data-layout="DE" onclick="setLayout('DE')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇩🇪 DE</button>
-                        <button class="k layout-btn" data-layout="ES" onclick="setLayout('ES')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇪🇸 ES</button>
-                        <button class="k layout-btn" data-layout="PT" onclick="setLayout('PT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇵🇹 PT</button>
-                        <button class="k layout-btn" data-layout="EMBEDDED" onclick="setLayout('EMBEDDED')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📺 TV</button>
-                        <button class="k layout-btn" data-layout="ASCII" onclick="setLayout('ASCII')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📟 ASCII</button>
-                    </div>
-                </div>
-
-                <div class="kbd-section">
-                    <div class="label">📡 Modalità Invio</div>
-                    <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
-                        <button class="k mode-btn active" data-mode="AUTO" onclick="setModo('AUTO')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🤖 Auto</button>
-                        <button class="k mode-btn" data-mode="ALT" onclick="setModo('ALT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">💻 Windows</button>
-                        <button class="k mode-btn" data-mode="UNICODE" onclick="setModo('UNICODE')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🌐 Unicode</button>
-                        <button class="k mode-btn" data-mode="ASCII" onclick="setModo('ASCII')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📟 ASCII</button>
-                    </div>
-                </div>
-
-                <div class="kbd-section">
-                    <div class="label" id="statusLabel">📌 Stato: Layout IT | Modalità AUTO</div>
-                </div>
-
-                <!-- Tastiera QWERTY -->
                 <button class="toggle-qwerty" id="toggleQwerty" onclick="toggleQWERTY()">
                     <span class="arrow" id="qwertyArrow">▶</span> Mostra tastiera
                 </button>
@@ -303,7 +257,6 @@
                     </div>
                 </div>
 
-                <!-- Combinazioni rapide -->
                 <div class="kbd-section">
                     <div class="label">Combinazioni rapide</div>
                     <div class="kbd-row">
@@ -330,9 +283,7 @@
                 </div>
             </div>
 
-            <!-- =========================== -->
-            <!-- PANEL MACRO                  -->
-            <!-- =========================== -->
+            <!-- PANEL MACRO -->
             <div id="panel-macro" class="panel">
                 <div class="kbd-section">
                     <div class="label">⚡ Macro predefinite</div>
@@ -353,6 +304,8 @@
                         <div class="m" onclick="eseguiMacro('bios_f12')"><span class="icona">🔧</span>Boot F12</div>
                     </div>
                 </div>
+
+                <!-- 🔥 MACRO PERSONALIZZATE -->
                 <div class="kbd-section">
                     <div class="label">⚡ Macro personalizzate</div>
                     <div class="macro-grid" id="macroCustomGrid"></div>
@@ -362,6 +315,8 @@
                         <button class="btn-add" onclick="salvaMacroCustom()">+</button>
                     </div>
                 </div>
+
+                <!-- 🔥 CREDENZIALI SALVATE SU LITTLEFS -->
                 <div class="kbd-section">
                     <div class="label">🔑 Credenziali salvate</div>
                     <div class="cred-grid" id="credGrid"></div>
@@ -371,12 +326,14 @@
                         <input type="password" id="credPass" placeholder="Password">
                         <button class="btn-add" onclick="salvaCredenziale()">+</button>
                     </div>
+                    <div style="margin-top: 4px; display: flex; gap: 6px;">
+                        <button class="btn" onclick="aggiornaCredenziali()" style="flex: 1; padding: 6px; font-size: 10px;">🔄 Aggiorna</button>
+                        <button class="btn" onclick="mostraCredenzialiLog()" style="flex: 1; padding: 6px; font-size: 10px;">📋 Mostra tutte</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- =========================== -->
-            <!-- PANEL TERMINAL               -->
-            <!-- =========================== -->
+            <!-- PANEL TERMINAL -->
             <div id="panel-terminal" class="panel">
                 <div class="kbd-section">
                     <div class="label">🟦 Windows (CMD / PowerShell)</div>
@@ -416,9 +373,7 @@
                 </div>
             </div>
 
-            <!-- =========================== -->
-            <!-- PANEL CHAT                   -->
-            <!-- =========================== -->
+            <!-- PANEL CHAT -->
             <div id="panel-chat" class="panel">
                 <div class="chat-area">
                     <textarea id="chatText" placeholder="Scrivi qui... (supporta dettatura)"></textarea>
@@ -440,7 +395,7 @@
             </button>
         </div>
 
-        <div class="log" id="log">▶ KVM Dongle v5.19 — Memoria Persistente + Login</div>
+        <div class="log" id="log">▶ KVM Dongle v5.19 — Memoria Persistente</div>
 
     </div>
 
@@ -453,12 +408,13 @@
         let holdMods = {};
         let holdGlobalActive = false, capsLockActive = false;
         let sens = 4;
+        
         // 🔥 NIENTE localStorage! Tutto su ESP32
         let macroCustom = [];
         let credenziali = [];
 
         // ============================================================
-        // FUNZIONE INVI - Supporta sia BLE che WiFi
+        // FUNZIONE INVI
         // ============================================================
         function invia(stringaComando) {
             console.log("Inviato: " + stringaComando);
@@ -545,14 +501,7 @@
         sensSlider.addEventListener('input', function() {
             sens = parseFloat(this.value);
             sensVal.textContent = sens.toFixed(1);
-            // La sensibilità è locale al browser (non critica)
         });
-        const savedSens = localStorage.getItem('kvm_sens');
-        if (savedSens) {
-            sens = parseFloat(savedSens);
-            sensSlider.value = sens;
-            sensVal.textContent = sens.toFixed(1);
-        }
 
         // ============================================================
         // BLE
@@ -575,25 +524,14 @@
                 bleRx = await svc.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
                 bleTx = await svc.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
                 await bleTx.startNotifications();
+                
                 bleTx.addEventListener('characteristicvaluechanged', e => {
                     const data = new TextDecoder().decode(e.target.value);
                     log('◀ ' + data);
                     
                     // ============================================================
-                    // 🔥 RICEZIONE DATI DA LITTLEFS
+                    // 🔥 RICEZIONE DATI DA LITTLEFS - CREDENZIALI
                     // ============================================================
-                    if (data.startsWith('MACRO_DATA:')) {
-                        const jsonStr = data.substring(11);
-                        try {
-                            macroCustom = JSON.parse(jsonStr);
-                            renderMacroCustom();
-                            log('✅ Macro caricate da ESP32: ' + macroCustom.length);
-                        } catch(e) {
-                            log('❌ Errore parsing macro');
-                        }
-                        return;
-                    }
-                    
                     if (data.startsWith('CRED_DATA:')) {
                         const jsonStr = data.substring(10);
                         try {
@@ -601,20 +539,8 @@
                             renderCredenziali();
                             log('✅ Credenziali caricate da ESP32: ' + credenziali.length);
                         } catch(e) {
-                            log('❌ Errore parsing credenziali');
+                            log('❌ Errore parsing credenziali: ' + e.message);
                         }
-                        return;
-                    }
-                    
-                    if (data.startsWith('MACRO_SAVED:')) {
-                        log('✅ Macro salvata: ' + data.substring(12));
-                        setTimeout(aggiornaMacroCustom, 500);
-                        return;
-                    }
-                    
-                    if (data.startsWith('MACRO_DELETED:')) {
-                        log('🗑️ Macro eliminata: ' + data.substring(14));
-                        setTimeout(aggiornaMacroCustom, 500);
                         return;
                     }
                     
@@ -630,6 +556,33 @@
                         return;
                     }
                     
+                    // ============================================================
+                    // 🔥 RICEZIONE DATI DA LITTLEFS - MACRO
+                    // ============================================================
+                    if (data.startsWith('MACRO_DATA:')) {
+                        const jsonStr = data.substring(11);
+                        try {
+                            macroCustom = JSON.parse(jsonStr);
+                            renderMacroCustom();
+                            log('✅ Macro caricate da ESP32: ' + macroCustom.length);
+                        } catch(e) {
+                            log('❌ Errore parsing macro: ' + e.message);
+                        }
+                        return;
+                    }
+                    
+                    if (data.startsWith('MACRO_SAVED:')) {
+                        log('💾 Macro salvata: ' + data.substring(12));
+                        setTimeout(aggiornaMacroCustom, 500);
+                        return;
+                    }
+                    
+                    if (data.startsWith('MACRO_DELETED:')) {
+                        log('🗑️ Macro eliminata: ' + data.substring(14));
+                        setTimeout(aggiornaMacroCustom, 500);
+                        return;
+                    }
+                    
                     if (data.startsWith('LOGIN_STARTED')) {
                         log('🔑 Login avviato...');
                         return;
@@ -639,17 +592,16 @@
                         log('✅ Login completato!');
                         return;
                     }
-                    // ============================================================
-                    // FINE SEZIONE LITTLEFS
-                    // ============================================================
                 });
+                
                 connesso = true;
                 btn.textContent = '● Connesso';
                 btn.className = 'connesso';
                 log('✅ Connesso via BLE');
+                
                 setTimeout(() => {
                     invia('PING');
-                    // 🔥 Carica dati all'avvio
+                    // 🔥 Carica macro e credenziali all'avvio
                     setTimeout(() => {
                         aggiornaMacroCustom();
                         aggiornaCredenziali();
@@ -756,45 +708,6 @@
         }
 
         // ============================================================
-        // LAYOUT E MODALITÀ
-        // ============================================================
-        function setLayout(layout) {
-            invia('LAYOUT:' + layout);
-            log('⌨️ Layout: ' + layout);
-
-            document.querySelectorAll('.layout-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.layout === layout) {
-                    btn.classList.add('active');
-                }
-            });
-
-            const statusLabel = document.getElementById('statusLabel');
-            if (statusLabel) {
-                const currentMode = document.querySelector('.mode-btn.active')?.dataset.mode || 'AUTO';
-                statusLabel.textContent = '📌 Stato: Layout ' + layout + ' | Modalità ' + currentMode;
-            }
-        }
-
-        function setModo(modo) {
-            invia('MODE:' + modo);
-            log('📡 Modalità: ' + modo);
-
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.mode === modo) {
-                    btn.classList.add('active');
-                }
-            });
-
-            const statusLabel = document.getElementById('statusLabel');
-            if (statusLabel) {
-                const currentLayout = document.querySelector('.layout-btn.active')?.dataset.layout || 'IT';
-                statusLabel.textContent = '📌 Stato: Layout ' + currentLayout + ' | Modalità ' + modo;
-            }
-        }
-
-        // ============================================================
         // CHAT - TRADUZIONE ACCENTI
         // ============================================================
         function traduciAccenti(testo) {
@@ -859,7 +772,7 @@
         }
 
         // ============================================================
-        // MACRO SU LITTLEFS
+        // 🔥 MACRO SU LITTLEFS
         // ============================================================
         function eseguiMacro(id) {
             invia('MACRO:' + id);
@@ -870,9 +783,7 @@
             const seq = document.getElementById('macroSeq').value.trim();
             if (!nome || !seq) { alert('Inserisci nome e sequenza'); return; }
             
-            // 🔥 Salva su ESP32
             invia('MACRO_SAVE:' + nome + ':' + seq);
-            
             document.getElementById('macroNome').value = '';
             document.getElementById('macroSeq').value = '';
             
@@ -887,7 +798,6 @@
         function rimuoviMacroCustom(i) {
             if (!macroCustom[i]) return;
             if (!confirm('Rimuovere "' + macroCustom[i].nome + '"?')) return;
-            
             invia('MACRO_DEL:' + macroCustom[i].nome);
             setTimeout(aggiornaMacroCustom, 1000);
             log('🗑️ Macro eliminata da ESP32');
@@ -920,7 +830,7 @@
         }
 
         // ============================================================
-        // CREDENZIALI SU LITTLEFS
+        // 🔥 CREDENZIALI SU LITTLEFS
         // ============================================================
         function salvaCredenziale() {
             const nome = document.getElementById('credNome').value.trim();
@@ -945,7 +855,6 @@
         function rimuoviCred(i) {
             if (!credenziali[i]) return;
             if (!confirm('Rimuovere "' + credenziali[i].nome + '"?')) return;
-            
             invia('CRED_DEL:' + credenziali[i].nome);
             setTimeout(aggiornaCredenziali, 1000);
             log('🗑️ Credenziale eliminata da ESP32');
@@ -954,7 +863,6 @@
         function inviaCred(i) {
             const c = credenziali[i];
             if (!c) return;
-            // 🔥 Usa il comando LOGIN (automatico)
             invia('LOGIN:' + c.user + ':' + c.pass);
             log('🔑 Login automatico per: ' + c.nome);
         }
@@ -975,6 +883,17 @@
                 div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
                 div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
                 grid.appendChild(div);
+            });
+        }
+
+        function mostraCredenzialiLog() {
+            if (credenziali.length === 0) {
+                log('📋 Nessuna credenziale salvata');
+                return;
+            }
+            log('📋 Credenziali salvate (' + credenziali.length + '):');
+            credenziali.forEach((c, i) => {
+                log('   ' + (i+1) + '. ' + c.nome + ' → ' + c.user + ' / ' + c.pass);
             });
         }
 
@@ -1128,7 +1047,7 @@
         // INIT
         // ============================================================
         aggiornaQWERTY();
-        log('✅ KVM Dongle v5.19 — Memoria Persistente + Login');
+        log('✅ KVM Dongle v5.19 — Memoria Persistente');
 
         const hostname = window.location.hostname;
 
@@ -1137,6 +1056,11 @@
             document.getElementById('statoBtn').disabled = true;
             document.getElementById('statoBtn').textContent = '● WiFi';
             document.getElementById('statoBtn').className = 'connesso';
+            // Carica dati all'avvio in modalità Wi-Fi
+            setTimeout(() => {
+                aggiornaMacroCustom();
+                aggiornaCredenziali();
+            }, 1000);
         } else {
             log('🌐 Modalità BLE (pagina da Internet)');
             document.getElementById('statoBtn').disabled = false;
@@ -1151,22 +1075,9 @@
             }
         }
 
-        // Inizializza lo stato della label
-        const statusLabel = document.getElementById('statusLabel');
-        if (statusLabel) {
-            const currentLayout = document.querySelector('.layout-btn.active')?.dataset.layout || 'IT';
-            const currentMode = document.querySelector('.mode-btn.active')?.dataset.mode || 'AUTO';
-            statusLabel.textContent = '📌 Stato: Layout ' + currentLayout + ' | Modalità ' + currentMode;
-        }
-
-        // 🔥 All'avvio, carica i dati dall'ESP32 (se connesso, verrà fatto dopo la connessione)
-        // Se già connesso via Wi-Fi, carica subito
-        if (hostname === '192.168.4.1') {
-            setTimeout(() => {
-                aggiornaMacroCustom();
-                aggiornaCredenziali();
-            }, 1000);
-        }
+        // Inizializza la griglia delle credenziali vuota
+        renderCredenziali();
+        renderMacroCustom();
     </script>
 
 </body>
