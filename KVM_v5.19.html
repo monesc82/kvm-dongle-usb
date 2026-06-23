@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -363,6 +363,11 @@
                 <div class="kbd-section">
                     <div class="label">🔑 Credenziali salvate</div>
                     <div class="cred-grid" id="credGrid"></div>
+                    <div class="cred-row" style="margin-top: 6px;">
+                <button class="btn-add" onclick="caricaCredenziali()" style="flex:1; text-align:center;">
+                 🔄 Ricarica credenziali
+               </button>
+</div>
                     <div class="cred-row">
                         <input type="text" id="credNome" placeholder="Nome (es. Admin)">
                         <input type="text" id="credUser" placeholder="Username">
@@ -1096,6 +1101,11 @@
         function scroll_(v) {
             invia('SC:' + v);
         }
+        
+        function caricaCredenziali() {
+            invia('CRED_LIST');
+            log('📤 Richiesta credenziali...');
+}
 
         // ============================================================
         // INIT
