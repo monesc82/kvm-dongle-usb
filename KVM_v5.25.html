@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f5f5f5">
-    <title>KVM Dongle v5.24</title>
+    <title>KVM Dongle v5.25</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
         :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,0.06); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; --header-height: 44px; --tab-height: 40px; --bottom-bar-height: 56px; }
@@ -444,21 +444,21 @@
                 <!-- Mouse - Soglia movimento -->
                 <div class="slider-row">
                     <span class="label">📏 Soglia movimento</span>
-                    <input type="range" id="minMovementSlider" min="1" max="20" step="1" value="8">
-                    <span class="val" id="minMovementVal">8</span>
+                    <input type="range" id="minMovementSlider" min="1" max="20" step="1" value="5">
+                    <span class="val" id="minMovementVal">5</span>
                 </div>
                 <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
-                    Più alto = meno lag su iPhone, meno precisione
+                    Più alto = meno lag su iPhone, meno precisione (consigliato 5-8)
                 </div>
 
                 <!-- Mouse - Intervallo invio -->
                 <div class="slider-row">
                     <span class="label">⏱️ Intervallo (ms)</span>
-                    <input type="range" id="sendIntervalSlider" min="10" max="150" step="5" value="60">
-                    <span class="val" id="sendIntervalVal">60</span>
+                    <input type="range" id="sendIntervalSlider" min="10" max="150" step="5" value="80">
+                    <span class="val" id="sendIntervalVal">80</span>
                 </div>
                 <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
-                    Più alto = meno comandi BLE, più fluido su iPhone
+                    Più alto = meno comandi BLE, più fluido su iPhone (consigliato 60-80)
                 </div>
 
                 <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
@@ -477,8 +477,8 @@
                     <div class="label" id="statusLabel">📌 Stato: Layout IT | Modalità AUTO</div>
                     <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">
                         🖱️ Sensibilità: <span id="statusSens">4.0</span> &nbsp;|&nbsp;
-                        📏 Soglia: <span id="statusMinMov">8</span> &nbsp;|&nbsp;
-                        ⏱️ Intervallo: <span id="statusInterval">60</span>ms
+                        📏 Soglia: <span id="statusMinMov">5</span> &nbsp;|&nbsp;
+                        ⏱️ Intervallo: <span id="statusInterval">80</span>ms
                     </div>
                 </div>
             </div>
@@ -494,7 +494,7 @@
             </button>
         </div>
 
-        <div class="log" id="log">▶ KVM Dongle v5.24 — Fix movimenti fantasma</div>
+        <div class="log" id="log">▶ KVM Dongle v5.25 — iPhone-friendly</div>
 
     </div>
 
@@ -511,11 +511,11 @@
         let bleChunkBuffer = { macro: '', cred: '' };
 
         // ============================================================
-        // IMPOSTAZIONI DEFAULT
+        // IMPOSTAZIONI DEFAULT (ottimizzate per iPhone)
         // ============================================================
         const DEFAULT_SENS = 4;
-        const DEFAULT_MIN_MOVEMENT = 8;
-        const DEFAULT_SEND_INTERVAL = 60;
+        const DEFAULT_MIN_MOVEMENT = 5;
+        const DEFAULT_SEND_INTERVAL = 80;
 
         // Carica da localStorage o usa default
         let sens = parseFloat(localStorage.getItem('kvm_sens')) || DEFAULT_SENS;
@@ -1111,13 +1111,14 @@
         }
 
         // ============================================================
-        // TRACKPAD - CON SVUOTAMENTO CODA PER IPHONE
+        // TRACKPAD - VERSIONE IPHONE-FRIENDLY
         // ============================================================
         const trackpad = document.getElementById('trackpadArea');
         let pointers = {}, lastTap = 0;
-        let accumulatedX = 0, accumulatedY = 0;
+
         let lastSendTime = 0;
-        let pendingMoves = [];
+        let accumulatedX = 0;
+        let accumulatedY = 0;
 
         trackpad.addEventListener('pointerdown', function(e) {
             e.preventDefault();
@@ -1129,41 +1130,43 @@
                 startY: e.clientY,
                 moved: false
             };
-            // Resetta accumulo
+            // Reset accumulo
             accumulatedX = 0;
             accumulatedY = 0;
-            // Annulla movimenti in sospeso
-            pendingMoves.forEach(id => clearTimeout(id));
-            pendingMoves = [];
         });
 
         trackpad.addEventListener('pointermove', function(e) {
             e.preventDefault();
             const p = pointers[e.pointerId];
             if (!p) return;
+            
             const dx = e.clientX - p.x;
             const dy = e.clientY - p.y;
+            
             if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
                 p.moved = true;
                 const n = Object.keys(pointers).length;
+                
                 if (n === 1) {
+                    // Accumula movimenti
                     accumulatedX += dx * sens;
                     accumulatedY += dy * sens;
                     p.x = e.clientX;
                     p.y = e.clientY;
                     
                     const now = Date.now();
+                    
+                    // 🔥 INVIA SOLO SE:
+                    // 1. Il movimento accumulato supera la soglia (minMovement)
+                    // 2. O è passato abbastanza tempo (sendInterval)
                     if (Math.abs(accumulatedX) > minMovement || 
                         Math.abs(accumulatedY) > minMovement || 
                         now - lastSendTime > sendInterval) {
                         
                         const mx = Math.round(accumulatedX);
                         const my = Math.round(accumulatedY);
+                        
                         if (mx !== 0 || my !== 0) {
-                            // Annulla movimenti in sospeso
-                            pendingMoves.forEach(id => clearTimeout(id));
-                            pendingMoves = [];
-                            
                             invia('M:' + mx + ',' + my);
                             accumulatedX = 0;
                             accumulatedY = 0;
@@ -1171,6 +1174,7 @@
                         }
                     }
                 } else if (n === 2) {
+                    // Scroll - accumula anche per lo scroll
                     const sy = Math.round(dy * 0.7);
                     if (sy !== 0) invia('SC:' + (-sy));
                     p.x = e.clientX;
@@ -1183,6 +1187,7 @@
             e.preventDefault();
             const p = pointers[e.pointerId];
             if (!p) return;
+            
             const dist = Math.sqrt(Math.pow(e.clientX - p.startX, 2) + Math.pow(e.clientY - p.startY, 2));
             
             // Gestione click
@@ -1206,11 +1211,7 @@
                 }
             }
             
-            // 🔥 SVUOTA LA CODA: annulla movimenti in sospeso
-            pendingMoves.forEach(id => clearTimeout(id));
-            pendingMoves = [];
-            
-            // Invia solo il movimento FINALE accumulato
+            // 🔥 INVIA I MOVIMENTI ACCUMULATI RIMANENTI
             const mx = Math.round(accumulatedX);
             const my = Math.round(accumulatedY);
             if (mx !== 0 || my !== 0) {
@@ -1224,8 +1225,6 @@
 
         trackpad.addEventListener('pointercancel', function(e) {
             delete pointers[e.pointerId];
-            pendingMoves.forEach(id => clearTimeout(id));
-            pendingMoves = [];
             accumulatedX = 0;
             accumulatedY = 0;
         });
@@ -1300,7 +1299,7 @@
         aggiornaMacroCustom();
         aggiornaCredenziali();
         aggiornaQWERTY();
-        log('✅ KVM Dongle v5.24 — Fix movimenti fantasma');
+        log('✅ KVM Dongle v5.25 — iPhone-friendly');
 
         const hostname = window.location.hostname;
 
