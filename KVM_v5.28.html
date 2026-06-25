@@ -669,50 +669,6 @@ function fermaCursore() {
     }, delay);
 }
 
-// ============================================================
-// FUNZIONE PER INVIO MOVIMENTO CON FLUSH DELAY
-// ============================================================
-function inviaMovimento(mx, my) {
-    // Annulla stop precedente se c'è un nuovo movimento
-    if (stopTimeout) {
-        clearTimeout(stopTimeout);
-        stopTimeout = null;
-    }
-    
-    lastMoveX = mx;
-    lastMoveY = my;
-    lastMoveTime = Date.now();
-    
-    invia('M:' + mx + ',' + my);
-}
-
-// ============================================================
-// FUNZIONE PER FERMARE IL CURSORE CON DELAY
-// ============================================================
-function fermaCursore() {
-    // Annulla stop precedente
-    if (stopTimeout) {
-        clearTimeout(stopTimeout);
-        stopTimeout = null;
-    }
-    
-    // Calcola il tempo trascorso dall'ultimo movimento
-    const elapsed = Date.now() - lastMoveTime;
-    
-    // Se è passato abbastanza tempo (>= 30ms), invia stop subito
-    if (elapsed >= 30) {
-        invia('M:0,0');
-        return;
-    }
-    
-    // Altrimenti programma lo stop dopo 30ms (flusso in coda)
-    const delay = 30 - elapsed;
-    stopTimeout = setTimeout(() => {
-        invia('M:0,0');
-        stopTimeout = null;
-    }, delay);
-}
-
         // ============================================================
         // LOG
         // ============================================================
