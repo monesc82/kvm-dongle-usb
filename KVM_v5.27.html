@@ -463,25 +463,24 @@
 
                 <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
 
-		<div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
+                <!-- 🔥 SLIDER MANUALI PER IPHONE -->
+                <div class="slider-row">
+                    <span class="label">⏱️ Intervallo iOS (ms)</span>
+                    <input type="range" id="manualIntervalSlider" min="20" max="200" step="5" value="100">
+                    <span class="val" id="manualIntervalVal">100</span>
+                </div>
+                <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
+                    Più alto = meno ghosting, meno fluido (iOS: 80-120, Android: 40-60)
+                </div>
 
-		<div class="slider-row">
- 						<span class="label">⏱️ Intervallo iOS (ms)</span>
-       					   <input type="range" id="manualIntervalSlider" min="20" max="200" step="5" value="100">
-    						<span class="val" id="manualIntervalVal">100</span>
-			</div>
-		<div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
- 						   Più alto = meno ghosting, meno fluido (iOS: 80-120, Android: 40-60)
-		</div>
-
-		<div class="slider-row">
-   						 <span class="label">📏 Soglia iOS (px)</span>
-	 	       <input type="range" id="manualThresholdSlider" min="1" max="20" step="1" value="8">
-		      <span class="val" id="manualThresholdVal">8</span>
-		</div>
-		<div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
- 						  Più alto = meno ghosting, meno precisione (iOS: 5-10, Android: 3-5)
-		</div>
+                <div class="slider-row">
+                    <span class="label">📏 Soglia iOS (px)</span>
+                    <input type="range" id="manualThresholdSlider" min="1" max="20" step="1" value="8">
+                    <span class="val" id="manualThresholdVal">8</span>
+                </div>
+                <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
+                    Più alto = meno ghosting, meno precisione (iOS: 5-10, Android: 3-5)
+                </div>
 
                 <!-- Pulsante Reset Default -->
                 <div class="controls-row">
@@ -531,62 +530,58 @@
         let bleChunkBuffer = { macro: '', cred: '' };
 
         // ============================================================
-        // IMPOSTAZIONI DEFAULT (ottimizzate per iPhone)
+        // RILEVAMENTO iOS
         // ============================================================
-	// ============================================================
-	// RILEVAMENTO iOS
-	// ============================================================
-	const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-	(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-	// ============================================================
-	// IMPOSTAZIONI DEFAULT (adattate al dispositivo)
-	// ============================================================
-	const DEFAULT_SENS = 4;
-	const DEFAULT_MIN_MOVEMENT = isIOS ? 8 : 4;      // iOS: 8, Android: 4
-	const DEFAULT_SEND_INTERVAL = isIOS ? 100 : 50;  // iOS: 100ms, Android: 50ms
+        // ============================================================
+        // IMPOSTAZIONI DEFAULT (adattate al dispositivo)
+        // ============================================================
+        const DEFAULT_SENS = 4;
+        const DEFAULT_MIN_MOVEMENT = isIOS ? 8 : 4;      // iOS: 8, Android: 4
+        const DEFAULT_SEND_INTERVAL = isIOS ? 100 : 50;  // iOS: 100ms, Android: 50ms
 
-	// Carica da localStorage o usa default
-	let sens = parseFloat(localStorage.getItem('kvm_sens')) || DEFAULT_SENS;
-	let minMovement = parseInt(localStorage.getItem('kvm_minMovement')) || DEFAULT_MIN_MOVEMENT;
-	let sendInterval = parseInt(localStorage.getItem('kvm_sendInterval')) || DEFAULT_SEND_INTERVAL;
+        // Carica da localStorage o usa default
+        let sens = parseFloat(localStorage.getItem('kvm_sens')) || DEFAULT_SENS;
+        let minMovement = parseInt(localStorage.getItem('kvm_minMovement')) || DEFAULT_MIN_MOVEMENT;
+        let sendInterval = parseInt(localStorage.getItem('kvm_sendInterval')) || DEFAULT_SEND_INTERVAL;
 
         // ============================================================
         // FUNZIONE RESET DEFAULT
         // ============================================================
-function resetDefaultSettings() {
-    if (!confirm('Ripristinare tutte le impostazioni ai valori predefiniti?')) return;
-    
-    sens = DEFAULT_SENS;
-    minMovement = DEFAULT_MIN_MOVEMENT;
-    sendInterval = DEFAULT_SEND_INTERVAL;
-    
-    localStorage.setItem('kvm_sens', sens);
-    localStorage.setItem('kvm_minMovement', minMovement);
-    localStorage.setItem('kvm_sendInterval', sendInterval);
-    
-    // Aggiorna tutti gli slider
-    document.getElementById('sensSlider').value = sens;
-    document.getElementById('sensVal').textContent = sens.toFixed(1);
-    document.getElementById('sensSliderTrack').value = sens;
-    document.getElementById('sensValTrack').textContent = sens.toFixed(1);
-    document.getElementById('minMovementSlider').value = minMovement;
-    document.getElementById('minMovementVal').textContent = minMovement;
-    document.getElementById('sendIntervalSlider').value = sendInterval;
-    document.getElementById('sendIntervalVal').textContent = sendInterval;
-    
-    // 🔥 AGGIUNGI QUESTE RIGHE PER I NUOVI SLIDER
-    document.getElementById('manualIntervalSlider').value = sendInterval;
-    document.getElementById('manualIntervalVal').textContent = sendInterval;
-    document.getElementById('manualThresholdSlider').value = minMovement;
-    document.getElementById('manualThresholdVal').textContent = minMovement;
-    
-    document.getElementById('statusSens').textContent = sens.toFixed(1);
-    document.getElementById('statusMinMov').textContent = minMovement;
-    document.getElementById('statusInterval').textContent = sendInterval;
-    
-    log('🔄 Impostazioni ripristinate ai valori default');
-}
+        function resetDefaultSettings() {
+            if (!confirm('Ripristinare tutte le impostazioni ai valori predefiniti?')) return;
+            
+            sens = DEFAULT_SENS;
+            minMovement = DEFAULT_MIN_MOVEMENT;
+            sendInterval = DEFAULT_SEND_INTERVAL;
+            
+            localStorage.setItem('kvm_sens', sens);
+            localStorage.setItem('kvm_minMovement', minMovement);
+            localStorage.setItem('kvm_sendInterval', sendInterval);
+            
+            // Aggiorna tutti gli slider
+            document.getElementById('sensSlider').value = sens;
+            document.getElementById('sensVal').textContent = sens.toFixed(1);
+            document.getElementById('sensSliderTrack').value = sens;
+            document.getElementById('sensValTrack').textContent = sens.toFixed(1);
+            document.getElementById('minMovementSlider').value = minMovement;
+            document.getElementById('minMovementVal').textContent = minMovement;
+            document.getElementById('sendIntervalSlider').value = sendInterval;
+            document.getElementById('sendIntervalVal').textContent = sendInterval;
+            
+            document.getElementById('manualIntervalSlider').value = sendInterval;
+            document.getElementById('manualIntervalVal').textContent = sendInterval;
+            document.getElementById('manualThresholdSlider').value = minMovement;
+            document.getElementById('manualThresholdVal').textContent = minMovement;
+            
+            document.getElementById('statusSens').textContent = sens.toFixed(1);
+            document.getElementById('statusMinMov').textContent = minMovement;
+            document.getElementById('statusInterval').textContent = sendInterval;
+            
+            log('🔄 Impostazioni ripristinate ai valori default');
+        }
 
         // ============================================================
         // FUNZIONE INVIA
@@ -1145,35 +1140,141 @@ function resetDefaultSettings() {
             log('📟 Comando inviato: ' + cmd);
         }
 
-// ============================================================
-// CONTROLLI MANUALI PER IPHONE
-// ============================================================
-const manualIntervalSlider = document.getElementById('manualIntervalSlider');
-const manualIntervalVal = document.getElementById('manualIntervalVal');
-const manualThresholdSlider = document.getElementById('manualThresholdSlider');
-const manualThresholdVal = document.getElementById('manualThresholdVal');
+        // ============================================================
+        // CONTROLLI MANUALI PER IPHONE
+        // ============================================================
+        const manualIntervalSlider = document.getElementById('manualIntervalSlider');
+        const manualIntervalVal = document.getElementById('manualIntervalVal');
+        const manualThresholdSlider = document.getElementById('manualThresholdSlider');
+        const manualThresholdVal = document.getElementById('manualThresholdVal');
 
-// Carica valori salvati (o usa default)
-manualIntervalSlider.value = sendInterval;
-manualIntervalVal.textContent = sendInterval;
-manualThresholdSlider.value = minMovement;
-manualThresholdVal.textContent = minMovement;
+        // Carica valori salvati (o usa default)
+        manualIntervalSlider.value = sendInterval;
+        manualIntervalVal.textContent = sendInterval;
+        manualThresholdSlider.value = minMovement;
+        manualThresholdVal.textContent = minMovement;
 
-manualIntervalSlider.addEventListener('input', function() {
-    const val = parseInt(this.value);
-    manualIntervalVal.textContent = val;
-    localStorage.setItem('kvm_sendInterval', val);
-    sendInterval = val;
-    log('⏱️ Intervallo impostato a: ' + val + 'ms');
-});
+        manualIntervalSlider.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            manualIntervalVal.textContent = val;
+            localStorage.setItem('kvm_sendInterval', val);
+            sendInterval = val;
+            log('⏱️ Intervallo impostato a: ' + val + 'ms');
+        });
 
-manualThresholdSlider.addEventListener('input', function() {
-    const val = parseInt(this.value);
-    manualThresholdVal.textContent = val;
-    localStorage.setItem('kvm_minMovement', val);
-    minMovement = val;
-    log('📏 Soglia impostata a: ' + val + 'px');
-});
+        manualThresholdSlider.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            manualThresholdVal.textContent = val;
+            localStorage.setItem('kvm_minMovement', val);
+            minMovement = val;
+            log('📏 Soglia impostata a: ' + val + 'px');
+        });
+
+        // ============================================================
+        // TRACKPAD - VERSIONE IPHONE/IPAD CON STOP SIGNAL
+        // ============================================================
+        const trackpad = document.getElementById('trackpadArea');
+        let pointers = {}, lastTap = 0;
+
+        // 🔥 PARAMETRI (usano le variabili globali)
+        let lastMoveTime = 0;
+        let accumulatedX = 0, accumulatedY = 0;
+        let stopSent = false;
+
+        trackpad.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            trackpad.setPointerCapture(e.pointerId);
+            pointers[e.pointerId] = {
+                x: e.clientX, y: e.clientY,
+                startX: e.clientX, startY: e.clientY,
+                moved: false
+            };
+            accumulatedX = 0; accumulatedY = 0;
+            stopSent = false;
+        });
+
+        trackpad.addEventListener('pointermove', function(e) {
+            e.preventDefault();
+            const p = pointers[e.pointerId];
+            if (!p) return;
+            const dx = e.clientX - p.x;
+            const dy = e.clientY - p.y;
+            if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+                p.moved = true;
+                const n = Object.keys(pointers).length;
+                if (n === 1) {
+                    accumulatedX += dx * sens;
+                    accumulatedY += dy * sens;
+                    p.x = e.clientX;
+                    p.y = e.clientY;
+                    const now = Date.now();
+                    // 🔥 Usa sendInterval e minMovement (regolabili dagli slider)
+                    if (now - lastMoveTime >= sendInterval) {
+                        const mx = Math.round(accumulatedX);
+                        const my = Math.round(accumulatedY);
+                        if (Math.abs(mx) >= minMovement || Math.abs(my) >= minMovement) {
+                            invia('M:' + mx + ',' + my);
+                            accumulatedX = 0; accumulatedY = 0;
+                            lastMoveTime = now;
+                            stopSent = false;
+                        }
+                    }
+                } else if (n === 2) {
+                    const sy = Math.round(dy * 0.7);
+                    if (sy !== 0) invia('SC:' + (-sy));
+                    p.x = e.clientX; p.y = e.clientY;
+                }
+            }
+        });
+
+        trackpad.addEventListener('pointerup', function(e) {
+            e.preventDefault();
+            const p = pointers[e.pointerId];
+            if (!p) return;
+            const dist = Math.sqrt(Math.pow(e.clientX - p.startX, 2) + Math.pow(e.clientY - p.startY, 2));
+            
+            // Click
+            if (!p.moved || dist < 8) {
+                const now = Date.now();
+                const remaining = Object.keys(pointers).length - 1;
+                if (remaining === 0) {
+                    if (now - lastTap < 300) {
+                        invia('C:L'); setTimeout(() => invia('C:L'), 80);
+                        lastTap = 0;
+                        log('🖱️ Doppio click');
+                    } else {
+                        invia('C:L');
+                        lastTap = now;
+                        log('🖱️ Click sinistro');
+                    }
+                } else if (remaining === 1) {
+                    invia('C:R');
+                    log('🖱️ Click destro');
+                }
+            }
+            
+            // 🔥🔥🔥 STRATEGIA 1: INVIA STOP SIGNAL! 🔥🔥🔥
+            if (!stopSent) {
+                invia('M:0,0');
+                stopSent = true;
+            }
+            
+            // Non inviare l'accumulo finale (evita ghosting)
+            accumulatedX = 0;
+            accumulatedY = 0;
+            
+            delete pointers[e.pointerId];
+        });
+
+        trackpad.addEventListener('pointercancel', function(e) {
+            delete pointers[e.pointerId];
+            if (!stopSent) {
+                invia('M:0,0');
+                stopSent = true;
+            }
+            accumulatedX = 0;
+            accumulatedY = 0;
+        });
 
         function toggleHold() {
             holdTouch = !holdTouch;
