@@ -8,6 +8,9 @@
     <meta name="theme-color" content="#f5f5f5">
     <title>KVM Dongle v5.30</title>
     <style>
+        /* ============================================================
+           TUTTO IL CSS DELLA TUA PAGINA KVM ORIGINALE
+           ============================================================ */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.08); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); }
@@ -662,6 +665,38 @@
 
 <script>
 // ============================================================
+// 🔥 LEGGI IP DAI PARAMETRI URL (MODIFICA PRINCIPALE)
+// ============================================================
+function getIPFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const ip = params.get('ip');
+    if (ip) {
+        // Salva per future connessioni
+        localStorage.setItem('kvm_wifi_ip', ip);
+        wifiIP = ip;
+        // Connetti automaticamente
+        if (!isConnected) {
+            // Aggiorna UI
+            document.getElementById('btnWiFi').classList.add('connected');
+            document.getElementById('statusWiFi').textContent = '✅ ' + ip;
+            document.getElementById('btnGoToKVM').disabled = false;
+            document.getElementById('statoBtn').textContent = '● WiFi';
+            document.getElementById('statoBtn').className = 'wifi';
+            document.getElementById('statoBtn').disabled = false;
+            connectionMode = 'wifi';
+            isConnected = true;
+            updateStatus('WiFi Connesso', 'IP: ' + ip, 'on');
+            log('✅ WiFi Connesso a ' + ip);
+            showToast('✅ WiFi Connesso a ' + ip);
+            // Carica reti salvate
+            loadSavedNetworksHTTP();
+        }
+        return ip;
+    }
+    return null;
+}
+
+// ============================================================
 // STATO GLOBALE
 // ============================================================
 let bleDevice = null, bleRx = null, bleTx = null, connesso = false;
@@ -781,7 +816,7 @@ function goToConnection() {
 }
 
 // ============================================================
-// ATTESA RIAVVIO (FIX: usa IP corretto)
+// ATTESA RIAVVIO
 // ============================================================
 function mostraAttesaRiavvio(msg) {
     updateStatus('⏳ Riavvio in corso...', msg, 'searching');
@@ -877,7 +912,7 @@ function fermaCursore() {
 }
 
 // ============================================================
-// CARICA RETI SALVATE VIA HTTP (FIX)
+// CARICA RETI SALVATE VIA HTTP
 // ============================================================
 function loadSavedNetworksHTTP() {
     const ip = connectionMode === 'ap' ? apIP : wifiIP;
@@ -1909,20 +1944,40 @@ function dblClick() { invia('C:L'); setTimeout(() => invia('C:L'), 80); }
 function scroll_(v) { invia('SC:' + v); }
 
 // ============================================================
-// INIT
+// 🔥 INIT CON LETTURA IP DALL'URL (MODIFICA PRINCIPALE)
 // ============================================================
 loadSettings();
 aggiornaMacroCustom();
 aggiornaCredenziali();
 aggiornaQWERTY();
-log('✅ KVM v5.30 — Seleziona una connessione');
-kvmLog('✅ KVM v5.30 — Pronto');
 
-const savedIP = localStorage.getItem('kvm_wifi_ip');
-if (savedIP) {
-    document.getElementById('wifiSsid').placeholder = 'IP salvato: ' + savedIP;
-    log('💡 IP salvato: ' + savedIP);
+// 🔥 LEGGI IP DAI PARAMETRI URL
+const urlIP = getIPFromURL();
+
+// Se non c'è IP in URL, prova con localStorage
+if (!urlIP) {
+    const savedIP = localStorage.getItem('kvm_wifi_ip');
+    if (savedIP) {
+        document.getElementById('wifiSsid').placeholder = 'IP salvato: ' + savedIP;
+        log('💡 IP salvato: ' + savedIP);
+        // Verifica se l'IP è raggiungibile
+        fetch('http://' + savedIP + '/status')
+            .then(r => r.json())
+            .then(data => {
+                wifiIP = savedIP;
+                setWiFiConnected();
+                log('✅ Riconnesso a ' + savedIP);
+                showToast('✅ Riconnesso a ' + savedIP);
+            })
+            .catch(() => {
+                log('⚠️ IP salvato non raggiungibile: ' + savedIP);
+                document.getElementById('wifiSsid').placeholder = 'IP salvato (non raggiungibile): ' + savedIP;
+            });
+    }
 }
+
+log('✅ KVM v5.30 — Pronto');
+kvmLog('✅ KVM v5.30 — Pronto');
 
 if (!navigator.bluetooth) {
     document.getElementById('btnBLE').classList.add('disabled');
