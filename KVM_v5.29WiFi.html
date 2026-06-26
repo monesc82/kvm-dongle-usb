@@ -8,34 +8,32 @@
     <meta name="theme-color" content="#f5f5f5">
     <title>KVM Dongle v5.29</title>
     <style>
-        /* ============================================================
-           TUTTO IL TUO CSS ORIGINALE (non toccato)
-           ============================================================ */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,0.06); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; --header-height: 44px; --tab-height: 40px; --bottom-bar-height: 56px; }
+        :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.08); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); }
         .app { display: flex; flex-direction: column; height: 100%; max-width: 700px; margin: 0 auto; background: var(--bg); position: relative; }
-        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; height: var(--header-height); background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; height: 44px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .logo { font-weight: 700; font-size: 15px; } .logo span { color: var(--accent); }
-        #statoBtn { padding: 4px 14px; border-radius: 20px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
-        #statoBtn.connesso { background: var(--green); }
-        #statoBtn.ricerca { background: var(--yellow); color: #000; }
-        #statoBtn.wifi { background: #007aff; }
-        #statoBtn:disabled { opacity: 0.4; }
-        .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; height: var(--tab-height); }
+        .header-btn { padding: 4px 14px; border-radius: 20px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
+        .header-btn.connesso { background: var(--green); }
+        .header-btn.ricerca { background: var(--yellow); color: #000; }
+        .header-btn.wifi { background: #007aff; }
+        .header-btn:disabled { opacity: 0.4; }
+        .header-back { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+        .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; height: 40px; }
         .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 8px; font-weight: 500; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; font-family: var(--font); min-width: 36px; padding: 0 2px; }
         .tab .icon { font-size: 16px; } .tab.attivo { color: var(--accent); border-bottom-color: var(--accent); }
-        .panels { flex: 1; overflow: hidden; position: relative; padding-bottom: var(--bottom-bar-height); }
+        .panels { flex: 1; overflow: hidden; position: relative; padding-bottom: 56px; }
         .panel { display: none; flex-direction: column; height: 100%; padding: 6px 8px 8px 8px; overflow-y: auto; gap: 6px; background: var(--bg); }
         .panel.attivo { display: flex; }
-        .bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: var(--bottom-bar-height); background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 12px; z-index: 100; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
+        .bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 56px; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 12px; z-index: 100; box-shadow: 0 -2px 8px rgba(0,0,0,0.04); }
         .bottom-bar .btn { flex: 1; padding: 10px 6px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 13px; font-weight: 700; cursor: pointer; font-family: var(--font); text-align: center; background: var(--surface); color: var(--text); box-shadow: var(--shadow); min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .bottom-bar .btn:active { transform: scale(0.96); }
         .bottom-bar .btn.hold-btn { background: #fff8e1; border-color: #ffe082; color: #e65100; }
         .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; border-color: var(--yellow); }
         .bottom-bar .btn.reset-btn { background: #ffebee; border-color: #ef9a9a; color: #c62828; }
         .bottom-bar .btn .sub { font-size: 9px; font-weight: 400; color: var(--muted); }
-        #panel-trackpad .trackpad-area { flex: 1; min-height: 100px; background: #ffffff; border: 2px solid var(--border); border-radius: var(--radius); touch-action: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.8; }
+        .trackpad-area { flex: 1; min-height: 100px; background: #ffffff; border: 2px solid var(--border); border-radius: var(--radius); touch-action: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.8; }
         .controls-row { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
         .controls-row .btn { flex: 1; min-width: 44px; padding: 10px 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 11px; font-weight: 600; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-family: var(--font); }
         .controls-row .btn:active { background: var(--accent); color: #fff; transform: scale(0.96); }
@@ -60,30 +58,23 @@
         .kbd-row .k.mod { background: #f5f5f5; border-color: #e0e0e0; color: var(--accent); font-size: 10px; }
         .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
         .kbd-row .k.space { flex: 4; background: #f5f5f5; border-color: #e0e0e0; }
-        .kbd-row .k.wide { flex: 1.8; }
         .kbd-row .k.caps-btn { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
         .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
         .kbd-row .k.layout-btn, .kbd-row .k.mode-btn { flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-family: var(--font); transition: all 0.2s ease; }
-        .kbd-row .k.layout-btn:active, .kbd-row .k.mode-btn:active { transform: scale(0.95); }
-        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3); }
-        .kbd-row .k.layout-btn:hover, .kbd-row .k.mode-btn:hover { border-color: var(--accent); }
+        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         #qwertyContainer { display: none; }
-        #qwertyContainer .kbd-row .k { font-size: 13px; min-height: 38px; }
         .toggle-qwerty { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 0; text-align: center; width: 100%; border-top: 1px solid var(--border); font-family: var(--font); margin-top: 4px; }
         .macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .macro-grid .m { padding: 12px 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); color: var(--text); }
         .macro-grid .m:active { background: var(--accent); color: #fff; transform: scale(0.96); }
         .macro-grid .m .icona { font-size: 18px; display: block; }
         .macro-grid .m.custom { border-color: var(--yellow); background: #fffde7; }
-        .terminal-grid { grid-template-columns: 1fr 1fr 1fr; }
-        .terminal-grid .m { font-size: 10px; padding: 10px 4px; }
-        .terminal-grid .m .icona { font-size: 14px; }
         .macro-add { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-        .macro-add input { flex: 1; min-width: 60px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: var(--font); user-select: text; -webkit-user-select: text; }
+        .macro-add input { flex: 1; min-width: 60px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: var(--font); }
         .macro-add input:focus { outline: none; border-color: var(--accent); }
         .macro-add .btn-add { padding: 8px 14px; background: var(--accent); border: none; border-radius: 6px; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--font); }
         .cred-row { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-        .cred-row input { flex: 1; min-width: 60px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: var(--font); user-select: text; -webkit-user-select: text; }
+        .cred-row input { flex: 1; min-width: 60px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: var(--font); }
         .cred-row input:focus { outline: none; border-color: var(--accent); }
         .cred-row .btn-add { padding: 8px 14px; background: var(--accent); border: none; border-radius: 6px; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--font); }
         .cred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -91,36 +82,30 @@
         .cred-grid .c:active { background: var(--accent); color: #fff; }
         .cred-grid .c .icona { font-size: 16px; display: block; margin-bottom: 2px; }
         #panel-chat .chat-area { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        #panel-chat .chat-area textarea { flex: 1; min-height: 80px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 15px; resize: none; user-select: text; -webkit-user-select: text; }
+        #panel-chat .chat-area textarea { flex: 1; min-height: 80px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 15px; resize: none; }
         #panel-chat .chat-area textarea:focus { border-color: var(--accent); }
         #panel-chat .chat-area .chat-actions { display: flex; gap: 6px; flex-shrink: 0; }
         #panel-chat .chat-area .chat-actions .btn { flex: 1; padding: 12px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--font); }
-        #panel-chat .chat-area .chat-actions .btn:active { opacity: 0.7; }
         #panel-chat .chat-area .chat-actions .btn.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
         .log { background: var(--surface); border-top: 1px solid var(--border); padding: 4px 10px; height: 30px; overflow-y: auto; font-family: monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; line-height: 1.8; }
-        
+
         /* WiFi Config */
         .wifi-config { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-top: 6px; }
         .wifi-config .row { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
-        .wifi-config input { flex: 1; min-width: 60px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: var(--font); user-select: text; -webkit-user-select: text; }
+        .wifi-config input { flex: 1; min-width: 60px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; font-family: var(--font); }
         .wifi-config input:focus { outline: none; border-color: var(--accent); }
         .wifi-config .btn-sm { padding: 8px 14px; background: var(--accent); border: none; border-radius: 6px; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer; font-family: var(--font); }
         .wifi-config .btn-sm.danger { background: var(--red); }
         .wifi-config .btn-sm.success { background: var(--green); }
         .wifi-config .btn-sm.warning { background: #ff9500; }
-        .wifi-config .btn-sm:active { transform: scale(0.95); }
         .wifi-status { font-size: 10px; color: var(--muted); padding: 4px 0; line-height: 1.6; }
         .wifi-networks { max-height: 100px; overflow-y: auto; }
         .wifi-networks .net { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: 11px; }
         .wifi-networks .net .ssid { font-weight: 600; }
-        .wifi-networks .net .btn-sm { padding: 2px 10px; font-size: 10px; }
         #wifiScanResults .net { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; border-bottom: 1px solid var(--border); font-size: 11px; }
         #wifiScanResults .net .ssid { font-weight: 500; }
-        #wifiScanResults .net .btn-sm { padding: 2px 10px; font-size: 10px; }
 
-        /* ============================================================
-           NUOVO: SCHERMATA CONNESSIONI
-           ============================================================ */
+        /* Connection Screen */
         .screen { display: none; flex-direction: column; height: 100%; }
         .screen.active { display: flex; }
         .hidden { display: none !important; }
@@ -130,10 +115,8 @@
         .connection-btn .icon { font-size: 24px; display: block; margin-bottom: 4px; }
         .connection-btn .label { font-size: 11px; font-weight: 600; color: var(--text); }
         .connection-btn .status { font-size: 9px; color: var(--muted); margin-top: 2px; }
-        .connection-btn.active { border-color: var(--accent); background: #e8f2ff; }
         .connection-btn.connected { border-color: var(--green); background: #e8f5e9; }
         .connection-btn.connected .label { color: var(--green); }
-        .connection-btn.error { border-color: var(--red); background: #ffebee; }
         .connection-btn.disabled { opacity: 0.4; pointer-events: none; }
         .status-bar { background: var(--surface); border-radius: var(--radius); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; border: 1px solid var(--border); margin: 8px 0; }
         .status-bar .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
@@ -142,14 +125,19 @@
         .status-bar .dot.error { background: var(--red); }
         .status-bar .dot.searching { background: var(--yellow); animation: pulse 1s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 0; background: none; border: none; }
-        .back-btn:active { opacity: 0.6; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; max-width: 90%; text-align: center; }
-        .toast.show { opacity: 1; }
+        .btn { padding: 12px; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; transition: all 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--green); color: white; }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-warning { background: #ff9500; color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; }
         .mt-8 { margin-top: 8px; }
         .mb-8 { margin-bottom: 8px; }
-        .flex { display: flex; gap: 8px; }
-        .flex-1 { flex: 1; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; max-width: 90%; text-align: center; }
+        .toast.show { opacity: 1; }
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 0; background: none; border: none; }
 
         @media (prefers-color-scheme: dark) {
             :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); }
@@ -163,15 +151,12 @@
             .kbd-row .k.space { background: #3a3a3c; border-color: #4a4a4c; }
             .kbd-row .k.caps-btn { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; }
             .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; }
-            .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; }
             .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); }
             .macro-grid .m.custom { background: #3a3a1e; border-color: #5a5a2d; }
             .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); }
             .controls-row .btn { background: var(--surface); border-color: var(--border); color: var(--text); }
-            #panel-trackpad .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; }
+            .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; }
             #panel-chat .chat-area textarea { background: #1a1a1c; border-color: #3a3a3c; color: #f5f5f5; }
-            .macro-add input { background: var(--surface); border-color: var(--border); color: var(--text); }
-            .cred-row input { background: var(--surface); border-color: var(--border); color: var(--text); }
             .log { background: var(--surface); border-color: var(--border); color: var(--muted); }
             .bottom-bar { background: var(--surface); border-color: var(--border); }
             .bottom-bar .btn.hold-btn { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; }
@@ -179,53 +164,41 @@
             .bottom-bar .btn.reset-btn { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; }
             .wifi-config { background: var(--surface); border-color: var(--border); }
             .wifi-config input { background: var(--surface); border-color: var(--border); color: var(--text); }
-            .wifi-networks .net { border-color: var(--border); }
-            .connection-btn.active { background: #1a2a3a; }
             .connection-btn.connected { background: #1a3a2a; }
             .toast { background: #2c2c2e; }
         }
         @media (orientation: landscape) and (max-height: 500px) {
-            :root { --header-height: 36px; --tab-height: 32px; --bottom-bar-height: 44px; }
+            .header { height: 36px; }
+            .tab-bar { height: 32px; }
+            .bottom-bar { height: 44px; }
             .logo { font-size: 13px; }
             .tab { font-size: 7px; }
             .tab .icon { font-size: 14px; }
             .panel { padding: 4px 6px; gap: 4px; }
-            #panel-trackpad .trackpad-area { min-height: 50px; }
+            .trackpad-area { min-height: 50px; }
             .kbd-row .k { min-height: 26px; padding: 4px 0; font-size: 10px; }
-            #qwertyContainer .kbd-row .k { font-size: 12px; min-height: 30px; }
             .controls-row .btn { padding: 6px 4px; font-size: 10px; min-height: 28px; }
             .macro-grid { grid-template-columns: repeat(3, 1fr); }
-            .terminal-grid { grid-template-columns: repeat(3, 1fr); }
             .cred-grid { grid-template-columns: repeat(3, 1fr); }
-            .macro-add input { padding: 4px 8px; font-size: 10px; }
-            .macro-add .btn-add { padding: 4px 10px; font-size: 11px; }
-            .cred-row input { padding: 4px 8px; font-size: 10px; }
-            .cred-row .btn-add { padding: 4px 10px; font-size: 11px; }
-            #panel-chat .chat-area textarea { min-height: 40px; font-size: 13px; }
             .log { height: 24px; font-size: 8px; padding: 2px 8px; }
             .bottom-bar .btn { font-size: 11px; padding: 6px 4px; min-height: 34px; }
             .bottom-bar .btn .sub { font-size: 7px; }
-            .wifi-config { padding: 8px; }
-            .wifi-config input { padding: 4px 8px; font-size: 10px; }
-            .wifi-config .btn-sm { padding: 4px 10px; font-size: 10px; }
         }
         @media (min-width: 480px) and (orientation: portrait) {
             .macro-grid { grid-template-columns: repeat(3, 1fr); }
             .cred-grid { grid-template-columns: repeat(3, 1fr); }
-            #panel-trackpad .trackpad-area { min-height: 180px; }
+            .trackpad-area { min-height: 180px; }
         }
         .btn-reset-default { background: #ffebee !important; border-color: #ef9a9a !important; color: #c62828 !important; }
         .btn-reset-default:active { background: #ffcdd2 !important; }
-        @media (prefers-color-scheme: dark) { .btn-reset-default { background: #3a1e1e !important; border-color: #5a2d2d !important; color: #ef9a9a !important; } .btn-reset-default:active { background: #4a2a2a !important; } }
+        @media (prefers-color-scheme: dark) { .btn-reset-default { background: #3a1e1e !important; border-color: #5a2d2d !important; color: #ef9a9a !important; } }
     </style>
 </head>
 <body>
 
 <div class="app">
 
-    <!-- ============================================================
-    TOAST (notifiche)
-    ============================================================ -->
+    <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
     <!-- ============================================================
@@ -234,7 +207,7 @@
     <div id="screen-connection" class="screen active">
         <header class="header">
             <div class="logo">KVM <span>Dongle</span></div>
-            <button id="statoBtn" onclick="toggleConnessione()" disabled>Connetti</button>
+            <button class="header-btn" id="statoBtn" onclick="toggleConnessione()" disabled>Connetti</button>
         </header>
 
         <div style="padding:8px 12px;flex:1;overflow-y:auto;">
@@ -277,7 +250,7 @@
             </div>
             
             <div class="mt-8">
-                <button class="btn" onclick="goToKVM()" id="btnGoToKVM" disabled style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;">
+                <button class="btn btn-primary" onclick="goToKVM()" id="btnGoToKVM" disabled>
                     🖥️ Vai al KVM
                 </button>
             </div>
@@ -295,12 +268,12 @@
     </div>
 
     <!-- ============================================================
-    SCHERMATA KVM (TUA INTERFACCIA ORIGINALE)
+    SCHERMATA KVM (COMPLETA)
     ============================================================ -->
     <div id="screen-kvm" class="screen">
         <header class="header">
             <div class="logo">KVM <span>Dongle</span></div>
-            <button class="back-btn" onclick="goToConnection()" style="background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;">← Torna</button>
+            <button class="header-back" onclick="goToConnection()">← Torna</button>
         </header>
 
         <nav class="tab-bar" id="tabBar">
@@ -488,7 +461,7 @@
             <div id="panel-macro" class="panel">
                 <div class="kbd-section">
                     <div class="label">⚡ Macro predefinite</div>
-                    <div class="macro-grid" id="macroGrid">
+                    <div class="macro-grid">
                         <div class="m" onclick="eseguiMacro('win_task_mgr')"><span class="icona">📊</span>Task Mgr</div>
                         <div class="m" onclick="eseguiMacro('win_cad')"><span class="icona">⚡</span>Ctrl+Alt+Del</div>
                         <div class="m" onclick="eseguiMacro('win_run')"><span class="icona">▶️</span>Esegui</div>
@@ -496,9 +469,6 @@
                         <div class="m" onclick="eseguiMacro('win_lock')"><span class="icona">🔒</span>Blocca</div>
                         <div class="m" onclick="eseguiMacro('win_cmd')"><span class="icona">⌨️</span>CMD</div>
                         <div class="m" onclick="eseguiMacro('win_ps')"><span class="icona">💙</span>PowerShell</div>
-                        <div class="m" onclick="eseguiMacro('win_devmgmt')"><span class="icona">🖥️</span>Gestione Disp.</div>
-                        <div class="m" onclick="eseguiMacro('win_control')"><span class="icona">⚙️</span>Pannello Controllo</div>
-                        <div class="m" onclick="eseguiMacro('win_xmenu')"><span class="icona">📋</span>Win+X Menu</div>
                         <div class="m" onclick="eseguiMacro('win_terminal')"><span class="icona">📟</span>Terminale</div>
                         <div class="m" onclick="eseguiMacro('lnx_term')"><span class="icona">📟</span>Terminale Linux</div>
                         <div class="m" onclick="eseguiMacro('bios_f2')"><span class="icona">⚙️</span>BIOS F2</div>
@@ -530,31 +500,26 @@
             <div id="panel-terminal" class="panel">
                 <div class="kbd-section">
                     <div class="label">🟦 Windows (CMD / PowerShell)</div>
-                    <div class="macro-grid terminal-grid" id="dosGrid">
+                    <div class="macro-grid terminal-grid" style="grid-template-columns:1fr 1fr 1fr;">
                         <div class="m" onclick="eseguiMacro('dos_ipconfig')"><span class="icona">🌐</span>ipconfig /all</div>
                         <div class="m" onclick="eseguiMacro('dos_ping')"><span class="icona">📡</span>ping 8.8.8.8</div>
                         <div class="m" onclick="eseguiMacro('dos_chkdsk')"><span class="icona">💾</span>chkdsk /f /r</div>
                         <div class="m" onclick="eseguiMacro('dos_sfc')"><span class="icona">🔧</span>sfc /scannow</div>
-                        <div class="m" onclick="eseguiMacro('dos_dism')"><span class="icona">🛠️</span>DISM</div>
                         <div class="m" onclick="eseguiMacro('dos_winget_up')"><span class="icona">📦</span>winget upgrade</div>
-                        <div class="m" onclick="eseguiMacro('dos_winget_all')"><span class="icona">📦</span>winget --all</div>
                         <div class="m" onclick="eseguiMacro('dos_netstat')"><span class="icona">🔌</span>netstat -ano</div>
                         <div class="m" onclick="eseguiMacro('dos_tasklist')"><span class="icona">📋</span>tasklist</div>
                     </div>
                 </div>
                 <div class="kbd-section">
                     <div class="label">🟩 Linux (Ubuntu / Debian)</div>
-                    <div class="macro-grid terminal-grid" id="linuxGrid">
+                    <div class="macro-grid terminal-grid" style="grid-template-columns:1fr 1fr 1fr;">
                         <div class="m" onclick="eseguiMacro('lnx_update')"><span class="icona">🔄</span>apt update</div>
                         <div class="m" onclick="eseguiMacro('lnx_upgrade')"><span class="icona">⬆️</span>apt upgrade -y</div>
                         <div class="m" onclick="eseguiMacro('lnx_clean')"><span class="icona">🧹</span>apt autoremove</div>
                         <div class="m" onclick="eseguiMacro('lnx_df')"><span class="icona">💾</span>df -h</div>
                         <div class="m" onclick="eseguiMacro('lnx_free')"><span class="icona">🧠</span>free -h</div>
                         <div class="m" onclick="eseguiMacro('lnx_top')"><span class="icona">📈</span>top</div>
-                        <div class="m" onclick="eseguiMacro('lnx_ps')"><span class="icona">📋</span>ps aux</div>
-                        <div class="m" onclick="eseguiMacro('lnx_netstat')"><span class="icona">🔌</span>ss -tulpn</div>
                         <div class="m" onclick="eseguiMacro('lnx_lsblk')"><span class="icona">💽</span>lsblk</div>
-                        <div class="m" onclick="eseguiMacro('lnx_dmesg')"><span class="icona">📋</span>dmesg tail</div>
                     </div>
                 </div>
                 <div class="kbd-section">
@@ -583,29 +548,25 @@
                 <div class="kbd-section">
                     <div class="label">⌨️ Layout Tastiera</div>
                     <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
-                        <button class="k layout-btn active" data-layout="IT" onclick="setLayout('IT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇮🇹 IT</button>
-                        <button class="k layout-btn" data-layout="US" onclick="setLayout('US')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇺🇸 US</button>
-                        <button class="k layout-btn" data-layout="UK" onclick="setLayout('UK')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇬🇧 UK</button>
-                        <button class="k layout-btn" data-layout="FR" onclick="setLayout('FR')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇫🇷 FR</button>
-                        <button class="k layout-btn" data-layout="DE" onclick="setLayout('DE')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇩🇪 DE</button>
-                        <button class="k layout-btn" data-layout="ES" onclick="setLayout('ES')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇪🇸 ES</button>
-                        <button class="k layout-btn" data-layout="PT" onclick="setLayout('PT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🇵🇹 PT</button>
-                        <button class="k layout-btn" data-layout="EMBEDDED" onclick="setLayout('EMBEDDED')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📺 TV</button>
-                        <button class="k layout-btn" data-layout="ASCII" onclick="setLayout('ASCII')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📟 ASCII</button>
+                        <button class="k layout-btn active" data-layout="IT" onclick="setLayout('IT')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇮🇹 IT</button>
+                        <button class="k layout-btn" data-layout="US" onclick="setLayout('US')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇺🇸 US</button>
+                        <button class="k layout-btn" data-layout="UK" onclick="setLayout('UK')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇬🇧 UK</button>
+                        <button class="k layout-btn" data-layout="FR" onclick="setLayout('FR')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇫🇷 FR</button>
+                        <button class="k layout-btn" data-layout="DE" onclick="setLayout('DE')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇩🇪 DE</button>
+                        <button class="k layout-btn" data-layout="ES" onclick="setLayout('ES')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇪🇸 ES</button>
+                        <button class="k layout-btn" data-layout="PT" onclick="setLayout('PT')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🇵🇹 PT</button>
                     </div>
                 </div>
 
                 <div class="kbd-section">
                     <div class="label">📡 Modalità Invio</div>
                     <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
-                        <button class="k mode-btn active" data-mode="AUTO" onclick="setModo('AUTO')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🤖 Auto</button>
-                        <button class="k mode-btn" data-mode="ALT" onclick="setModo('ALT')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">💻 Windows</button>
-                        <button class="k mode-btn" data-mode="UNICODE" onclick="setModo('UNICODE')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">🌐 Unicode</button>
-                        <button class="k mode-btn" data-mode="ASCII" onclick="setModo('ASCII')" style="flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px;">📟 ASCII</button>
+                        <button class="k mode-btn active" data-mode="AUTO" onclick="setModo('AUTO')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🤖 Auto</button>
+                        <button class="k mode-btn" data-mode="ALT" onclick="setModo('ALT')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">💻 Windows</button>
+                        <button class="k mode-btn" data-mode="UNICODE" onclick="setModo('UNICODE')" style="flex:0 0 auto;padding:4px 10px;font-size:10px;min-height:28px;">🌐 Unicode</button>
                     </div>
                 </div>
 
-                <!-- WIFI CONFIG -->
                 <div class="kbd-section">
                     <div class="label">📡 Connessione WiFi</div>
                     <div class="wifi-config">
@@ -619,30 +580,22 @@
                         <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
                         
                         <div class="row">
-                            <input type="text" id="wifiSsid" placeholder="SSID rete WiFi">
-                            <input type="password" id="wifiPass" placeholder="Password">
-                            <button class="btn-sm success" onclick="wifiConnect()">🔗 Connetti</button>
+                            <input type="text" id="wifiSsid2" placeholder="SSID rete WiFi">
+                            <input type="password" id="wifiPass2" placeholder="Password">
+                            <button class="btn-sm success" onclick="wifiConnect2()">🔗 Connetti</button>
                         </div>
                         
                         <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
                         
                         <div class="row">
-                            <input type="text" id="wifiApSsid" placeholder="SSID AP" value="KVM-S3">
-                            <input type="text" id="wifiApPass" placeholder="Password AP" value="12345678">
-                            <button class="btn-sm" onclick="wifiUpdateAP()" style="background:#007aff;">💾 Salva AP</button>
+                            <button class="btn-sm warning" onclick="wifiScan2()">📡 Scansiona reti</button>
                         </div>
-                        
-                        <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
-                        
-                        <div class="row">
-                            <button class="btn-sm warning" onclick="wifiScan()">📡 Scansiona reti</button>
-                        </div>
-                        <div id="wifiScanResults" style="max-height:150px;overflow-y:auto;margin-top:4px;"></div>
+                        <div id="wifiScanResults2" style="max-height:150px;overflow-y:auto;margin-top:4px;"></div>
                         
                         <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
                         
                         <div class="label" style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:600;">📋 Reti salvate</div>
-                        <div class="wifi-networks" id="wifiNetworks"></div>
+                        <div class="wifi-networks" id="wifiNetworks2"></div>
                     </div>
                 </div>
 
@@ -659,41 +612,17 @@
                     <input type="range" id="minMovementSlider" min="1" max="20" step="1" value="5">
                     <span class="val" id="minMovementVal">5</span>
                 </div>
-                <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
-                    Più alto = meno lag su iPhone, meno precisione (consigliato 5-8)
-                </div>
 
                 <div class="slider-row">
                     <span class="label">⏱️ Intervallo (ms)</span>
                     <input type="range" id="sendIntervalSlider" min="10" max="150" step="5" value="80">
                     <span class="val" id="sendIntervalVal">80</span>
                 </div>
-                <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
-                    Più alto = meno comandi BLE, più fluido su iPhone (consigliato 60-80)
-                </div>
 
                 <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
 
-                <div class="slider-row">
-                    <span class="label">⏱️ Intervallo iOS (ms)</span>
-                    <input type="range" id="manualIntervalSlider" min="20" max="200" step="5" value="100">
-                    <span class="val" id="manualIntervalVal">100</span>
-                </div>
-                <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
-                    Più alto = meno ghosting, meno fluido (iOS: 80-120, Android: 40-60)
-                </div>
-
-                <div class="slider-row">
-                    <span class="label">📏 Soglia iOS (px)</span>
-                    <input type="range" id="manualThresholdSlider" min="1" max="20" step="1" value="8">
-                    <span class="val" id="manualThresholdVal">8</span>
-                </div>
-                <div style="font-size: 9px; color: var(--muted); padding: 0 0 4px 0; text-align: center;">
-                    Più alto = meno ghosting, meno precisione (iOS: 5-10, Android: 3-5)
-                </div>
-
                 <div class="controls-row">
-                    <button class="btn btn-reset-default" onclick="resetDefaultSettings()" style="flex:1; padding: 10px; font-size: 12px;">
+                    <button class="btn btn-reset-default" onclick="resetDefaultSettings()" style="flex:1;padding:10px;font-size:12px;">
                         🔄 Ripristina Impostazioni Default
                     </button>
                 </div>
@@ -702,7 +631,7 @@
 
                 <div class="kbd-section">
                     <div class="label" id="statusLabel">📌 Stato: Layout IT | Modalità AUTO</div>
-                    <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">
+                    <div style="font-size:10px;color:var(--muted);margin-top:4px;">
                         🖱️ Sensibilità: <span id="statusSens">4.0</span> &nbsp;|&nbsp;
                         📏 Soglia: <span id="statusMinMov">5</span> &nbsp;|&nbsp;
                         ⏱️ Intervallo: <span id="statusInterval">80</span>ms
@@ -728,7 +657,7 @@
 
 <script>
 // ============================================================
-// TUTTE LE VARIABILI GLOBALI (le tue originali + nuove)
+// STATO GLOBALE
 // ============================================================
 let bleDevice = null, bleRx = null, bleTx = null, connesso = false;
 let holdTouch = false, holdTouchBtn = null;
@@ -745,20 +674,20 @@ let apIP = '192.168.4.1';
 let restartPolling = null;
 
 // ============================================================
-// RILEVAMENTO iOS (tuo originale)
+// RILEVAMENTO iOS
 // ============================================================
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 // ============================================================
-// IMPOSTAZIONI DEFAULT (tue originali)
+// IMPOSTAZIONI DEFAULT
 // ============================================================
 const DEFAULT_SENS = 4;
 const DEFAULT_MIN_MOVEMENT = isIOS ? 8 : 4;
 const DEFAULT_SEND_INTERVAL = isIOS ? 100 : 50;
 
 // ============================================================
-// STATO TRACKPAD (tuo originale)
+// STATO TRACKPAD
 // ============================================================
 let pointers = {};
 let lastTap = 0;
@@ -769,14 +698,14 @@ let velocityHistory = [];
 const VELOCITY_SAMPLES = 5;
 
 // ============================================================
-// CARICA IMPOSTAZIONI (tue originali)
+// CARICA IMPOSTAZIONI
 // ============================================================
 let sens = parseFloat(localStorage.getItem('kvm_sens')) || DEFAULT_SENS;
 let minMovement = parseInt(localStorage.getItem('kvm_minMovement')) || DEFAULT_MIN_MOVEMENT;
 let sendInterval = parseInt(localStorage.getItem('kvm_sendInterval')) || DEFAULT_SEND_INTERVAL;
 
 // ============================================================
-// TOAST (nuovo)
+// TOAST
 // ============================================================
 function showToast(msg, duration = 3000) {
     const t = document.getElementById('toast');
@@ -787,7 +716,7 @@ function showToast(msg, duration = 3000) {
 }
 
 // ============================================================
-// LOG (tuo originale + adattato per due schermate)
+// LOG
 // ============================================================
 function log(msg) {
     const el = document.getElementById('log');
@@ -823,7 +752,7 @@ function updateStatus(text, detail, dotState) {
 }
 
 // ============================================================
-// NAVIGAZIONE TRA SCHERMATE (nuovo)
+// NAVIGAZIONE
 // ============================================================
 function goToKVM() {
     if (!isConnected) {
@@ -847,7 +776,7 @@ function goToConnection() {
 }
 
 // ============================================================
-// ATTESA RIAVVIO (nuovo)
+// ATTESA RIAVVIO
 // ============================================================
 function mostraAttesaRiavvio(msg) {
     updateStatus('⏳ Riavvio in corso...', msg, 'searching');
@@ -868,7 +797,6 @@ function mostraAttesaRiavvio(msg) {
                 showToast('✅ Dispositivo online!');
                 updateStatus('✅ Online', ip, 'on');
                 log('✅ Dispositivo tornato online');
-                await getWiFiStatus();
                 return;
             }
         } catch(e) { /* ancora offline */ }
@@ -884,31 +812,33 @@ function mostraAttesaRiavvio(msg) {
 }
 
 // ============================================================
-// FUNZIONE INVIA UNIFICATA (MODIFICATA per supportare WiFi)
+// FUNZIONE INVIA UNIFICATA
 // ============================================================
-function invia(stringaComando) {
-    console.log("📤 Invio: " + stringaComando);
+function invia(cmd) {
+    console.log("📤 Invio:", cmd);
 
+    // BLE
     if (connectionMode === 'ble' && connesso && bleRx) {
         try {
-            bleRx.writeValue(new TextEncoder().encode(stringaComando + '\n'));
-            if (!stringaComando.startsWith('M:')) {
-                log('📶 BLE ▶ ' + stringaComando.substring(0, 50) + (stringaComando.length > 50 ? '…' : ''));
+            bleRx.writeValue(new TextEncoder().encode(cmd + '\n'));
+            if (!cmd.startsWith('M:')) {
+                log('📶 BLE ▶ ' + cmd.substring(0, 50) + (cmd.length > 50 ? '…' : ''));
             }
             return;
         } catch (e) {
-            log('❌ Errore invio BLE: ' + e.message);
+            log('❌ Errore BLE: ' + e.message);
             return;
         }
     }
     
+    // WiFi o AP
     if (connectionMode === 'wifi' || connectionMode === 'ap') {
         const ip = connectionMode === 'ap' ? apIP : wifiIP;
-        fetch('http://' + ip + '/api?run=' + encodeURIComponent(stringaComando))
-            .then(response => response.json())
+        fetch('http://' + ip + '/api?run=' + encodeURIComponent(cmd))
+            .then(r => r.json())
             .then(data => {
-                if (data.status === 'ok') log('📡 ' + connectionMode.toUpperCase() + ' ▶ ' + stringaComando);
-                else log('❌ Errore: ' + stringaComando);
+                if (data.status === 'ok') log('📡 ' + connectionMode.toUpperCase() + ' ▶ ' + cmd);
+                else log('❌ Errore: ' + cmd);
             })
             .catch(err => log('❌ Errore rete: ' + err.message));
         return;
@@ -918,46 +848,25 @@ function invia(stringaComando) {
 }
 
 // ============================================================
-// FUNZIONE PER INVIO MOVIMENTO CON FLUSH DELAY (tua originale)
+// MOVIMENTO
 // ============================================================
 function inviaMovimento(mx, my) {
-    if (stopTimeout) {
-        clearTimeout(stopTimeout);
-        stopTimeout = null;
-    }
-    
+    if (stopTimeout) { clearTimeout(stopTimeout); stopTimeout = null; }
     lastMoveX = mx;
     lastMoveY = my;
     lastMoveTime = Date.now();
-    
     invia('M:' + mx + ',' + my);
 }
 
-// ============================================================
-// FUNZIONE PER FERMARE IL CURSORE CON DELAY (tua originale)
-// ============================================================
 function fermaCursore() {
-    if (stopTimeout) {
-        clearTimeout(stopTimeout);
-        stopTimeout = null;
-    }
-    
+    if (stopTimeout) { clearTimeout(stopTimeout); stopTimeout = null; }
     const elapsed = Date.now() - lastMoveTime;
-    
-    if (elapsed >= 30) {
-        invia('M:0,0');
-        return;
-    }
-    
-    const delay = 30 - elapsed;
-    stopTimeout = setTimeout(() => {
-        invia('M:0,0');
-        stopTimeout = null;
-    }, delay);
+    if (elapsed >= 30) { invia('M:0,0'); return; }
+    stopTimeout = setTimeout(() => { invia('M:0,0'); stopTimeout = null; }, 30 - elapsed);
 }
 
 // ============================================================
-// BLE CONNESSIONE (nuova, unificata)
+// BLE CONNESSIONE
 // ============================================================
 async function connectBLE() {
     if (connesso) {
@@ -966,7 +875,6 @@ async function connectBLE() {
     }
     
     const btn = document.getElementById('btnBLE');
-    btn.classList.add('active');
     document.getElementById('statusBLE').textContent = 'Ricerca...';
     updateStatus('Ricerca BLE...', 'Cerca dispositivo', 'searching');
     log('🔍 Ricerca dispositivo BLE...');
@@ -1011,7 +919,6 @@ async function connectBLE() {
         }, 1500);
         
     } catch (e) {
-        document.getElementById('btnBLE').classList.remove('active');
         document.getElementById('statusBLE').textContent = '❌ Errore';
         updateStatus('BLE Errore', e.message, 'error');
         log('❌ BLE Errore: ' + e.message);
@@ -1029,27 +936,14 @@ function onDisconnesso() {
         document.getElementById('statoBtn').textContent = 'Connetti';
         document.getElementById('statoBtn').className = '';
     }
-    document.getElementById('btnBLE').classList.remove('connected', 'active');
+    document.getElementById('btnBLE').classList.remove('connected');
     document.getElementById('statusBLE').textContent = 'Disconnesso';
     updateStatus('BLE Disconnesso', '⚠️', 'error');
     log('⚠️ BLE Disconnesso');
-    
-    holdTouch = false;
-    holdTouchBtn = null;
-    holdMods = {};
-    holdGlobalActive = false;
-    capsLockActive = false;
-    document.getElementById('btnSx').classList.remove('premuto', 'hold-on');
-    document.getElementById('btnDx').classList.remove('premuto', 'hold-on');
-    document.getElementById('btnHold').classList.remove('hold-on');
-    document.querySelectorAll('.mod.attivo').forEach(el => el.classList.remove('attivo'));
-    document.querySelectorAll('.hold-btn.attivo').forEach(el => el.classList.remove('attivo'));
-    document.querySelectorAll('.caps-btn.attivo').forEach(el => el.classList.remove('attivo'));
-    aggiornaQWERTY();
 }
 
 // ============================================================
-// WIFI CONNESSIONE (nuova, unificata)
+// WIFI CONNESSIONE
 // ============================================================
 function connectWiFi() {
     const config = document.getElementById('wifiConfig');
@@ -1081,7 +975,6 @@ function connectWiFiNetwork() {
         return;
     }
     
-    // Se sembra un IP
     if (ssid.match(/^\d+\.\d+\.\d+\.\d+$/)) {
         wifiIP = ssid;
         localStorage.setItem('kvm_wifi_ip', wifiIP);
@@ -1097,25 +990,16 @@ function connectWiFiNetwork() {
     if (connesso && bleRx) {
         invia('WIFI_CONNECT:' + ssid + '|' + pass);
         updateStatus('WiFi connessione in corso...', ssid, 'searching');
-        log('📡 Comando inviato via BLE');
         mostraAttesaRiavvio('Connessione a ' + ssid);
     } else {
-        // Prova direttamente via HTTP
         const ip = wifiIP || '192.168.4.1';
         fetch('http://' + ip + '/connect?ssid=' + encodeURIComponent(ssid) + '&pass=' + encodeURIComponent(pass))
             .then(r => r.json())
             .then(data => {
-                if (data.restart) {
-                    mostraAttesaRiavvio(data.message);
-                } else {
-                    showToast(data.message);
-                    log(data.message);
-                }
+                if (data.restart) mostraAttesaRiavvio(data.message);
+                else { showToast(data.message); log(data.message); }
             })
-            .catch(err => {
-                log('❌ Errore: ' + err.message);
-                showToast('❌ Errore: ' + err.message);
-            });
+            .catch(err => { log('❌ Errore: ' + err.message); showToast('❌ Errore: ' + err.message); });
     }
 }
 
@@ -1153,7 +1037,7 @@ function connectAP() {
 }
 
 // ============================================================
-// GESTIONE RISPOSTE BLE (tua originale + estesa)
+// GESTIONE RISPOSTE BLE
 // ============================================================
 function handleBLEResponse(data) {
     console.log("🔵 BLE ricevuto:", data);
@@ -1170,10 +1054,7 @@ function handleBLEResponse(data) {
     if (data === 'MACRO_END') {
         try {
             const raw = JSON.parse(bleChunkBuffer.macro || '[]');
-            macroCustom = raw.map(m => ({
-                nome: m.nome || m.n || '',
-                seq: m.seq || m.s || ''
-            }));
+            macroCustom = raw.map(m => ({ nome: m.nome || m.n || '', seq: m.seq || m.s || '' }));
             aggiornaMacroCustom();
             log('✅ Macro caricate: ' + macroCustom.length);
         } catch(err) { log('❌ JSON macro: ' + err.message); }
@@ -1193,11 +1074,7 @@ function handleBLEResponse(data) {
     if (data === 'CRED_END') {
         try {
             const raw = JSON.parse(bleChunkBuffer.cred || '[]');
-            credenziali = raw.map(c => ({
-                nome: c.nome || c.n || '',
-                user: c.user || c.u || '',
-                pass: c.pass || c.p || ''
-            }));
+            credenziali = raw.map(c => ({ nome: c.nome || c.n || '', user: c.user || c.u || '', pass: c.pass || c.p || '' }));
             aggiornaCredenziali();
             log('✅ Credenziali caricate: ' + credenziali.length);
         } catch(err) { log('❌ JSON cred: ' + err.message); }
@@ -1205,11 +1082,11 @@ function handleBLEResponse(data) {
         return;
     }
 
-    if (data.startsWith('MACRO_SAVED:'))   { log('✅ Macro salvata: ' + data.substring(12)); return; }
+    if (data.startsWith('MACRO_SAVED:')) { log('✅ Macro salvata: ' + data.substring(12)); return; }
     if (data.startsWith('MACRO_DELETED:')) { log('🗑️ Macro eliminata: ' + data.substring(14)); return; }
-    if (data.startsWith('CRED_SAVED:'))    { log('✅ Credenziale salvata: ' + data.substring(11)); return; }
-    if (data.startsWith('CRED_DELETED:'))  { log('🗑️ Cred eliminata: ' + data.substring(13)); return; }
-    if (data.startsWith('ERR:'))           { log('❌ ' + data); return; }
+    if (data.startsWith('CRED_SAVED:')) { log('✅ Credenziale salvata: ' + data.substring(11)); return; }
+    if (data.startsWith('CRED_DELETED:')) { log('🗑️ Cred eliminata: ' + data.substring(13)); return; }
+    if (data.startsWith('ERR:')) { log('❌ ' + data); return; }
 
     // WiFi responses
     if (data.startsWith('WIFI_SCAN:')) {
@@ -1277,7 +1154,7 @@ function handleBLEResponse(data) {
 }
 
 // ============================================================
-// WIFI FUNCTIONS (tue originali + migliorate)
+// WIFI FUNCTIONS
 // ============================================================
 function wifiSetMode(mode) {
     if (mode === 'AP') {
@@ -1299,47 +1176,48 @@ function wifiStatus() {
     log('📡 Richiesta stato WiFi');
 }
 
-function wifiConnect() {
-    const ssid = document.getElementById('wifiSsid').value.trim();
-    const pass = document.getElementById('wifiPass').value.trim();
+function wifiConnect2() {
+    const ssid = document.getElementById('wifiSsid2').value.trim();
+    const pass = document.getElementById('wifiPass2').value.trim();
     if (!ssid) { log('❌ Inserisci SSID'); return; }
     invia('WIFI_CONNECT:' + ssid + '|' + pass);
     log('📡 Connessione a ' + ssid + '...');
-    document.getElementById('wifiSsid').value = '';
-    document.getElementById('wifiPass').value = '';
+    document.getElementById('wifiSsid2').value = '';
+    document.getElementById('wifiPass2').value = '';
     mostraAttesaRiavvio('Connessione a ' + ssid);
 }
 
-function wifiUpdateAP() {
-    const ssid = document.getElementById('wifiApSsid').value.trim();
-    const pass = document.getElementById('wifiApPass').value.trim();
-    if (!ssid) { log('❌ Inserisci SSID AP'); return; }
-    invia('WIFI_AP_UPDATE:' + ssid + '|' + pass);
-    log('📡 Aggiornamento AP: ' + ssid);
-    mostraAttesaRiavvio('Aggiornamento AP');
+function wifiScan2() {
+    const results = document.getElementById('wifiScanResults2');
+    results.innerHTML = '🔍 Scansione in corso...';
+    invia('WIFI_SCAN');
+    log('📡 Scansione reti WiFi...');
 }
 
-function wifiScan() {
-    const results = document.getElementById('wifiScanResults');
-    results.innerHTML = '🔍 Scansione in corso...';
-    
-    if (isWiFiMode || connectionMode === 'wifi' || connectionMode === 'ap') {
-        const ip = connectionMode === 'ap' ? apIP : wifiIP;
-        fetch('http://' + ip + '/scan')
+function wifiLoadNetworks() {
+    invia('WIFI_NETWORKS');
+}
+
+function wifiDeleteNetwork(ssid) {
+    if (!confirm('Rimuovere la rete "' + ssid + '"?')) return;
+    invia('WIFI_DELETE:' + ssid);
+    log('🗑️ Rimozione rete: ' + ssid);
+}
+
+function wifiConnectSaved(ssid) {
+    if (connesso && bleRx) {
+        invia('WIFI_CONNECT:' + ssid + '|');
+        log('📡 Connessione a ' + ssid + '...');
+        mostraAttesaRiavvio('Connessione a ' + ssid);
+    } else {
+        const ip = wifiIP || '192.168.4.1';
+        fetch('http://' + ip + '/connect_saved?ssid=' + encodeURIComponent(ssid))
             .then(res => res.json())
             .then(data => {
-                displayScanResults(data.networks);
+                log('📡 ' + data.message);
+                if (data.restart) mostraAttesaRiavvio(data.message);
             })
-            .catch(err => {
-                results.innerHTML = '❌ Errore scansione: ' + err.message;
-            });
-    } else if (connectionMode === 'ble' && connesso) {
-        invia('WIFI_SCAN');
-        log('📡 Scansione reti WiFi...');
-        results.innerHTML = '🔍 Scansione in corso via BLE...';
-    } else {
-        results.innerHTML = '❌ Connetti prima il dongle';
-        showToast('❌ Connetti prima il dongle');
+            .catch(err => log('❌ Errore: ' + err.message));
     }
 }
 
@@ -1357,23 +1235,35 @@ function displayScanResults(networks) {
     networks.forEach(n => {
         const div = document.createElement('div');
         div.className = 'net';
-        
-        let signalIcon = '📶';
-        if (n.rssi > -50) signalIcon = '🟢';
-        else if (n.rssi > -65) signalIcon = '🟡';
-        else signalIcon = '🔴';
-        
+        let signalIcon = n.rssi > -50 ? '🟢' : n.rssi > -65 ? '🟡' : '🔴';
         let security = n.encryption === 0 ? '🔓' : '🔒';
-        let secLabel = n.encryption === 0 ? 'Aperta' : 'Protetta';
         const ssidEsc = n.ssid.replace(/'/g, "\\'");
         
         div.innerHTML = `
             <span class="ssid">${signalIcon} ${n.ssid} ${security}</span>
-            <span style="font-size:10px;color:var(--muted);">${n.rssi} dBm ${secLabel}</span>
-            <button class="btn-sm success" onclick="selezionaRete('${ssidEsc}', ${n.encryption === 0})" style="padding:2px 10px;font-size:10px;">Seleziona</button>
+            <span style="font-size:10px;color:var(--muted);">${n.rssi} dBm</span>
+            <button class="btn-sm success" onclick="selezionaRete('${ssidEsc}', ${n.encryption === 0})">Seleziona</button>
         `;
         container.appendChild(div);
     });
+}
+
+function displayNetworks(nets) {
+    const container = document.getElementById('wifiNetworks2');
+    container.innerHTML = '';
+    if (nets && nets.length > 0) {
+        nets.forEach(n => {
+            const div = document.createElement('div');
+            div.className = 'net';
+            div.innerHTML = `
+                <span class="ssid">📶 ${n.ssid}</span>
+                <button class="btn-sm success" onclick="selezionaRete('${n.ssid}', false)">Seleziona</button>
+            `;
+            container.appendChild(div);
+        });
+    } else {
+        container.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:4px;">Nessuna rete salvata</div>';
+    }
 }
 
 function selezionaRete(ssid, isOpen) {
@@ -1395,77 +1285,36 @@ function selezionaRete(ssid, isOpen) {
     }
 }
 
-function displayNetworks(nets) {
-    const container = document.getElementById('wifiNetworks');
-    container.innerHTML = '';
-    if (nets && nets.length > 0) {
-        nets.forEach(n => {
-            const div = document.createElement('div');
-            div.className = 'net';
-            div.innerHTML = `
-                <span class="ssid">📶 ${n.ssid}</span>
-                <button class="btn-sm success" onclick="selezionaRete('${n.ssid}', false)" style="padding:2px 10px;font-size:10px;">Seleziona</button>
-            `;
-            container.appendChild(div);
-        });
-    } else {
-        container.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:4px;">Nessuna rete salvata</div>';
-    }
-}
-
-function wifiLoadNetworks() {
-    invia('WIFI_NETWORKS');
-}
-
-function wifiDeleteNetwork(ssid) {
-    if (!confirm('Rimuovere la rete "' + ssid + '"?')) return;
-    invia('WIFI_DELETE:' + ssid);
-    log('🗑️ Rimozione rete: ' + ssid);
-}
-
-function wifiConnectSaved(ssid) {
-    if (isWiFiMode || connectionMode === 'wifi' || connectionMode === 'ap') {
+// ============================================================
+// SCANSIONE RETI (dalla schermata connessioni)
+// ============================================================
+function scanNetworks() {
+    const results = document.getElementById('wifiScanResults');
+    results.innerHTML = '🔍 Scansione in corso...';
+    
+    if (connectionMode === 'wifi' || connectionMode === 'ap') {
         const ip = connectionMode === 'ap' ? apIP : wifiIP;
-        fetch('http://' + ip + '/connect_saved?ssid=' + encodeURIComponent(ssid))
-            .then(res => res.json())
-            .then(data => {
-                log('📡 ' + data.message);
-                document.getElementById('wifiStatus').innerHTML = '🔄 Connessione a ' + ssid + '...';
-                if (data.restart) mostraAttesaRiavvio(data.message);
-            })
-            .catch(err => log('❌ Errore: ' + err.message));
+        fetch('http://' + ip + '/scan')
+            .then(r => r.json())
+            .then(data => { displayScanResults(data.networks); })
+            .catch(err => { results.innerHTML = '❌ Errore: ' + err.message; });
+    } else if (connectionMode === 'ble' && connesso) {
+        invia('WIFI_SCAN');
+        log('📡 Scansione reti WiFi via BLE...');
+        results.innerHTML = '🔍 Scansione in corso via BLE...';
     } else {
-        invia('WIFI_CONNECT:' + ssid + '|');
-        log('📡 Connessione a ' + ssid + '...');
-        mostraAttesaRiavvio('Connessione a ' + ssid);
+        results.innerHTML = '❌ Connetti prima il dongle';
+        showToast('❌ Connetti prima il dongle');
     }
-}
-
-async function getWiFiStatus() {
-    if (connectionMode !== 'wifi' && connectionMode !== 'ap') return;
-    const ip = connectionMode === 'ap' ? apIP : wifiIP;
-    try {
-        const res = await fetch('http://' + ip + '/status');
-        const data = await res.json();
-        document.getElementById('statusDetail').textContent = '📶 ' + data.mode + ' | ' + data.ip;
-        if (data.mode === 'STA') {
-            document.getElementById('btnWiFi').classList.add('connected');
-            document.getElementById('statusWiFi').textContent = '✅ ' + data.ssid;
-        }
-        if (data.mode === 'AP') {
-            document.getElementById('btnAP').classList.add('connected');
-            document.getElementById('statusAP').textContent = '✅ AP: ' + data.ssid;
-        }
-    } catch(e) { /* offline */ }
 }
 
 // ============================================================
-// TOGGLE CONNESSIONE (pulsante header)
+// TOGGLE CONNESSIONE
 // ============================================================
 function toggleConnessione() {
     if (isConnected) {
-        if (connectionMode === 'ble' && connesso) {
-            if (bleDevice) bleDevice.gatt.disconnect();
+        if (connectionMode === 'ble' && connesso && bleDevice) {
+            bleDevice.gatt.disconnect();
         }
         isConnected = false;
         connectionMode = null;
@@ -1482,49 +1331,504 @@ function toggleConnessione() {
 }
 
 // ============================================================
-// SCANSIONE RETI (dalla schermata connessioni)
+// TABS
 // ============================================================
-function scanNetworks() {
-    const results = document.getElementById('wifiScanResults');
-    results.innerHTML = '🔍 Scansione in corso...';
-    
-    if (connectionMode === 'wifi' || connectionMode === 'ap') {
-        const ip = connectionMode === 'ap' ? apIP : wifiIP;
-        fetch('http://' + ip + '/scan')
-            .then(r => r.json())
-            .then(data => {
-                displayScanResults(data.networks);
-            })
-            .catch(err => {
-                results.innerHTML = '❌ Errore scansione: ' + err.message;
-                showToast('❌ Errore scansione');
-            });
-    } else if (connectionMode === 'ble' && connesso) {
-        invia('WIFI_SCAN');
-        log('📡 Scansione reti WiFi via BLE...');
-        results.innerHTML = '🔍 Scansione in corso via BLE...';
+document.querySelectorAll('#tabBar .tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('#tabBar .tab').forEach(t => t.classList.remove('attivo'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('attivo'));
+        this.classList.add('attivo');
+        document.getElementById('panel-' + this.dataset.panel).classList.add('attivo');
+        if (this.dataset.panel !== 'tastiera') {
+            document.getElementById('qwertyContainer').style.display = 'none';
+            document.getElementById('qwertyArrow').className = 'arrow';
+            document.getElementById('toggleQwerty').innerHTML = '<span class="arrow">▶</span> Mostra tastiera';
+        }
+    });
+});
+
+// ============================================================
+// TOGGLE QWERTY
+// ============================================================
+function toggleQWERTY() {
+    const container = document.getElementById('qwertyContainer');
+    const arrow = document.getElementById('qwertyArrow');
+    const btn = document.getElementById('toggleQwerty');
+    if (container.style.display === 'none' || container.style.display === '') {
+        container.style.display = 'block';
+        arrow.className = 'arrow open';
+        btn.innerHTML = '<span class="arrow open">▼</span> Nascondi tastiera';
     } else {
-        results.innerHTML = '❌ Connetti prima il dongle';
-        showToast('❌ Connetti prima il dongle');
+        container.style.display = 'none';
+        arrow.className = 'arrow';
+        btn.innerHTML = '<span class="arrow">▶</span> Mostra tastiera';
     }
 }
 
 // ============================================================
-// TUTTE LE TUE FUNZIONI ORIGINALI (non toccate)
+// CONTROLLI IMPOSTAZIONI
 // ============================================================
-// resetDefaultSettings, toggleQWERTY, toggleMod, inviaTastoConMod,
-// inviaCombo, eseguiMacro, salvaMacroCustom, rimuoviMacroCustom,
-// eseguiMacroCustom, aggiornaMacroCustom, salvaCredenziale,
-// rimuoviCred, inviaCred, aggiornaCredenziali, inviaCustomCmd,
-// traduciAccenti, inviaChat, toggleCaps, toggleHold, mouseDown,
-// mouseUp, dblClick, scroll_, aggiornaQWERTY, setLayout, setModo,
-// resetAll, toggleHoldGlobal, loadSettings, updateSens, log, ecc.
+const sensSlider = document.getElementById('sensSlider');
+const sensVal = document.getElementById('sensVal');
+const sensSliderTrack = document.getElementById('sensSliderTrack');
+const sensValTrack = document.getElementById('sensValTrack');
+
+function updateSens(value) {
+    sens = parseFloat(value);
+    sensVal.textContent = sens.toFixed(1);
+    sensValTrack.textContent = sens.toFixed(1);
+    sensSlider.value = sens;
+    sensSliderTrack.value = sens;
+    localStorage.setItem('kvm_sens', sens);
+    document.getElementById('statusSens').textContent = sens.toFixed(1);
+}
+
+sensSlider.addEventListener('input', function() { updateSens(this.value); });
+sensSliderTrack.addEventListener('input', function() { updateSens(this.value); });
+
+const minMovementSlider = document.getElementById('minMovementSlider');
+const minMovementVal = document.getElementById('minMovementVal');
+minMovementSlider.addEventListener('input', function() {
+    minMovement = parseInt(this.value);
+    minMovementVal.textContent = minMovement;
+    localStorage.setItem('kvm_minMovement', minMovement);
+    document.getElementById('statusMinMov').textContent = minMovement;
+});
+
+const sendIntervalSlider = document.getElementById('sendIntervalSlider');
+const sendIntervalVal = document.getElementById('sendIntervalVal');
+sendIntervalSlider.addEventListener('input', function() {
+    sendInterval = parseInt(this.value);
+    sendIntervalVal.textContent = sendInterval;
+    localStorage.setItem('kvm_sendInterval', sendInterval);
+    document.getElementById('statusInterval').textContent = sendInterval;
+});
+
+function loadSettings() {
+    sensSlider.value = sens;
+    sensVal.textContent = sens.toFixed(1);
+    sensSliderTrack.value = sens;
+    sensValTrack.textContent = sens.toFixed(1);
+    minMovementSlider.value = minMovement;
+    minMovementVal.textContent = minMovement;
+    sendIntervalSlider.value = sendInterval;
+    sendIntervalVal.textContent = sendInterval;
+    document.getElementById('statusSens').textContent = sens.toFixed(1);
+    document.getElementById('statusMinMov').textContent = minMovement;
+    document.getElementById('statusInterval').textContent = sendInterval;
+}
+
+function resetDefaultSettings() {
+    if (!confirm('Ripristinare tutte le impostazioni ai valori predefiniti?')) return;
+    sens = DEFAULT_SENS;
+    minMovement = DEFAULT_MIN_MOVEMENT;
+    sendInterval = DEFAULT_SEND_INTERVAL;
+    localStorage.setItem('kvm_sens', sens);
+    localStorage.setItem('kvm_minMovement', minMovement);
+    localStorage.setItem('kvm_sendInterval', sendInterval);
+    loadSettings();
+    log('🔄 Impostazioni ripristinate ai valori default');
+    showToast('✅ Impostazioni ripristinate');
+}
 
 // ============================================================
-// QUI VANNO TUTTE LE TUE FUNZIONI ORIGINALI
-// (le ho già incluse nel file completo che ti mando)
+// RESET
 // ============================================================
-// ... (continua con tutto il resto del tuo codice JavaScript)
+function resetAll() {
+    holdMods = {};
+    holdGlobalActive = false;
+    capsLockActive = false;
+    holdTouch = false;
+    holdTouchBtn = null;
+    document.querySelectorAll('.mod.attivo').forEach(el => el.classList.remove('attivo'));
+    document.querySelectorAll('.hold-btn.attivo').forEach(el => el.classList.remove('attivo'));
+    document.querySelectorAll('.caps-btn.attivo').forEach(el => el.classList.remove('attivo'));
+    document.getElementById('btnHold').classList.remove('hold-on');
+    document.getElementById('btnSx').classList.remove('premuto');
+    document.getElementById('btnDx').classList.remove('premuto');
+    aggiornaQWERTY();
+    invia('RESET');
+    log('✕ RESET eseguito');
+    showToast('✕ RESET eseguito');
+}
+
+// ============================================================
+// HOLD
+// ============================================================
+function toggleHoldGlobal() {
+    holdGlobalActive = !holdGlobalActive;
+    document.querySelectorAll('.hold-btn').forEach(el => {
+        el.classList.toggle('attivo', holdGlobalActive);
+    });
+    if (holdGlobalActive) {
+        invia('HOLD_ON');
+        log('🔒 HOLD GLOBALE attivo');
+    } else {
+        invia('HOLD_OFF');
+        log('🔓 HOLD GLOBALE disattivato');
+        document.querySelectorAll('.k.premuto').forEach(el => el.classList.remove('premuto'));
+    }
+}
+
+// ============================================================
+// CAPS LOCK
+// ============================================================
+function toggleCaps() {
+    capsLockActive = !capsLockActive;
+    document.getElementById('btnCaps').classList.toggle('attivo', capsLockActive);
+    invia('CAPS_TOGGLE');
+    aggiornaQWERTY();
+    log('⇪ CAPS ' + (capsLockActive ? 'ON' : 'OFF'));
+}
+
+// ============================================================
+// QWERTY
+// ============================================================
+function aggiornaQWERTY() {
+    const shiftAttivo = holdMods['SHIFT'] || false;
+    const capsAttivo = capsLockActive || false;
+    const mostraMaiuscolo = shiftAttivo !== capsAttivo;
+    const lettere = ['q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m'];
+    lettere.forEach(letra => {
+        const el = document.getElementById('qw-' + letra);
+        if (el) el.textContent = mostraMaiuscolo ? letra.toUpperCase() : letra.toLowerCase();
+    });
+}
+
+// ============================================================
+// LAYOUT E MODALITÀ
+// ============================================================
+function setLayout(layout) {
+    invia('LAYOUT:' + layout);
+    log('⌨️ Layout: ' + layout);
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.layout === layout) btn.classList.add('active');
+    });
+    const statusLabel = document.getElementById('statusLabel');
+    if (statusLabel) {
+        const currentMode = document.querySelector('.mode-btn.active')?.dataset.mode || 'AUTO';
+        statusLabel.textContent = '📌 Stato: Layout ' + layout + ' | Modalità ' + currentMode;
+    }
+}
+
+function setModo(modo) {
+    invia('MODE:' + modo);
+    log('📡 Modalità: ' + modo);
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.mode === modo) btn.classList.add('active');
+    });
+    const statusLabel = document.getElementById('statusLabel');
+    if (statusLabel) {
+        const currentLayout = document.querySelector('.layout-btn.active')?.dataset.layout || 'IT';
+        statusLabel.textContent = '📌 Stato: Layout ' + currentLayout + ' | Modalità ' + modo;
+    }
+}
+
+// ============================================================
+// CHAT - TRADUZIONE ACCENTI
+// ============================================================
+function traduciAccenti(testo) {
+    const mappa = {
+        'à': '[ALT+0224]', 'è': '[ALT+0232]', 'é': '[ALT+0233]',
+        'ì': '[ALT+0236]', 'ò': '[ALT+0242]', 'ù': '[ALT+0249]',
+        'À': '[ALT+0192]', 'È': '[ALT+0200]', 'É': '[ALT+0201]',
+        'Ì': '[ALT+0204]', 'Ò': '[ALT+0210]', 'Ù': '[ALT+0217]'
+    };
+    let risultato = '';
+    for (let i = 0; i < testo.length; i++) {
+        let car = testo.charAt(i);
+        risultato += mappa[car] || car;
+    }
+    return risultato;
+}
+
+function inviaChat() {
+    const text = document.getElementById('chatText').value;
+    if (!text) { log('❌ Testo vuoto'); return; }
+    const textTradotto = traduciAccenti(text);
+    document.getElementById('chatText').value = '';
+    invia('T:' + textTradotto);
+    log('💬 Inviato (' + text.length + ' caratteri)');
+}
+
+// ============================================================
+// TASTIERA
+// ============================================================
+function toggleMod(mod) {
+    holdMods[mod] = !holdMods[mod];
+    const el = document.getElementById('mod-' + mod);
+    if (el) el.classList.toggle('attivo', holdMods[mod]);
+    if (mod === 'SHIFT') aggiornaQWERTY();
+    invia('HD:' + mod);
+}
+
+function inviaTastoConMod(tasto) {
+    if (holdGlobalActive) {
+        invia('K:' + tasto);
+        return;
+    }
+    const attivi = Object.keys(holdMods).filter(k => holdMods[k]);
+    if (attivi.length > 0) {
+        invia('K:' + attivi.join('+') + '+' + tasto);
+        holdMods = {};
+        document.querySelectorAll('.k.mod.attivo').forEach(el => el.classList.remove('attivo'));
+        setTimeout(() => invia('HD:OFF'), 80);
+    } else {
+        invia('K:' + tasto);
+    }
+}
+
+function inviaCombo(c) {
+    if (holdGlobalActive) { invia('K:' + c); return; }
+    invia('K:' + c);
+}
+
+// ============================================================
+// MACRO
+// ============================================================
+function eseguiMacro(id) { invia('MACRO:' + id); }
+
+function salvaMacroCustom() {
+    const nome = document.getElementById('macroNome').value.trim();
+    const seq = document.getElementById('macroSeq').value.trim();
+    if (!nome || !seq) { alert('Inserisci nome e sequenza'); return; }
+    const payload = JSON.stringify({ n: nome, s: seq });
+    invia('MACRO_SAVE:' + payload);
+    document.getElementById('macroNome').value = '';
+    document.getElementById('macroSeq').value = '';
+    log('📤 Salvataggio macro: ' + nome);
+    macroCustom.push({ nome: nome, seq: seq });
+    aggiornaMacroCustom();
+}
+
+function rimuoviMacroCustom(i) {
+    const nome = macroCustom[i].nome;
+    if (confirm('Rimuovere "' + nome + '"?')) {
+        invia('MACRO_DEL:' + nome);
+        macroCustom.splice(i, 1);
+        aggiornaMacroCustom();
+    }
+}
+
+function eseguiMacroCustom(i) {
+    invia('MACRO_RUN:' + macroCustom[i].nome);
+    log('⚡ ' + macroCustom[i].nome);
+}
+
+function aggiornaMacroCustom() {
+    const grid = document.getElementById('macroCustomGrid');
+    grid.innerHTML = '';
+    macroCustom.forEach((m, i) => {
+        const div = document.createElement('div');
+        div.className = 'm custom';
+        div.innerHTML = `<span class="icona">⚡</span>${m.nome}<br><span style="font-size:8px;color:var(--muted);">${m.seq.substring(0,12)}${m.seq.length>12?'…':''}</span>`;
+        div.onclick = () => eseguiMacroCustom(i);
+        div.addEventListener('contextmenu', (e) => { e.preventDefault(); rimuoviMacroCustom(i); });
+        let timer;
+        div.addEventListener('touchstart', (e) => { timer = setTimeout(() => { rimuoviMacroCustom(i); }, 800); });
+        div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
+        div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
+        grid.appendChild(div);
+    });
+}
+
+// ============================================================
+// CREDENZIALI
+// ============================================================
+function salvaCredenziale() {
+    const nome = document.getElementById('credNome').value.trim();
+    const user = document.getElementById('credUser').value.trim();
+    const pass = document.getElementById('credPass').value.trim();
+    if (!nome || !pass) { alert('Inserisci nome e password'); return; }
+    const payload = JSON.stringify({ n: nome, u: user, p: pass });
+    invia('CRED_SAVE:' + payload);
+    document.getElementById('credNome').value = '';
+    document.getElementById('credUser').value = '';
+    document.getElementById('credPass').value = '';
+    credenziali.push({ nome: nome, user: user, pass: pass });
+    aggiornaCredenziali();
+    log('🔑 Salvataggio: ' + nome);
+}
+
+function rimuoviCred(i) {
+    const nome = credenziali[i].nome;
+    if (confirm('Rimuovere "' + nome + '"?')) {
+        invia('CRED_DEL:' + nome);
+        credenziali.splice(i, 1);
+        aggiornaCredenziali();
+    }
+}
+
+function inviaCred(i) {
+    invia('CRED_USE:' + credenziali[i].nome);
+    log('🔑 Invio: ' + credenziali[i].nome);
+}
+
+function aggiornaCredenziali() {
+    const grid = document.getElementById('credGrid');
+    grid.innerHTML = '';
+    credenziali.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'c';
+        div.innerHTML = `<span class="icona">🔑</span>${c.nome}`;
+        div.onclick = () => inviaCred(i);
+        div.addEventListener('contextmenu', (e) => { e.preventDefault(); rimuoviCred(i); });
+        let timer;
+        div.addEventListener('touchstart', (e) => { timer = setTimeout(() => { rimuoviCred(i); }, 800); });
+        div.addEventListener('touchend', () => { if (timer) clearTimeout(timer); });
+        div.addEventListener('touchmove', () => { if (timer) clearTimeout(timer); });
+        grid.appendChild(div);
+    });
+}
+
+// ============================================================
+// TERMINAL
+// ============================================================
+function inviaCustomCmd() {
+    const cmd = document.getElementById('customCmd').value.trim();
+    if (!cmd) { log('❌ Inserisci un comando'); return; }
+    document.getElementById('customCmd').value = '';
+    invia('T:' + traduciAccenti(cmd));
+    setTimeout(() => invia('K:ENTER'), 200);
+    log('📟 Comando inviato: ' + cmd);
+}
+
+// ============================================================
+// TRACKPAD
+// ============================================================
+const trackpad = document.getElementById('trackpadArea');
+let accumulatedX = 0, accumulatedY = 0;
+let stopSent = false;
+
+trackpad.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    trackpad.setPointerCapture(e.pointerId);
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
+    accumulatedX = 0; accumulatedY = 0; stopSent = false; velocityHistory = [];
+});
+
+trackpad.addEventListener('pointermove', function(e) {
+    e.preventDefault();
+    const p = pointers[e.pointerId];
+    if (!p) return;
+    const dx = e.clientX - p.x;
+    const dy = e.clientY - p.y;
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        p.moved = true;
+        const n = Object.keys(pointers).length;
+        if (n === 1) {
+            const dxRaw = dx * sens;
+            const dyRaw = dy * sens;
+            velocityHistory.push({ dx: dxRaw, dy: dyRaw });
+            if (velocityHistory.length > VELOCITY_SAMPLES) velocityHistory.shift();
+            let avgDx = 0, avgDy = 0;
+            for (let i = 0; i < velocityHistory.length; i++) { avgDx += velocityHistory[i].dx; avgDy += velocityHistory[i].dy; }
+            avgDx /= velocityHistory.length; avgDy /= velocityHistory.length;
+            const currentSpeed = Math.abs(dxRaw) + Math.abs(dyRaw);
+            const avgSpeed = Math.abs(avgDx) + Math.abs(avgDy);
+            let decay = 1.0;
+            if (currentSpeed < avgSpeed * 0.5) decay = 0.5;
+            if (currentSpeed < avgSpeed * 0.25) decay = 0.25;
+            if (currentSpeed < avgSpeed * 0.1) decay = 0;
+            accumulatedX += dxRaw * decay;
+            accumulatedY += dyRaw * decay;
+            p.x = e.clientX; p.y = e.clientY;
+            const now = Date.now();
+            if (now - lastMoveTime >= sendInterval) {
+                const mx = Math.round(accumulatedX), my = Math.round(accumulatedY);
+                if (Math.abs(mx) >= minMovement || Math.abs(my) >= minMovement) {
+                    inviaMovimento(mx, my);
+                    accumulatedX = 0; accumulatedY = 0; lastMoveTime = now; stopSent = false;
+                }
+            }
+        } else if (n === 2) {
+            const sy = Math.round(dy * 0.7);
+            if (sy !== 0) invia('SC:' + (-sy));
+            p.x = e.clientX; p.y = e.clientY;
+        }
+    }
+});
+
+trackpad.addEventListener('pointerup', function(e) {
+    e.preventDefault();
+    const p = pointers[e.pointerId];
+    if (!p) return;
+    const dist = Math.sqrt(Math.pow(e.clientX - p.startX, 2) + Math.pow(e.clientY - p.startY, 2));
+    if (!p.moved || dist < 8) {
+        const now = Date.now();
+        const remaining = Object.keys(pointers).length - 1;
+        if (remaining === 0) {
+            if (now - lastTap < 300) { invia('C:L'); setTimeout(() => invia('C:L'), 80); lastTap = 0; log('🖱️ Doppio click'); }
+            else { invia('C:L'); lastTap = now; log('🖱️ Click sinistro'); }
+        } else if (remaining === 1) { invia('C:R'); log('🖱️ Click destro'); }
+    }
+    if (!stopSent) { fermaCursore(); stopSent = true; }
+    accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
+    delete pointers[e.pointerId];
+});
+
+trackpad.addEventListener('pointercancel', function(e) {
+    delete pointers[e.pointerId];
+    if (!stopSent) { fermaCursore(); stopSent = true; }
+    accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
+});
+
+function toggleHold() {
+    holdTouch = !holdTouch;
+    const btn = document.getElementById('btnHold');
+    if (holdTouch) {
+        btn.classList.add('hold-on');
+        btn.innerHTML = '🔒 ON<span class="sub">Blocca</span>';
+        log('🔒 Hold attivo');
+    } else {
+        btn.classList.remove('hold-on');
+        btn.innerHTML = '🔒 Hold<span class="sub">Blocca</span>';
+        if (holdTouchBtn) {
+            const btnName = holdTouchBtn === 'L' ? 'btnSx' : 'btnDx';
+            document.getElementById(btnName).classList.remove('premuto');
+            invia('C:' + holdTouchBtn + ':up');
+            holdTouchBtn = null;
+        }
+        log('🔓 Hold rilasciato');
+    }
+}
+
+function mouseDown(t) {
+    const btnId = t === 'L' ? 'btnSx' : 'btnDx';
+    const btn = document.getElementById(btnId);
+    if (holdTouch) {
+        if (holdTouchBtn === t) {
+            btn.classList.remove('premuto');
+            invia('C:' + t + ':up');
+            holdTouchBtn = null;
+            log('🖱️ ' + (t === 'L' ? 'Sx' : 'Dx') + ' rilasciato');
+        } else {
+            if (holdTouchBtn) {
+                const oldBtn = holdTouchBtn === 'L' ? 'btnSx' : 'btnDx';
+                document.getElementById(oldBtn).classList.remove('premuto');
+                invia('C:' + holdTouchBtn + ':up');
+            }
+            btn.classList.add('premuto');
+            invia('C:' + t + ':down');
+            holdTouchBtn = t;
+            log('🖱️ ' + (t === 'L' ? 'Sx' : 'Dx') + ' premuto');
+        }
+    } else {
+        btn.classList.add('premuto');
+        invia('C:' + t + ':down');
+    }
+}
+
+function mouseUp(t) {
+    if (holdTouch) return;
+    document.getElementById(t === 'L' ? 'btnSx' : 'btnDx').classList.remove('premuto');
+    invia('C:' + t + ':up');
+}
+
+function dblClick() { invia('C:L'); setTimeout(() => invia('C:L'), 80); }
+function scroll_(v) { invia('SC:' + v); }
 
 // ============================================================
 // INIT
@@ -1562,7 +1866,6 @@ window.invia = invia;
 window.inviaMovimento = inviaMovimento;
 window.fermaCursore = fermaCursore;
 window.mostraAttesaRiavvio = mostraAttesaRiavvio;
-window.getWiFiStatus = getWiFiStatus;
 window.toggleConnessione = toggleConnessione;
 window.toggleHold = toggleHold;
 window.toggleHoldGlobal = toggleHoldGlobal;
@@ -1587,9 +1890,8 @@ window.setModo = setModo;
 window.toggleQWERTY = toggleQWERTY;
 window.wifiSetMode = wifiSetMode;
 window.wifiStatus = wifiStatus;
-window.wifiConnect = wifiConnect;
-window.wifiUpdateAP = wifiUpdateAP;
-window.wifiScan = wifiScan;
+window.wifiConnect2 = wifiConnect2;
+window.wifiScan2 = wifiScan2;
 window.wifiLoadNetworks = wifiLoadNetworks;
 window.wifiDeleteNetwork = wifiDeleteNetwork;
 window.wifiConnectSaved = wifiConnectSaved;
