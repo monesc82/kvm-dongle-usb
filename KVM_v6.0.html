@@ -641,10 +641,10 @@
                 </div>
 
                 <!-- Azioni -->
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button onclick="fmUpload()" style="flex:1;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⬆️ Upload</button>
-                    <button onclick="fmNewFile()" style="flex:1;padding:8px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📄 Nuovo</button>
-                    <button onclick="fmNewDir()" style="flex:1;padding:8px;background:#ff9500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📁 Cartella</button>
+                <div class="fm-actions">
+                        <button onclick="fmUpload()" style="background:var(--accent);">⬆️ Upload</button>
+                        <button onclick="fmNewFile()" style="background:var(--green);">📄 Nuovo</button>
+                        <button onclick="fmNewDir()" style="background:#ff9500;">📁 Cartella</button>
                 </div>
                 <input type="file" id="fmFileInput" style="display:none;" multiple onchange="fmDoUpload(this)">
 
@@ -1870,6 +1870,51 @@ document.querySelectorAll('#tabBar .tab').forEach(tab => {
 ].forEach(fn => { try { if (typeof window[fn] === 'undefined') window[fn] = eval(fn); } catch(e){} });
 
 console.log('✅ KVM v6.0_claude — App pronta');
+// ============================================================
+// ADATTAMENTO TASTIERA TELEFONO
+// ============================================================
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function() {
+        const heightDiff = window.innerHeight - window.visualViewport.height;
+        
+        // Chat panel
+        const chatPanel = document.getElementById('panel-chat');
+        if (chatPanel && chatPanel.classList.contains('attivo')) {
+            if (heightDiff > 100) {
+                chatPanel.style.paddingBottom = (heightDiff + 20) + 'px';
+                const actions = chatPanel.querySelector('.chat-actions');
+                if (actions) {
+                    actions.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            } else {
+                chatPanel.style.paddingBottom = '0';
+            }
+        }
+        
+        // Files panel
+        const filesPanel = document.getElementById('panel-files');
+        if (filesPanel && filesPanel.classList.contains('attivo')) {
+            if (heightDiff > 100) {
+                filesPanel.style.paddingBottom = (heightDiff + 20) + 'px';
+            } else {
+                filesPanel.style.paddingBottom = '0';
+            }
+        }
+    });
+}
+
+// Forza il refresh quando si apre la tastiera
+document.addEventListener('focusin', function(e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+        setTimeout(() => {
+            const activePanel = document.querySelector('.panel.attivo');
+            if (activePanel) {
+                activePanel.scrollTop = activePanel.scrollHeight;
+            }
+        }, 300);
+    }
+});
+    
 </script>
 </body>
 </html>
