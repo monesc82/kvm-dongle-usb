@@ -188,11 +188,38 @@
         .btn-reset-default { background: #ffebee !important; border-color: #ef9a9a !important; color: #c62828 !important; }
         .btn-reset-default:active { background: #ffcdd2 !important; }
         @media (prefers-color-scheme: dark) { .btn-reset-default { background: #3a1e1e !important; border-color: #5a2d2d !important; color: #ef9a9a !important; } }
-    </style>
-</head>
-<body>
-<div class="app">
+    /* Fix pulsanti Files - non coperti da Hold/Reset */
+        #panel-files {
+            padding-bottom: 0;
+}
 
+        .fm-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            background: var(--bg);
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+            border-top: 1px solid var(--border);
+        }
+
+        .fm-actions button {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+            </style>
+         </head>
+         <body>
+         <div class="app">
+            
     <div class="toast" id="toast"></div>
 
     <!-- ============================================================
@@ -649,10 +676,10 @@
                 </div>
 
                 <!-- Azioni -->
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button onclick="fmUpload()" style="flex:1;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⬆️ Upload</button>
-                    <button onclick="fmNewFile()" style="flex:1;padding:8px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📄 Nuovo</button>
-                    <button onclick="fmNewDir()" style="flex:1;padding:8px;background:#ff9500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📁 Cartella</button>
+                <div class="fm-actions" style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;background:var(--bg);position:sticky;bottom:0;z-index:20;border-top:1px solid var(--border);">
+                    <button onclick="fmUpload()" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⬆️ Upload</button>
+                    <button onclick="fmNewFile()" style="flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📄 Nuovo</button>
+                    <button onclick="fmNewDir()" style="flex:1;padding:10px;background:#ff9500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📁 Cartella</button>
                 </div>
                 <input type="file" id="fmFileInput" style="display:none;" multiple onchange="fmDoUpload(this)">
 
