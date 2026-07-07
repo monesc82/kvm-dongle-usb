@@ -189,32 +189,34 @@
         .btn-reset-default:active { background: #ffcdd2 !important; }
         @media (prefers-color-scheme: dark) { .btn-reset-default { background: #3a1e1e !important; border-color: #5a2d2d !important; color: #ef9a9a !important; } }
     /* Fix pulsanti Files - non coperti da Hold/Reset */
-        #panel-files {
-            padding-bottom: 0;
+/* Fix pulsanti Files - non coperti da Hold/Reset */
+/* Fix pulsanti Files - non coperti da Hold/Reset */
+#panel-files {
+    padding-bottom: 0 !important;
 }
 
-        .fm-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            padding: 10px 0;
-            background: var(--bg);
-            position: sticky;
-            bottom: 0;
-            z-index: 20;
-            border-top: 1px solid var(--border);
-        }
+.fm-actions {
+    display: flex !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    padding: 10px 0 !important;
+    background: var(--bg) !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 200 !important;  /* ← FORZATO SOPRA LA BOTTOM-BAR */
+    border-top: 1px solid var(--border) !important;
+}
 
-        .fm-actions button {
-            flex: 1;
-            min-width: 60px;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
+.fm-actions button {
+    flex: 1 !important;
+    min-width: 60px !important;
+    padding: 10px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
             </style>
          </head>
          <body>
