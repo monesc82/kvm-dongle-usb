@@ -1058,6 +1058,39 @@ function toggleConnessione() {
 // BLE RESPONSES
 // ============================================================
 function handleBLEResponse(data) {
+        if (data.startsWith('MACRO_SAVED:')) {
+        log('✅ Macro salvata: ' + data.substring(12));
+        // ★★★ RICARICA LA LISTA ★★★
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('MACRO_LIST'), 300);
+        }
+        return;
+    }
+    
+    if (data.startsWith('MACRO_DELETED:')) {
+        log('🗑️ Macro eliminata: ' + data.substring(14));
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('MACRO_LIST'), 300);
+        }
+        return;
+    }
+    
+    if (data.startsWith('CRED_SAVED:')) {
+        log('✅ Credenziale salvata: ' + data.substring(11));
+        // ★★★ RICARICA LA LISTA ★★★
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('CRED_LIST'), 300);
+        }
+        return;
+    }
+    
+    if (data.startsWith('CRED_DELETED:')) {
+        log('🗑️ Cred eliminata: ' + data.substring(13));
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('CRED_LIST'), 300);
+        }
+        return;
+    }
     if (data.startsWith('MACRO_START:')) { bleChunkBuffer.macro = ''; return; }
     if (data.startsWith('MACRO_DATA:'))  { bleChunkBuffer.macro += data.substring(11); return; }
     if (data === 'MACRO_END') {
