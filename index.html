@@ -784,13 +784,29 @@ function updateStatus(text, detail, dotState) {
 // NAVIGAZIONE
 // ============================================================
 function goToKVM() {
-    if (!isConnected) { log('❌ Nessuna connessione attiva'); showToast('❌ Nessuna connessione attiva'); return; }
+    if (!isConnected) { 
+        log('❌ Nessuna connessione attiva'); 
+        showToast('❌ Nessuna connessione attiva'); 
+        return; 
+    }
+    
     document.getElementById('screen-connection').classList.remove('active');
     document.getElementById('screen-connection').style.display = 'none';
     document.getElementById('screen-kvm').classList.add('active');
     document.getElementById('screen-kvm').style.display = 'flex';
     kvmLog('✅ KVM attivo - Modalità: ' + connectionMode.toUpperCase());
-    // FIX v5.30: carica stato WiFi e reti salvate entrando nel KVM
+    
+    // ★★★ RICARICA SEMPRE I DATI ALL'INGRESSO ★★★
+    if (connectionMode === 'ble' && connesso) {
+        log('🔄 Ricarica dati via BLE...');
+        invia('MACRO_LIST');
+        setTimeout(() => invia('CRED_LIST'), 400);
+    } else if (connectionMode === 'wifi' || connectionMode === 'ap') {
+        log('🔄 Ricarica dati via HTTP...');
+        loadMacrosHTTP();
+        loadCredsHTTP();
+    }
+    
     if (connectionMode === 'wifi' || connectionMode === 'ap') {
         wifiStatus();
         setTimeout(wifiLoadNetworks, 500);
@@ -1072,6 +1088,55 @@ function loadSavedNetworksHTTP(ip) {
             displayNetworks(data.networks || []);
         })
         .catch(() => {});
+}
+    // ============================================================
+// CARICAMENTO MACRO E CREDENZIALI VIA HTTP (WiFi/AP)
+// ============================================================
+function loadMacrosHTTP() {
+    if (!wifiIP) {
+        log('❌ WiFi IP non disponibile');
+        return Promise.reject('No WiFi IP');
+    }
+    log('📡 Caricamento macro da http://' + wifiIP + '/api/macros');
+    return fetch('http://' + wifiIP + '/api/macros')
+        .then(r => r.json())
+        .then(data => {
+            macroCustom = data.map(m => ({
+                nome: m.nome || m.n || '',
+                seq: m.seq || m.s || ''
+            }));
+            renderMacros();
+            log('✅ Macro caricate: ' + macroCustom.length);
+            return macroCustom;
+        })
+        .catch(err => {
+            log('❌ Load macros: ' + err.message);
+            throw err;
+        });
+}
+
+function loadCredsHTTP() {
+    if (!wifiIP) {
+        log('❌ WiFi IP non disponibile');
+        return Promise.reject('No WiFi IP');
+    }
+    log('📡 Caricamento credenziali da http://' + wifiIP + '/api/creds');
+    return fetch('http://' + wifiIP + '/api/creds')
+        .then(r => r.json())
+        .then(data => {
+            credenziali = data.map(c => ({
+                nome: c.nome || c.n || '',
+                user: c.user || c.u || '',
+                pass: c.pass || c.p || ''
+            }));
+            renderCreds();
+            log('✅ Credenziali caricate: ' + credenziali.length);
+            return credenziali;
+        })
+        .catch(err => {
+            log('❌ Load creds: ' + err.message);
+            throw err;
+        });
 }
 
 // ============================================================
@@ -1367,19 +1432,14 @@ function scanNetworks() {
 // ============================================================
 // TABS
 // ============================================================
+// Aggiorna SD status quando si apre il tab Files
 document.querySelectorAll('#tabBar .tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('#tabBar .tab').forEach(t => t.classList.remove('attivo'));
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('attivo'));
-        this.classList.add('attivo');
-        document.getElementById('panel-' + this.dataset.panel).classList.add('attivo');
-        if (this.dataset.panel !== 'tastiera') {
-            document.getElementById('qwertyContainer').style.display = 'none';
-            document.getElementById('toggleQwerty').innerHTML = '<span class="arrow">▶</span> Mostra tastiera';
-        }
-        // FIX v5.30: aggiorna stato WiFi quando si apre impostazioni
-        if (this.dataset.panel === 'impostazioni') wifiStatus();
-    });
+    if (tab.dataset.panel === 'files') {
+        const origClick = tab.onclick;
+        tab.addEventListener('click', () => {
+            if (connectionMode === 'wifi' || connectionMode === 'ap') sdRefresh();
+        });
+    }
 });
 
 function toggleQWERTY() {
@@ -1980,21 +2040,27 @@ console.log('✅ KVM v6.1_claude — App pronta');
     const host = window.location.hostname;
     const isGitHub = host.endsWith('github.io');
     const isLocalDev = host === '' || host === 'localhost' || host === '127.0.0.1';
-    if (isGitHub || isLocalDev) return; // pagina esterna: nessun auto-connect
+    if (isGitHub || isLocalDev) return;
 
-    // Siamo serviti dal dongle stesso (es. 192.168.4.1 in AP,
-    // oppure l'IP assegnato in STA): il dongle è per definizione
-    // raggiungibile, non serve nemmeno verificare.
     wifiIP = host;
     connectionMode = 'wifi';
     isConnected = true;
     localStorage.setItem('kvm_wifi_ip', wifiIP);
     log('🔌 Servito direttamente dal dongle su ' + host + ' — connessione automatica');
+    
+    // ★★★ CARICA MACRO E CREDENZIALI PRIMA DI ANDARE AL KVM ★★★
+    setTimeout(() => {
+        loadMacrosHTTP();
+        loadCredsHTTP();
+        log('✅ Macro e credenziali caricate da LittleFS');
+    }, 200);
+    
     setTimeout(() => {
         const sb = document.getElementById('statoBtn');
         if (sb) { sb.style.display = ''; sb.textContent = '● ' + host; sb.className = 'header-btn wifi'; }
         goToKVM();
-    }, 100);
+    }, 500);
+})();
 })();
 </script>
 </body>
