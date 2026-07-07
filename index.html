@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#f5f5f5">
-    <title>KVM Dongle v6.0</title>
+    <title>KVM Dongle v6.1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.08); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -551,18 +551,18 @@
                         <button class="k mode-btn" data-mode="UNICODE" onclick="setModo('UNICODE')">🌐 Unicode</button>
                     </div>
                 </div>
-                <!-- ★★★ AGGIUNGI QUESTA SEZIONE ★★★ -->
-<div class="kbd-section">
-    <div class="label">🔄 Sincronizzazione Dati</div>
-    <div class="controls-row">
-        <button class="btn" onclick="ricaricaDati()" style="flex:1; padding:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
-            🔄 Ricarica Macro e Credenziali
-        </button>
-    </div>
-    <div style="font-size:10px; color:var(--muted); padding:4px 0; text-align:center;">
-        Utile se hai salvato dati da BLE e ora sei in WiFi (o viceversa)
-    </div>
-      </div>
+                <!-- SEZIONE SINCRONIZZAZIONE DATI -->
+                <div class="kbd-section">
+                    <div class="label">🔄 Sincronizzazione Dati</div>
+                    <div class="controls-row">
+                        <button class="btn" onclick="ricaricaDati()" style="flex:1; padding:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+                            🔄 Ricarica Macro e Credenziali
+                        </button>
+                    </div>
+                    <div style="font-size:10px; color:var(--muted); padding:4px 0; text-align:center;">
+                        Utile se hai salvato dati da BLE e ora sei in WiFi (o viceversa)
+                    </div>
+                </div>
 
                 <!-- FIX v5.30: pannello WiFi nelle impostazioni ora funziona anche via HTTP -->
                 <div class="kbd-section">
@@ -644,7 +644,7 @@
                 <!-- Lista file -->
                 <div id="fmList" style="flex:1;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
                     <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">
-                        Connetti in WiFi/AP e inserisci una SD card per usare il file manager
+                        Connetti in WiFi/AP per usare il file manager
                     </div>
                 </div>
 
@@ -1070,39 +1070,6 @@ function toggleConnessione() {
 // BLE RESPONSES
 // ============================================================
 function handleBLEResponse(data) {
-        if (data.startsWith('MACRO_SAVED:')) {
-        log('✅ Macro salvata: ' + data.substring(12));
-        // ★★★ RICARICA LA LISTA ★★★
-        if (connectionMode === 'ble') {
-            setTimeout(() => invia('MACRO_LIST'), 300);
-        }
-        return;
-    }
-    
-    if (data.startsWith('MACRO_DELETED:')) {
-        log('🗑️ Macro eliminata: ' + data.substring(14));
-        if (connectionMode === 'ble') {
-            setTimeout(() => invia('MACRO_LIST'), 300);
-        }
-        return;
-    }
-    
-    if (data.startsWith('CRED_SAVED:')) {
-        log('✅ Credenziale salvata: ' + data.substring(11));
-        // ★★★ RICARICA LA LISTA ★★★
-        if (connectionMode === 'ble') {
-            setTimeout(() => invia('CRED_LIST'), 300);
-        }
-        return;
-    }
-    
-    if (data.startsWith('CRED_DELETED:')) {
-        log('🗑️ Cred eliminata: ' + data.substring(13));
-        if (connectionMode === 'ble') {
-            setTimeout(() => invia('CRED_LIST'), 300);
-        }
-        return;
-    }
     if (data.startsWith('MACRO_START:')) { bleChunkBuffer.macro = ''; return; }
     if (data.startsWith('MACRO_DATA:'))  { bleChunkBuffer.macro += data.substring(11); return; }
     if (data === 'MACRO_END') {
@@ -1121,10 +1088,34 @@ function handleBLEResponse(data) {
         } catch(err) { log('❌ JSON cred: ' + err.message); }
         bleChunkBuffer.cred = ''; return;
     }
-    if (data.startsWith('MACRO_SAVED:'))  { log('✅ Macro salvata: ' + data.substring(12)); return; }
-    if (data.startsWith('MACRO_DELETED:')){ log('🗑️ Macro eliminata: ' + data.substring(14)); return; }
-    if (data.startsWith('CRED_SAVED:'))   { log('✅ Credenziale salvata: ' + data.substring(11)); return; }
-    if (data.startsWith('CRED_DELETED:')) { log('🗑️ Cred eliminata: ' + data.substring(13)); return; }
+    if (data.startsWith('MACRO_SAVED:')) {
+        log('✅ Macro salvata: ' + data.substring(12));
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('MACRO_LIST'), 300);
+        }
+        return;
+    }
+    if (data.startsWith('MACRO_DELETED:')) {
+        log('🗑️ Macro eliminata: ' + data.substring(14));
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('MACRO_LIST'), 300);
+        }
+        return;
+    }
+    if (data.startsWith('CRED_SAVED:')) {
+        log('✅ Credenziale salvata: ' + data.substring(11));
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('CRED_LIST'), 300);
+        }
+        return;
+    }
+    if (data.startsWith('CRED_DELETED:')) {
+        log('🗑️ Cred eliminata: ' + data.substring(13));
+        if (connectionMode === 'ble') {
+            setTimeout(() => invia('CRED_LIST'), 300);
+        }
+        return;
+    }
     if (data.startsWith('ERR:'))          { log('❌ ' + data); return; }
     if (data.startsWith('WIFI_SCAN:')) {
         try { displayScanResults(JSON.parse(data.substring(10)).networks); } catch(e) { log('❌ Parse scan BLE'); }
@@ -1561,7 +1552,9 @@ function aggiornaCredenziali() {
     });
 }
 
-    // ★★★ QUI, SUBITO DOPO, AGGIUNGI LA NUOVA FUNZIONE ★★★
+// ============================================================
+// RICARICA DATI (MACRO E CREDENZIALI)
+// ============================================================
 function ricaricaDati() {
     if (connectionMode === 'ble' && connesso) {
         log('🔄 Ricarica dati via BLE...');
@@ -1578,11 +1571,6 @@ function ricaricaDati() {
         showToast('❌ Connetti prima il dongle');
     }
 }
-
-// ============================================================
-// TERMINAL
-// ============================================================
-function inviaCustomCmd() {
 
 // ============================================================
 // TERMINAL
@@ -1946,7 +1934,8 @@ document.querySelectorAll('#tabBar .tab').forEach(tab => {
  'mouseUp','dblClick','scroll_','setLayout','setModo','toggleQWERTY','wifiSetMode','wifiStatus',
  'wifiConnect2','wifiScan2','wifiLoadNetworks','wifiDeleteNetwork','wifiConnectSaved',
  'sdRefresh','fmNavigate','fmEdit','fmEditorSave','fmEditorClose','fmEditorRunPayload',
- 'fmRunPayload','fmDownload','fmDelete','fmUpload','fmDoUpload','fmNewFile','fmNewDir'
+ 'fmRunPayload','fmDownload','fmDelete','fmUpload','fmDoUpload','fmNewFile','fmNewDir',
+ 'ricaricaDati'
 ].forEach(fn => { try { if (typeof window[fn] === 'undefined') window[fn] = eval(fn); } catch(e){} });
 
 console.log('✅ KVM v6.1_claude — App pronta');
