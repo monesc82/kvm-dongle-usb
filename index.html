@@ -551,6 +551,18 @@
                         <button class="k mode-btn" data-mode="UNICODE" onclick="setModo('UNICODE')">🌐 Unicode</button>
                     </div>
                 </div>
+                <!-- ★★★ AGGIUNGI QUESTA SEZIONE ★★★ -->
+<div class="kbd-section">
+    <div class="label">🔄 Sincronizzazione Dati</div>
+    <div class="controls-row">
+        <button class="btn" onclick="ricaricaDati()" style="flex:1; padding:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">
+            🔄 Ricarica Macro e Credenziali
+        </button>
+    </div>
+    <div style="font-size:10px; color:var(--muted); padding:4px 0; text-align:center;">
+        Utile se hai salvato dati da BLE e ora sei in WiFi (o viceversa)
+    </div>
+      </div>
 
                 <!-- FIX v5.30: pannello WiFi nelle impostazioni ora funziona anche via HTTP -->
                 <div class="kbd-section">
@@ -1548,6 +1560,29 @@ function aggiornaCredenziali() {
         grid.appendChild(div);
     });
 }
+
+    // ★★★ QUI, SUBITO DOPO, AGGIUNGI LA NUOVA FUNZIONE ★★★
+function ricaricaDati() {
+    if (connectionMode === 'ble' && connesso) {
+        log('🔄 Ricarica dati via BLE...');
+        invia('MACRO_LIST');
+        setTimeout(() => invia('CRED_LIST'), 400);
+        showToast('🔄 Ricarica in corso...');
+    } else if (connectionMode === 'wifi' || connectionMode === 'ap') {
+        log('🔄 Ricarica dati via HTTP...');
+        loadMacrosHTTP();
+        loadCredsHTTP();
+        showToast('🔄 Dati ricaricati');
+    } else {
+        log('❌ Nessuna connessione attiva');
+        showToast('❌ Connetti prima il dongle');
+    }
+}
+
+// ============================================================
+// TERMINAL
+// ============================================================
+function inviaCustomCmd() {
 
 // ============================================================
 // TERMINAL
