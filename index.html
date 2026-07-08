@@ -723,7 +723,9 @@ let holdMods = {};
 let holdGlobalActive = false, capsLockActive = false;
 let macroCustom = [];
 let credenziali = [];
-let bleChunkBuffer = { macro: '', cred: '' };
+let bleChunkBuffer = { macro: '', cred: '', fsList: '', fsRead: '' };
+// FIX v6.1.2: mappa di promise in attesa di risposta BLE per il File Manager
+let blePendingFS = {};
 let connectionMode = null; // 'ble', 'wifi', 'ap'
 let isConnected = false;
 let wifiIP = null;
@@ -784,29 +786,13 @@ function updateStatus(text, detail, dotState) {
 // NAVIGAZIONE
 // ============================================================
 function goToKVM() {
-    if (!isConnected) { 
-        log('❌ Nessuna connessione attiva'); 
-        showToast('❌ Nessuna connessione attiva'); 
-        return; 
-    }
-    
+    if (!isConnected) { log('❌ Nessuna connessione attiva'); showToast('❌ Nessuna connessione attiva'); return; }
     document.getElementById('screen-connection').classList.remove('active');
     document.getElementById('screen-connection').style.display = 'none';
     document.getElementById('screen-kvm').classList.add('active');
     document.getElementById('screen-kvm').style.display = 'flex';
     kvmLog('✅ KVM attivo - Modalità: ' + connectionMode.toUpperCase());
-    
-    // ★★★ RICARICA SEMPRE I DATI ALL'INGRESSO ★★★
-    if (connectionMode === 'ble' && connesso) {
-        log('🔄 Ricarica dati via BLE...');
-        invia('MACRO_LIST');
-        setTimeout(() => invia('CRED_LIST'), 400);
-    } else if (connectionMode === 'wifi' || connectionMode === 'ap') {
-        log('🔄 Ricarica dati via HTTP...');
-        loadMacrosHTTP();
-        loadCredsHTTP();
-    }
-    
+    // FIX v5.30: carica stato WiFi e reti salvate entrando nel KVM
     if (connectionMode === 'wifi' || connectionMode === 'ap') {
         wifiStatus();
         setTimeout(wifiLoadNetworks, 500);
@@ -1039,6 +1025,9 @@ function setWiFiConnected() {
     showToast('✅ WiFi Connesso a ' + wifiIP);
     localStorage.setItem('kvm_wifi_ip', wifiIP);
     loadSavedNetworksHTTP(wifiIP);
+    // FIX v6.1.2: carica macro/credenziali via HTTP (mancava del tutto)
+    loadMacrosHTTP();
+    loadCredsHTTP();
 }
 
 // ============================================================
@@ -1062,6 +1051,9 @@ function connectAP() {
         showToast('✅ Access Point connesso a ' + apIP);
         localStorage.setItem('kvm_wifi_ip', apIP);
         loadSavedNetworksHTTP(apIP);
+        // FIX v6.1.2: carica macro/credenziali via HTTP anche in AP
+        loadMacrosHTTP();
+        loadCredsHTTP();
     });
 }
 
@@ -1088,55 +1080,6 @@ function loadSavedNetworksHTTP(ip) {
             displayNetworks(data.networks || []);
         })
         .catch(() => {});
-}
-    // ============================================================
-// CARICAMENTO MACRO E CREDENZIALI VIA HTTP (WiFi/AP)
-// ============================================================
-function loadMacrosHTTP() {
-    if (!wifiIP) {
-        log('❌ WiFi IP non disponibile');
-        return Promise.reject('No WiFi IP');
-    }
-    log('📡 Caricamento macro da http://' + wifiIP + '/api/macros');
-    return fetch('http://' + wifiIP + '/api/macros')
-        .then(r => r.json())
-        .then(data => {
-            macroCustom = data.map(m => ({
-                nome: m.nome || m.n || '',
-                seq: m.seq || m.s || ''
-            }));
-            renderMacros();
-            log('✅ Macro caricate: ' + macroCustom.length);
-            return macroCustom;
-        })
-        .catch(err => {
-            log('❌ Load macros: ' + err.message);
-            throw err;
-        });
-}
-
-function loadCredsHTTP() {
-    if (!wifiIP) {
-        log('❌ WiFi IP non disponibile');
-        return Promise.reject('No WiFi IP');
-    }
-    log('📡 Caricamento credenziali da http://' + wifiIP + '/api/creds');
-    return fetch('http://' + wifiIP + '/api/creds')
-        .then(r => r.json())
-        .then(data => {
-            credenziali = data.map(c => ({
-                nome: c.nome || c.n || '',
-                user: c.user || c.u || '',
-                pass: c.pass || c.p || ''
-            }));
-            renderCreds();
-            log('✅ Credenziali caricate: ' + credenziali.length);
-            return credenziali;
-        })
-        .catch(err => {
-            log('❌ Load creds: ' + err.message);
-            throw err;
-        });
 }
 
 // ============================================================
@@ -1211,6 +1154,49 @@ function handleBLEResponse(data) {
         return;
     }
     if (data.startsWith('ERR:'))          { log('❌ ' + data); return; }
+
+    // ── FIX v6.1.2: risposte File Manager via BLE ────────────
+    if (data === 'FS_LIST_START') { bleChunkBuffer.fsList = ''; return; }
+    if (data.startsWith('FS_LIST_DATA:')) { bleChunkBuffer.fsList += data.substring(13); return; }
+    if (data === 'FS_LIST_END') {
+        if (blePendingFS.list) { blePendingFS.list(bleChunkBuffer.fsList); blePendingFS.list = null; }
+        return;
+    }
+    if (data === 'FS_READ_START') { bleChunkBuffer.fsRead = ''; return; }
+    if (data.startsWith('FS_READ_DATA:')) { bleChunkBuffer.fsRead += data.substring(13); return; }
+    if (data === 'FS_READ_END') {
+        if (blePendingFS.read) { blePendingFS.read(bleChunkBuffer.fsRead); blePendingFS.read = null; }
+        return;
+    }
+    if (data.startsWith('FS_READ_ERR')) {
+        if (blePendingFS.readReject) { blePendingFS.readReject(new Error('File non trovato')); blePendingFS.readReject = null; }
+        return;
+    }
+    if (data.startsWith('FS_WRITE_OK')) {
+        if (blePendingFS.write) { blePendingFS.write(true); blePendingFS.write = null; }
+        return;
+    }
+    if (data.startsWith('FS_WRITE_ERR')) {
+        if (blePendingFS.writeReject) { blePendingFS.writeReject(new Error('Scrittura fallita')); blePendingFS.writeReject = null; }
+        return;
+    }
+    if (data.startsWith('FS_DELETE_OK')) {
+        if (blePendingFS.delete) { blePendingFS.delete(true); blePendingFS.delete = null; }
+        return;
+    }
+    if (data.startsWith('FS_DELETE_ERR')) {
+        if (blePendingFS.deleteReject) { blePendingFS.deleteReject(new Error('Eliminazione fallita')); blePendingFS.deleteReject = null; }
+        return;
+    }
+    if (data.startsWith('FS_MKDIR_OK')) {
+        if (blePendingFS.mkdir) { blePendingFS.mkdir(true); blePendingFS.mkdir = null; }
+        return;
+    }
+    if (data.startsWith('FS_MKDIR_ERR')) {
+        if (blePendingFS.mkdirReject) { blePendingFS.mkdirReject(new Error('Creazione cartella fallita')); blePendingFS.mkdirReject = null; }
+        return;
+    }
+
     if (data.startsWith('WIFI_SCAN:')) {
         try { displayScanResults(JSON.parse(data.substring(10)).networks); } catch(e) { log('❌ Parse scan BLE'); }
         return;
@@ -1232,6 +1218,21 @@ function handleBLEResponse(data) {
     if (data.startsWith('WIFI:AP_MODE'))     { mostraAttesaRiavvio('Passaggio a AP', apIP); return; }
     if (data.startsWith('WIFI:STA_MODE'))    { mostraAttesaRiavvio('Passaggio a STA'); return; }
     if (data.startsWith('WIFI_DELETED:'))    { log('🗑️ Rete eliminata: ' + data.substring(13)); wifiLoadNetworks(); return; }
+    // FIX v6.1.2: STATUS: non era gestito — necessario per il badge
+    // storage nel File Manager quando si è connessi via BLE.
+    if (data.startsWith('STATUS:') && data.charAt(7) === '{') {
+        try {
+            const obj = JSON.parse(data.substring(7));
+            sdOK = !!obj.sd;
+            const icon = document.getElementById('sdStatusIcon');
+            const text = document.getElementById('sdStatusText');
+            if (icon && text) {
+                icon.textContent = sdOK ? '✅' : '❌';
+                text.textContent = sdOK ? 'Archivio: disponibile' : 'Archivio: non rilevato';
+            }
+        } catch(e) {}
+        return;
+    }
     if (!data.startsWith('OK:M')) log('◀ ' + data);
 }
 
@@ -1432,14 +1433,19 @@ function scanNetworks() {
 // ============================================================
 // TABS
 // ============================================================
-// Aggiorna SD status quando si apre il tab Files
 document.querySelectorAll('#tabBar .tab').forEach(tab => {
-    if (tab.dataset.panel === 'files') {
-        const origClick = tab.onclick;
-        tab.addEventListener('click', () => {
-            if (connectionMode === 'wifi' || connectionMode === 'ap') sdRefresh();
-        });
-    }
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('#tabBar .tab').forEach(t => t.classList.remove('attivo'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('attivo'));
+        this.classList.add('attivo');
+        document.getElementById('panel-' + this.dataset.panel).classList.add('attivo');
+        if (this.dataset.panel !== 'tastiera') {
+            document.getElementById('qwertyContainer').style.display = 'none';
+            document.getElementById('toggleQwerty').innerHTML = '<span class="arrow">▶</span> Mostra tastiera';
+        }
+        // FIX v5.30: aggiorna stato WiFi quando si apre impostazioni
+        if (this.dataset.panel === 'impostazioni') wifiStatus();
+    });
 });
 
 function toggleQWERTY() {
@@ -1642,6 +1648,41 @@ function aggiornaCredenziali() {
 }
 
 // ============================================================
+// FIX v6.1.2 — CARICAMENTO MACRO/CREDENZIALI VIA HTTP
+// Prima mancavano del tutto: il pulsante "Ricarica" su WiFi
+// chiamava queste due funzioni che non esistevano, causando un
+// ReferenceError silenzioso e la sincronizzazione unidirezionale
+// (i dati salvati via BLE non comparivano mai via WiFi).
+// ============================================================
+async function loadMacrosHTTP() {
+    if (connectionMode !== 'wifi' && connectionMode !== 'ap') return;
+    const ip = connectionMode === 'ap' ? apIP : wifiIP;
+    try {
+        const res = await fetch('http://' + ip + '/macros');
+        const arr = await res.json();
+        macroCustom = (arr || []).map(m => ({ nome: m.n || m.nome || '', seq: m.s || m.seq || '' }));
+        aggiornaMacroCustom();
+        log('✅ Macro caricate via HTTP: ' + macroCustom.length);
+    } catch(e) {
+        log('❌ Errore caricamento macro: ' + e.message);
+    }
+}
+
+async function loadCredsHTTP() {
+    if (connectionMode !== 'wifi' && connectionMode !== 'ap') return;
+    const ip = connectionMode === 'ap' ? apIP : wifiIP;
+    try {
+        const res = await fetch('http://' + ip + '/creds');
+        const arr = await res.json();
+        credenziali = (arr || []).map(c => ({ nome: c.n || c.nome || '', user: c.u || c.user || '', pass: c.p || c.pass || '' }));
+        aggiornaCredenziali();
+        log('✅ Credenziali caricate via HTTP: ' + credenziali.length);
+    } catch(e) {
+        log('❌ Errore caricamento credenziali: ' + e.message);
+    }
+}
+
+// ============================================================
 // RICARICA DATI (MACRO E CREDENZIALI)
 // ============================================================
 function ricaricaDati() {
@@ -1787,15 +1828,105 @@ if (!navigator.bluetooth) {
 let fmCurrentPath = '/';
 let fmEditorPath = '';
 let sdOK = false;
+const BLE_TIMEOUT_MS = 8000;
 
 function fmGetBaseURL() {
     const ip = connectionMode === 'ap' ? apIP : wifiIP;
     return 'http://' + ip;
 }
 
+// ============================================================
+// FIX v6.1.2 — HELPER UNIFICATI FILE MANAGER (BLE + HTTP)
+// Ogni funzione instrada automaticamente sul canale attivo.
+// Prima il File Manager funzionava SOLO su WiFi/AP perché usava
+// fetch() direttamente; il firmware aveva già i comandi BLE_FS_*
+// pronti lato dongle ma nessuna pagina HTML li chiamava mai.
+// ============================================================
+function fsList(path) {
+    if (connectionMode === 'ble') {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout BLE')), BLE_TIMEOUT_MS);
+            blePendingFS.list = (raw) => { clearTimeout(t); try { resolve(JSON.parse(raw || '{"files":[]}')); } catch(e) { reject(e); } };
+            invia('BLE_FS_LIST:' + path);
+        });
+    }
+    return fetch(fmGetBaseURL() + '/fs/list?path=' + encodeURIComponent(path)).then(r => r.json());
+}
+
+function fsRead(path) {
+    if (connectionMode === 'ble') {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout BLE')), BLE_TIMEOUT_MS);
+            blePendingFS.read = (content) => { clearTimeout(t); resolve(content); };
+            blePendingFS.readReject = (err) => { clearTimeout(t); reject(err); };
+            invia('BLE_FS_READ:' + path);
+        });
+    }
+    return fetch(fmGetBaseURL() + '/fs/read?path=' + encodeURIComponent(path)).then(r => r.text());
+}
+
+function fsWrite(path, content) {
+    if (connectionMode === 'ble') {
+        // MTU e throughput BLE sono molto più bassi del WiFi: file
+        // grandi non sono praticabili su questo canale (protocollo
+        // a righe di testo, non multipart binario).
+        if (content.length > 4000) {
+            return Promise.reject(new Error('File troppo grande per BLE (max ~4KB) — usa WiFi'));
+        }
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout BLE')), BLE_TIMEOUT_MS);
+            blePendingFS.write = () => { clearTimeout(t); resolve(true); };
+            blePendingFS.writeReject = (err) => { clearTimeout(t); reject(err); };
+            invia('BLE_FS_WRITE:' + path + '|' + content);
+        });
+    }
+    return fetch(fmGetBaseURL() + '/fs/write?path=' + encodeURIComponent(path), {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: content
+    }).then(r => r.json()).then(data => {
+        if (data.status !== 'ok') throw new Error('Scrittura fallita');
+        return true;
+    });
+}
+
+function fsDelete(path) {
+    if (connectionMode === 'ble') {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout BLE')), BLE_TIMEOUT_MS);
+            blePendingFS.delete = () => { clearTimeout(t); resolve(true); };
+            blePendingFS.deleteReject = (err) => { clearTimeout(t); reject(err); };
+            invia('BLE_FS_DELETE:' + path);
+        });
+    }
+    return fetch(fmGetBaseURL() + '/fs/delete?path=' + encodeURIComponent(path))
+        .then(r => r.json()).then(data => {
+            if (data.status !== 'ok') throw new Error('Eliminazione fallita');
+            return true;
+        });
+}
+
+function fsMkdir(path) {
+    if (connectionMode === 'ble') {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => reject(new Error('Timeout BLE')), BLE_TIMEOUT_MS);
+            blePendingFS.mkdir = () => { clearTimeout(t); resolve(true); };
+            blePendingFS.mkdirReject = (err) => { clearTimeout(t); reject(err); };
+            invia('BLE_FS_MKDIR:' + path);
+        });
+    }
+    return fetch(fmGetBaseURL() + '/fs/mkdir?path=' + encodeURIComponent(path))
+        .then(r => r.json()).then(data => {
+            if (data.status !== 'ok') throw new Error('mkdir fallito');
+            return true;
+        });
+}
+
 async function sdRefresh() {
+    if (connectionMode === 'ble' && connesso) {
+        invia('STATUS'); // risposta gestita in handleBLEResponse -> aggiorna badge
+        return;
+    }
     if (connectionMode !== 'wifi' && connectionMode !== 'ap') {
-        document.getElementById('sdStatusText').textContent = 'Archivio: connetti via WiFi/AP';
+        document.getElementById('sdStatusText').textContent = 'Archivio: connetti prima il dongle';
         return;
     }
     try {
@@ -1816,8 +1947,7 @@ async function fmNavigate(path) {
     const listEl = document.getElementById('fmList');
     listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);">⏳ Caricamento...</div>';
     try {
-        const res = await fetch(fmGetBaseURL() + '/fs/list?path=' + encodeURIComponent(path));
-        const data = await res.json();
+        const data = await fsList(path);
         if (data.error) { listEl.innerHTML = '<div style="padding:16px;color:var(--red);">❌ ' + data.error + '</div>'; return; }
 
         // Breadcrumb
@@ -1845,7 +1975,6 @@ async function fmNavigate(path) {
 
         // Lista file
         listEl.innerHTML = '';
-        // Pulsante "su" se non siamo in root
         if (path !== '/') {
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;';
@@ -1882,8 +2011,7 @@ async function fmNavigate(path) {
 
 async function fmEdit(path, name) {
     try {
-        const res = await fetch(fmGetBaseURL() + '/fs/read?path=' + encodeURIComponent(path));
-        const content = await res.text();
+        const content = await fsRead(path);
         document.getElementById('fmEditorTitle').textContent = name;
         document.getElementById('fmEditorText').value = content;
         fmEditorPath = path;
@@ -1897,12 +2025,8 @@ async function fmEdit(path, name) {
 async function fmEditorSave() {
     const content = document.getElementById('fmEditorText').value;
     try {
-        const res = await fetch(fmGetBaseURL() + '/fs/write?path=' + encodeURIComponent(fmEditorPath), {
-            method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: content
-        });
-        const data = await res.json();
-        if (data.status === 'ok') { showToast('✅ File salvato'); kvmLog('💾 Salvato: ' + fmEditorPath); }
-        else showToast('❌ Errore salvataggio');
+        await fsWrite(fmEditorPath, content);
+        showToast('✅ File salvato'); kvmLog('💾 Salvato: ' + fmEditorPath);
     } catch(e) { showToast('❌ ' + e.message); }
 }
 
@@ -1914,7 +2038,6 @@ function fmEditorClose() {
 
 async function fmEditorRunPayload() {
     if (!fmEditorPath) return;
-    // Prima salva, poi esegui
     await fmEditorSave();
     fmRunPayload(fmEditorPath);
 }
@@ -1922,37 +2045,49 @@ async function fmEditorRunPayload() {
 async function fmRunPayload(path) {
     if (!confirm('Eseguire il payload "' + path + '"?\n⚠️ Il dongle inizierà a digitare!')) return;
     try {
-        const res = await fetch(fmGetBaseURL() + '/payload/run?path=' + encodeURIComponent(path));
-        const data = await res.json();
+        // FIX v6.1.2: invia() instrada su BLE o HTTP automaticamente,
+        // prima si usava un fetch() fisso che funzionava solo su WiFi
+        invia('PAYLOAD_RUN:' + path);
         showToast('▶️ Payload avviato: ' + path);
         kvmLog('▶️ Payload: ' + path);
     } catch(e) { showToast('❌ Errore: ' + e.message); }
 }
 
-function fmDownload(path) {
-    const url = fmGetBaseURL() + '/fs/read?path=' + encodeURIComponent(path);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = path.split('/').pop();
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+async function fmDownload(path) {
+    // FIX v6.1.2: usa fsRead() + Blob invece di un link diretto a
+    // /fs/read — funziona così su entrambi i canali, prima era
+    // possibile solo via WiFi perché costruiva un URL HTTP fisso.
+    try {
+        const content = await fsRead(path);
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = path.split('/').pop();
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch(e) { showToast('❌ Download fallito: ' + e.message); }
 }
 
 async function fmDelete(path, name) {
     if (!confirm('Eliminare "' + name + '"?')) return;
     try {
-        const res = await fetch(fmGetBaseURL() + '/fs/delete?path=' + encodeURIComponent(path));
-        const data = await res.json();
-        if (data.status === 'ok') { showToast('🗑️ Eliminato: ' + name); fmNavigate(fmCurrentPath); }
-        else showToast('❌ Eliminazione fallita');
+        await fsDelete(path);
+        showToast('🗑️ Eliminato: ' + name);
+        fmNavigate(fmCurrentPath);
     } catch(e) { showToast('❌ ' + e.message); }
 }
 
-function fmUpload() { document.getElementById('fmFileInput').click(); }
+function fmUpload() {
+    if (connectionMode === 'ble') {
+        showToast('⚠️ Upload binario non disponibile via BLE — usa "Nuovo" per file di testo o passa a WiFi/AP');
+        return;
+    }
+    document.getElementById('fmFileInput').click();
+}
 
 async function fmDoUpload(input) {
+    // Upload multipart: resta WiFi/AP-only per costruzione (BLE GATT
+    // non gestisce praticamente form binari su questo protocollo a righe).
     const files = input.files;
     if (!files || files.length === 0) return;
     const progressEl = document.getElementById('fmUploadProgress');
@@ -1981,12 +2116,9 @@ async function fmNewFile() {
     if (!name) return;
     const path = (fmCurrentPath === '/' ? '' : fmCurrentPath) + '/' + name;
     try {
-        const res = await fetch(fmGetBaseURL() + '/fs/write?path=' + encodeURIComponent(path), {
-            method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: ''
-        });
-        const data = await res.json();
-        if (data.status === 'ok') { fmNavigate(fmCurrentPath); fmEdit(path, name); }
-        else showToast('❌ Creazione fallita');
+        await fsWrite(path, '');
+        fmNavigate(fmCurrentPath);
+        fmEdit(path, name);
     } catch(e) { showToast('❌ ' + e.message); }
 }
 
@@ -1995,19 +2127,17 @@ async function fmNewDir() {
     if (!name) return;
     const path = (fmCurrentPath === '/' ? '' : fmCurrentPath) + '/' + name;
     try {
-        const res = await fetch(fmGetBaseURL() + '/fs/mkdir?path=' + encodeURIComponent(path));
-        const data = await res.json();
-        if (data.status === 'ok') { fmNavigate(fmCurrentPath); showToast('📁 Cartella creata'); }
-        else showToast('❌ mkdir fallito');
+        await fsMkdir(path);
+        fmNavigate(fmCurrentPath);
+        showToast('📁 Cartella creata');
     } catch(e) { showToast('❌ ' + e.message); }
 }
 
-// Aggiorna SD status quando si apre il tab Files
+// Aggiorna lo stato archivio quando si apre il tab Files (BLE incluso)
 document.querySelectorAll('#tabBar .tab').forEach(tab => {
     if (tab.dataset.panel === 'files') {
-        const origClick = tab.onclick;
         tab.addEventListener('click', () => {
-            if (connectionMode === 'wifi' || connectionMode === 'ap') sdRefresh();
+            if (connectionMode === 'wifi' || connectionMode === 'ap' || (connectionMode === 'ble' && connesso)) sdRefresh();
         });
     }
 });
@@ -2040,27 +2170,21 @@ console.log('✅ KVM v6.1_claude — App pronta');
     const host = window.location.hostname;
     const isGitHub = host.endsWith('github.io');
     const isLocalDev = host === '' || host === 'localhost' || host === '127.0.0.1';
-    if (isGitHub || isLocalDev) return;
+    if (isGitHub || isLocalDev) return; // pagina esterna: nessun auto-connect
 
+    // Siamo serviti dal dongle stesso (es. 192.168.4.1 in AP,
+    // oppure l'IP assegnato in STA): il dongle è per definizione
+    // raggiungibile, non serve nemmeno verificare.
     wifiIP = host;
     connectionMode = 'wifi';
     isConnected = true;
     localStorage.setItem('kvm_wifi_ip', wifiIP);
     log('🔌 Servito direttamente dal dongle su ' + host + ' — connessione automatica');
-    
-    // ★★★ CARICA MACRO E CREDENZIALI PRIMA DI ANDARE AL KVM ★★★
-    setTimeout(() => {
-        loadMacrosHTTP();
-        loadCredsHTTP();
-        log('✅ Macro e credenziali caricate da LittleFS');
-    }, 200);
-    
     setTimeout(() => {
         const sb = document.getElementById('statoBtn');
         if (sb) { sb.style.display = ''; sb.textContent = '● ' + host; sb.className = 'header-btn wifi'; }
         goToKVM();
-    }, 500);
-})();
+    }, 100);
 })();
 </script>
 </body>
