@@ -275,7 +275,6 @@ Progetto KVM USB HID evoluto per LilyGo T-Dongle S3 (ESP32-S3). Trasforma il don
 
 - **Claude** (Anthropic) - Sviluppo e debug
 - **DeepSeek** - Analisi e suggerimenti
-- **OpenInterface KeyMod** - Ispirazione design
 
 ---
 
