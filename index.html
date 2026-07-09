@@ -2164,7 +2164,7 @@ async function fmRename() {
     }
 } 
 
-    // ============================================================
+// ============================================================
 // RINOMINA FILE/CARTELLA (DA PULSANTE AFFIANCO)
 // ============================================================
 async function fmRenameFile(path, oldName) {
@@ -2217,7 +2217,7 @@ document.querySelectorAll('#tabBar .tab').forEach(tab => {
  'mouseUp','dblClick','scroll_','setLayout','setModo','toggleQWERTY','wifiSetMode','wifiStatus',
  'wifiConnect2','wifiScan2','wifiLoadNetworks','wifiDeleteNetwork','wifiConnectSaved',
  'sdRefresh','fmNavigate','fmEdit','fmEditorSave','fmEditorClose','fmEditorRunPayload',
- 'fmRunPayload','fmDownload','fmDelete','fmUpload','fmDoUpload','fmNewFile','fmNewDir',
+ 'fmRunPayload','fmDownload','fmDelete','fmUpload','fmDoUpload','fmNewFile','fmNewDir','fmRenameFile',
  'ricaricaDati'
 ].forEach(fn => { try { if (typeof window[fn] === 'undefined') window[fn] = eval(fn); } catch(e){} });
 
