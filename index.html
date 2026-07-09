@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -678,12 +678,10 @@
                 </div>
 
                 <!-- Azioni -->
-                   <div class="fm-actions" style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;background:var(--bg);position:sticky;bottom:0;z-index:20;border-top:1px solid var(--border);">
+                <div class="fm-actions" style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0;background:var(--bg);position:sticky;bottom:0;z-index:20;border-top:1px solid var(--border);">
                     <button onclick="fmUpload()" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⬆️ Upload</button>
                     <button onclick="fmNewFile()" style="flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📄 Nuovo</button>
                     <button onclick="fmNewDir()" style="flex:1;padding:10px;background:#ff9500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📁 Cartella</button>
-                    <!-- ★★★ AGGIUNGI QUESTO ★★★ -->
-                    <button onclick="fmRename()" style="flex:1;padding:10px;background:#8e44ad;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">✏️ Rinomina</button>
                 </div>
                 <input type="file" id="fmFileInput" style="display:none;" multiple onchange="fmDoUpload(this)">
 
@@ -1556,14 +1554,14 @@ function setModo(modo) {
 // CHAT / ACCENTI
 // ============================================================
 function traduciAccenti(testo) {
-    // v6.3: il firmware gestisce già UTF-8, inviamo il testo così com'è
-    return testo;
+    const mappa = {'à':'[ALT+0224]','è':'[ALT+0232]','é':'[ALT+0233]','ì':'[ALT+0236]','ò':'[ALT+0242]','ù':'[ALT+0249]','À':'[ALT+0192]','È':'[ALT+0200]','É':'[ALT+0201]','Ì':'[ALT+0204]','Ò':'[ALT+0210]','Ù':'[ALT+0217]'};
+    return [...testo].map(c => mappa[c] || c).join('');
 }
 function inviaChat() {
     const text = document.getElementById('chatText').value;
     if (!text) { log('❌ Testo vuoto'); return; }
     document.getElementById('chatText').value = '';
-    invia('T:' + text);
+    invia('T:' + traduciAccenti(text));
     log('💬 Inviato (' + text.length + ' caratteri)');
 }
 
@@ -1711,7 +1709,7 @@ function inviaCustomCmd() {
     const cmd = document.getElementById('customCmd').value.trim();
     if (!cmd) return;
     document.getElementById('customCmd').value = '';
-    invia('T:' + cmd);
+    invia('T:' + traduciAccenti(cmd));
     setTimeout(() => invia('K:ENTER'), 200);
 }
 
@@ -2133,48 +2131,6 @@ async function fmNewDir() {
         fmNavigate(fmCurrentPath);
         showToast('📁 Cartella creata');
     } catch(e) { showToast('❌ ' + e.message); }
-}
-
-// ★★★ AGGIUNGI QUESTA FUNZIONE ★★★
-async function fmRename() {
-    // 1. Chiedi il nome del file/cartella da rinominare
-    const oldName = prompt('Inserisci il nome del file o cartella da rinominare:');
-    if (!oldName) return;
-    
-    // 2. Chiedi il nuovo nome
-    const newName = prompt('Inserisci il nuovo nome:');
-    if (!newName) return;
-    
-    // 3. Costruisci i path
-    const oldPath = (fmCurrentPath === '/' ? '' : fmCurrentPath) + '/' + oldName;
-    const newPath = (fmCurrentPath === '/' ? '' : fmCurrentPath) + '/' + newName;
-    
-    try {
-        // 4. Verifica che il file esista (opzionale, ma utile per feedback)
-        // Usa fsList per controllare? Oppure prova direttamente il rename.
-        // Il firmware controllerà se il file esiste.
-        
-        // 5. Esegui rename via HTTP o BLE
-        if (connectionMode === 'ble') {
-            // Via BLE: usa il comando BLE_FS_RENAME
-            invia('BLE_FS_RENAME:' + oldPath + '|' + newPath);
-            // La risposta arriverà in handleBLEResponse
-            showToast('⏳ Richiesta rinominazione via BLE...');
-        } else {
-            // Via HTTP
-            const url = fmGetBaseURL() + '/fs/rename?old=' + encodeURIComponent(oldPath) + '&new=' + encodeURIComponent(newPath);
-            const res = await fetch(url, { method: 'POST' });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                showToast('✅ Rinominato: ' + oldName + ' → ' + newName);
-                fmNavigate(fmCurrentPath);
-            } else {
-                showToast('❌ ' + (data.error || 'Errore sconosciuto'));
-            }
-        }
-    } catch(e) {
-        showToast('❌ Errore: ' + e.message);
-    }
 }
 
 // Aggiorna lo stato archivio quando si apre il tab Files (BLE incluso)
