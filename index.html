@@ -1987,24 +1987,26 @@ async function fmNavigate(path) {
         if (!data.files || data.files.length === 0) {
             listEl.innerHTML += '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">📭 Cartella vuota</div>';
         }
-        (data.files || []).forEach(f => {
-            const row = document.createElement('div');
-            row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);';
-            const fullPath = (path === '/' ? '' : path) + '/' + f.name;
-            const sizeStr = f.isDir ? '' : (f.size > 1048576 ? (f.size/1048576).toFixed(1)+'MB' : f.size > 1024 ? (f.size/1024).toFixed(1)+'KB' : f.size+'B');
-            row.innerHTML = `
-                <span style="font-size:18px;">${f.icon}</span>
-                <span style="flex:1;font-size:12px;font-weight:600;word-break:break-all;">${f.name}</span>
-                ${sizeStr ? '<span style="font-size:10px;color:var(--muted);">'+sizeStr+'</span>' : ''}
-                <div style="display:flex;gap:4px;">
-                    ${f.isDir ? `<button onclick="fmNavigate('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">📂 Apri</button>` : ''}
-                    ${!f.isDir ? `<button onclick="fmEdit('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--green);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>` : ''}
-                    ${!f.isDir ? `<button onclick="fmDownload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#007aff;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">⬇️</button>` : ''}
-                    ${(f.name.endsWith('.txt')||f.name.endsWith('.ducky')||f.name.endsWith('.sh')) ? `<button onclick="fmRunPayload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#ff3b30;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">▶️</button>` : ''}
-                    <button onclick="fmDelete('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--red);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">🗑️</button>
-                </div>`;
-            listEl.appendChild(row);
-        });
+(data.files || []).forEach(f => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);';
+    const fullPath = (path === '/' ? '' : path) + '/' + f.name;
+    const sizeStr = f.isDir ? '' : (f.size > 1048576 ? (f.size/1048576).toFixed(1)+'MB' : f.size > 1024 ? (f.size/1024).toFixed(1)+'KB' : f.size+'B');
+    row.innerHTML = `
+        <span style="font-size:18px;">${f.icon}</span>
+        <span style="flex:1;font-size:12px;font-weight:600;word-break:break-all;">${f.name}</span>
+        ${sizeStr ? '<span style="font-size:10px;color:var(--muted);">'+sizeStr+'</span>' : ''}
+        <div style="display:flex;gap:4px;">
+            ${f.isDir ? `<button onclick="fmNavigate('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">📂 Apri</button>` : ''}
+            ${!f.isDir ? `<button onclick="fmEdit('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--green);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>` : ''}
+            <!-- ★★★ PULSANTE RINOMINA PER TUTTI (FILE E CARTELLE) ★★★ -->
+            <button onclick="fmRenameFile('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#8e44ad;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>
+            ${!f.isDir ? `<button onclick="fmDownload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#007aff;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">⬇️</button>` : ''}
+            ${(f.name.endsWith('.txt')||f.name.endsWith('.ducky')||f.name.endsWith('.sh')) ? `<button onclick="fmRunPayload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#ff3b30;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">▶️</button>` : ''}
+            <button onclick="fmDelete('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--red);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">🗑️</button>
+        </div>`;
+    listEl.appendChild(row);
+});
     } catch(e) {
         listEl.innerHTML = '<div style="padding:16px;color:var(--red);">❌ Errore: ' + e.message + '</div>';
     }
