@@ -2164,6 +2164,39 @@ async function fmRename() {
     }
 } 
 
+    // ============================================================
+// RINOMINA FILE/CARTELLA (DA PULSANTE AFFIANCO)
+// ============================================================
+async function fmRenameFile(path, oldName) {
+    const newName = prompt('Rinomina "' + oldName + '" in:', oldName);
+    if (!newName || newName === oldName) return;
+    
+    // Estrai la directory dal path completo
+    const dir = path.substring(0, path.lastIndexOf('/') + 1);
+    const newPath = dir + newName;
+    
+    try {
+        if (connectionMode === 'ble') {
+            invia('BLE_FS_RENAME:' + path + '|' + newPath);
+            showToast('⏳ Rinominazione via BLE...');
+            return;
+        }
+        
+        const url = fmGetBaseURL() + '/fs/rename?old=' + encodeURIComponent(path) + '&new=' + encodeURIComponent(newPath);
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.status === 'ok') {
+            showToast('✅ Rinominato: ' + oldName + ' → ' + newName);
+            fmNavigate(fmCurrentPath);
+        } else {
+            showToast('❌ ' + (data.error || 'Errore sconosciuto'));
+        }
+    } catch(e) {
+        showToast('❌ ' + e.message);
+    }
+}
+
 // Aggiorna lo stato archivio quando si apre il tab Files (BLE incluso)
 document.querySelectorAll('#tabBar .tab').forEach(tab => {
     if (tab.dataset.panel === 'files') {
