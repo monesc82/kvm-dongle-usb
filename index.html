@@ -1554,14 +1554,14 @@ function setModo(modo) {
 // CHAT / ACCENTI
 // ============================================================
 function traduciAccenti(testo) {
-    const mappa = {'à':'[ALT+0224]','è':'[ALT+0232]','é':'[ALT+0233]','ì':'[ALT+0236]','ò':'[ALT+0242]','ù':'[ALT+0249]','À':'[ALT+0192]','È':'[ALT+0200]','É':'[ALT+0201]','Ì':'[ALT+0204]','Ò':'[ALT+0210]','Ù':'[ALT+0217]'};
-    return [...testo].map(c => mappa[c] || c).join('');
+    // v6.3: il firmware gestisce già UTF-8, inviamo il testo così com'è
+    return testo;
 }
 function inviaChat() {
     const text = document.getElementById('chatText').value;
     if (!text) { log('❌ Testo vuoto'); return; }
     document.getElementById('chatText').value = '';
-    invia('T:' + traduciAccenti(text));
+    invia('T:' + text);
     log('💬 Inviato (' + text.length + ' caratteri)');
 }
 
@@ -1709,7 +1709,7 @@ function inviaCustomCmd() {
     const cmd = document.getElementById('customCmd').value.trim();
     if (!cmd) return;
     document.getElementById('customCmd').value = '';
-    invia('T:' + traduciAccenti(cmd));
+    invia('T:' + cmd);
     setTimeout(() => invia('K:ENTER'), 200);
 }
 
