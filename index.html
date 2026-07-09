@@ -682,6 +682,7 @@
                     <button onclick="fmUpload()" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">⬆️ Upload</button>
                     <button onclick="fmNewFile()" style="flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📄 Nuovo</button>
                     <button onclick="fmNewDir()" style="flex:1;padding:10px;background:#ff9500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">📁 Cartella</button>
+                    <button onclick="fmRename()" style="flex:1;padding:10px;background:#8e44ad;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">✏️ Rinomina</button>
                 </div>
                 <input type="file" id="fmFileInput" style="display:none;" multiple onchange="fmDoUpload(this)">
 
@@ -2132,6 +2133,34 @@ async function fmNewDir() {
         showToast('📁 Cartella creata');
     } catch(e) { showToast('❌ ' + e.message); }
 }
+
+   // ============================================================
+// RINOMINA FILE O CARTELLA
+// ============================================================
+async function fmRename() {
+    const oldName = prompt('Nome del file/cartella da rinominare:');
+    if (!oldName) return;
+    
+    const newName = prompt('Nuovo nome per "' + oldName + '":');
+    if (!newName) return;
+    
+    const oldPath = (fmCurrentPath === '/' ? '' : fmCurrentPath) + '/' + oldName;
+    const newPath = (fmCurrentPath === '/' ? '' : fmCurrentPath) + '/' + newName;
+    
+    try {
+        const url = fmGetBaseURL() + '/fs/rename?old=' + encodeURIComponent(oldPath) + '&new=' + encodeURIComponent(newPath);
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'ok') {
+            showToast('✅ Rinominato: ' + oldName + ' → ' + newName);
+            fmNavigate(fmCurrentPath);
+        } else {
+            showToast('❌ ' + (data.error || 'Errore sconosciuto'));
+        }
+    } catch(e) {
+        showToast('❌ ' + e.message);
+    }
+} 
 
 // Aggiorna lo stato archivio quando si apre il tab Files (BLE incluso)
 document.querySelectorAll('#tabBar .tab').forEach(tab => {
