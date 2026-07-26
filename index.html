@@ -1,122 +1,12 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- ============================================================
-         PWA - META TAG PER INSTALLAZIONE
-         ============================================================ -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="KVM Dongle">
-    <meta name="theme-color" content="#f5f5f5">
-    
-    <!-- ============================================================
-         PWA - MANIFEST E ICONE (puntano ai file nella root)
-         ============================================================ -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icon-192.png">
-    
-    <!-- ============================================================
-         REINDIRIZZAMENTO AUTOMATICO ALLA PAGINA KVM
-         ============================================================ -->
-    <meta http-equiv="refresh" content="0; url=https://monesc82.github.io/kvm-dongle-usb/KVM_v7.0_fused.html">
-    
+    <meta http-equiv="refresh" content="0; url=/kvm-dongle-usb/KVM_v7.0_fused.html">
     <title>KVM Dongle</title>
-    <style>
-        /* Stile di fallback (mostrato solo se il redirect fallisce) */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            max-width: 400px;
-        }
-        .logo {
-            font-size: 48px;
-            font-weight: 700;
-            color: #007aff;
-            margin-bottom: 16px;
-        }
-        .spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e0e0e0;
-            border-top-color: #007aff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        p {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        a {
-            color: #007aff;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .version {
-            margin-top: 24px;
-            font-size: 12px;
-            color: #999;
-        }
-    </style>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23007aff'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' font-family='sans-serif' fill='white'%3EKVM%3C/text%3E%3C/svg%3E">
 </head>
 <body>
-    <div class="container">
-        <div class="logo">🔌 KVM</div>
-        <div class="spinner"></div>
-        <p>Reindirizzamento in corso...<br>
-        Se non vieni reindirizzato automaticamente, <a href="/KVM_v7.0_fused.html">clicca qui</a>.</p>
-        <div class="version">KVM Dongle v7.0 · PWA</div>
-    </div>
-    
-    <!-- ============================================================
-         SERVICE WORKER - Registrazione (solo su HTTPS)
-         ============================================================ -->
-    <script>
-        // Questo script serve a:
-        // 1. Assicurarsi che il redirect funzioni anche se il meta tag fallisce
-        // 2. Registrare il service worker per la PWA
-        
-        (function() {
-            // Redirect di fallback (se il meta tag non funziona)
-            setTimeout(function() {
-                if (!window.location.href.includes('KVM_v7.0_fused.html')) {
-                    window.location.href = '/KVM_v7.0_fused.html';
-                }
-            }, 1500);
-            
-            // Registrazione Service Worker (solo su HTTPS)
-            if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-                window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/service-worker.js')
-                        .then(function(reg) {
-                            console.log('✅ Service Worker registrato con successo');
-                        })
-                        .catch(function(err) {
-                            console.log('⚠️ Service Worker non registrato:', err);
-                        });
-                });
-            }
-        })();
-    </script>
+    <p>Reindirizzamento a <a href="/kvm-dongle-usb/KVM_v7.0_fused.html">KVM Dongle</a>...</p>
 </body>
 </html>
