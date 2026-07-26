@@ -1,0 +1,25 @@
+{
+  "name": "KVM Dongle",
+  "short_name": "KVM",
+  "description": "Controlla il tuo PC da smartphone",
+  "scope": "/",
+  "start_url": "/KVM_v7.0_fused.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f5f5",
+  "theme_color": "#007aff",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
