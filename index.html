@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KVM Dongle">
     <meta name="theme-color" content="#f5f5f5">
+    <!-- v6.4b: PWA installabile — questi file (manifest.json, icon-192.png,
+         icon-512.png, service-worker.js) vanno caricati NELLA STESSA cartella
+         di questo file HTML su GitHub Pages. Non funziona da file:// locale —
+         serve HTTPS, motivo per cui il tentativo precedente non ha funzionato. -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>KVM Dongle v6.1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -32,10 +39,10 @@
         .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; border-color: var(--yellow); }
         .bottom-bar .btn.reset-btn { background: #ffebee; border-color: #ef9a9a; color: #c62828; }
         .bottom-bar .btn .sub { font-size: 9px; font-weight: 400; color: var(--muted); }
-        .trackpad-area { flex: 1; min-height: 100px; background: #ffffff; border: 2px solid var(--border); border-radius: var(--radius); touch-action: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.8; }
-        .controls-row { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-        .controls-row .btn { flex: 1; min-width: 44px; padding: 10px 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 11px; font-weight: 600; text-align: center; cursor: pointer; box-shadow: var(--shadow); font-family: var(--font); }
-        .controls-row .btn:active { background: var(--accent); color: #fff; transform: scale(0.96); }
+        .trackpad-area { flex: 1; min-height: 100px; background: #ffffff; border: 2px solid var(--border); border-radius: 18px; touch-action: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .controls-row { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+        .controls-row .btn { flex: 1; min-width: 44px; padding: 12px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 11px; font-weight: 600; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-family: var(--font); transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0); }
+        .controls-row .btn:active { background: var(--accent); color: #fff; transform: translateY(1px) scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
         .controls-row .btn.hold-on { background: var(--yellow); color: #000; border-color: var(--yellow); }
         .controls-row .btn.premuto { background: var(--accent); color: #fff; }
         .controls-row .btn .sub { display: block; font-size: 8px; font-weight: 400; color: var(--muted); margin-top: 1px; }
@@ -45,23 +52,389 @@
         .slider-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff; }
         .slider-row .val { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 28px; text-align: center; }
         .kbd-section { flex-shrink: 0; }
-        .kbd-section .label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; font-weight: 600; }
-        .kbd-row { display: flex; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
-        .kbd-row .k { flex: 1; padding: 8px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font); min-height: 34px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); color: var(--text); }
-        .kbd-row .k:active { background: var(--accent); color: #fff; transform: scale(0.95); }
-        .kbd-row .k.verde { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; }
-        .kbd-row .k.rosso { background: #ffebee; border-color: #ef9a9a; color: #c62828; }
-        .kbd-row .k.blu { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
-        .kbd-row .k.giallo { background: #fff8e1; border-color: #ffe082; color: #e65100; }
-        .kbd-row .k.arancio { background: #fff3e0; border-color: #ffcc80; color: #bf360c; }
-        .kbd-row .k.mod { background: #f5f5f5; border-color: #e0e0e0; color: var(--accent); font-size: 10px; }
+        .kbd-section .label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 700; }
+        .kbd-row { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+        .kbd-row .k { flex: 1; padding: 10px 4px; background: var(--surface); border: 1px solid rgba(0,0,0,0.05); border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); min-height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6); color: var(--text); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0); }
+        .kbd-row .k:active { background: var(--accent); color: #fff; transform: translateY(2px) scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.1); border-color: var(--accent); }
+        .kbd-row .k.verde { background: linear-gradient(135deg, #d4f5e8 0%, #c8f1e0 100%); border-color: rgba(56, 142, 60, 0.15); color: #2e7d32; }
+        .kbd-row .k.rosso { background: linear-gradient(135deg, #ffdbdb 0%, #ffcfcf 100%); border-color: rgba(198, 40, 40, 0.15); color: #c62828; }
+        .kbd-row .k.blu { background: linear-gradient(135deg, #d4e9f7 0%, #c8dff1 100%); border-color: rgba(13, 71, 161, 0.15); color: #0d47a1; }
+        .kbd-row .k.giallo { background: linear-gradient(135deg, #fff4d6 0%, #ffecc8 100%); border-color: rgba(230, 81, 0, 0.15); color: #e65100; }
+        .kbd-row .k.arancio { background: linear-gradient(135deg, #ffe8d6 0%, #ffdcc8 100%); border-color: rgba(191, 54, 12, 0.15); color: #bf360c; }
+        .kbd-row .k.mod { background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border-color: rgba(0,0,0,0.05); color: var(--accent); font-size: 10px; font-weight: 700; }
         .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .kbd-row .k.space { flex: 4; background: #f5f5f5; border-color: #e0e0e0; }
-        .kbd-row .k.caps-btn { background: #e3f2fd; border-color: #90caf9; color: #0d47a1; }
+        .kbd-row .k.space { flex: 4; background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border-color: rgba(0,0,0,0.05); }
+        .kbd-row .k.caps-btn { background: linear-gradient(135deg, #d4e9f7 0%, #c8dff1 100%); border-color: rgba(13, 71, 161, 0.15); color: #0d47a1; }
         .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .kbd-row .k.layout-btn, .kbd-row .k.mode-btn { flex: 0 0 auto; padding: 4px 10px; font-size: 10px; min-height: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-family: var(--font); transition: all 0.2s ease; }
-        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-        #qwertyContainer { display: none; }
+        .kbd-row .k.layout-btn, .kbd-row .k.mode-btn { flex: 0 0 auto; padding: 6px 12px; font-size: 10px; min-height: 32px; background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; color: var(--text); cursor: pointer; font-family: var(--font); font-weight: 600; transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 6px rgba(0,0,0,0.06); transform: translateY(0); }
+        .kbd-row .k.layout-btn:active, .kbd-row .k.mode-btn:active { transform: translateY(1px) scale(0.97); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,122,255,0.3); }
+
+
+
+        /* ============================================================
+           v6.4 — Barra flottante scorciatoie (ispirata a KeyCmd)
+           Sticky in cima al pannello Tastiera, sempre visibile durante
+           lo scroll delle sezioni sottostanti.
+           ============================================================ */
+        .floating-bar {
+            position: sticky; top: 0; z-index: 50;
+            background: var(--bg);
+            padding-bottom: 8px; margin-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+        .floating-bar .frow { display: flex; gap: 6px; margin-bottom: 4px; }
+        .floating-bar .f {
+            flex: 1; padding: 8px 4px; text-align: center; font-size: 10px; font-weight: 700;
+            border-radius: 9px; cursor: pointer; font-family: var(--font);
+            background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border: 1px solid rgba(0,0,0,0.05); color: var(--text);
+            min-height: 30px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0);
+        }
+        .floating-bar .f:active { background: var(--accent); color: #fff; transform: translateY(2px) scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.12); border-color: var(--accent); }
+        .floating-bar .f.combo { background: linear-gradient(135deg, #ffe8d6 0%, #ffdcc8 100%); border-color: rgba(191, 54, 12, 0.15); color: #bf360c; font-weight: 700; }
+        .floating-bar .f.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .floating-bar .f.estesa-btn { background: var(--accent); color: #fff; border-color: var(--accent); font-size: 9px; font-weight: 700; box-shadow: 0 2px 12px rgba(0,122,255,0.3); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .search-panel {
+            position: sticky;
+            top: 0;
+            z-index: 60;
+            background: var(--bg);
+            padding: 10px 0 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .search-panel input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+        }
+        .search-panel input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+        }
+        .search-panel .clear-search {
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .search-results {
+            padding: 0 0 8px;
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .search-results span { display: block; }
+        .search-results .result-btn {
+            width: 100%; text-align: left; margin-bottom: 4px; padding: 10px 12px;
+            border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+            color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .search-results .result-btn:hover { background: rgba(0,122,255,0.06); }
+        .macro-search-panel, .fm-search-bar { display:flex; gap:8px; align-items:center; padding:10px 0; }
+        .macro-search-panel input, .fm-search-bar input { flex:1; min-width:0; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:13px; }
+        .macro-search-panel input:focus, .fm-search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.12); }
+        .macro-search-panel button, .fm-search-bar button, .search-panel .clear-search { padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:13px; cursor:pointer; }
+        .macro-search-panel button:hover, .fm-search-bar button:hover, .search-panel .clear-search:hover { background: rgba(0,0,0,0.04); }
+        .macro-search-hint, .fm-search-hint { font-size:11px; color:var(--muted); padding-bottom:8px; min-height:18px; }
+        .macro-grid .m.hidden, .cred-grid .c.hidden { display:none !important; }
+
+        /* ============================================================
+           v6.4 — Tastiera estesa a schermo intero ("Completo")
+           ============================================================ */
+        #tastieraEstesaOverlay {
+            display: none; position: fixed; top: var(--estesa-top, 0); right: 0; bottom: var(--estesa-bottom, 0); left: 0; z-index: 200;
+            background: var(--bg); flex-direction: column; padding: 8px;
+            min-height: 120px;
+        }
+        #tastieraEstesaOverlay.aperta { display: flex; }
+        .estesa-mini-touchpad-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .estesa-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 8px; flex-shrink: 0;
+        }
+        .estesa-header .titolo { font-size: 14px; font-weight: 700; color: var(--text); }
+        .estesa-header .chiudi {
+            padding: 6px 14px; background: var(--red); color: #fff; border: none;
+            border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .estesa-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            justify-content: stretch;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .estesa-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 0 0 auto;
+            min-height: 0;
+        }
+        .estesa-row .ek {
+            flex: 1;
+            padding: 6px 4px;
+            font-size: 12px;
+            min-height: 36px;
+            max-height: 48px;
+            position: relative;
+            text-align: center;
+            background: var(--surface);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+            transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(0);
+        }
+        .estesa-row .ek:active { background: var(--accent); color: #fff; transform: translateY(2px) scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.1); border-color: var(--accent); }
+        /* v6.4b: FIX landscape — su schermi bassi (telefono ruotato)
+           i tasti si comprimono invece di far sparire l'ultima riga.
+           Copre sia orientation:landscape sia il caso più affidabile
+           "poca altezza disponibile" (max-height), perché orientation
+           da solo non basta su alcuni browser/tablet. */
+        @media (max-height: 500px) {
+            .estesa-header { margin-bottom: 4px; }
+            .estesa-header .titolo { font-size: 12px; font-weight: 700; }
+            .estesa-header .chiudi { padding: 4px 12px; font-size: 11px; border-radius: 8px; font-weight: 600; }
+            .estesa-grid { gap: 4px; }
+            .estesa-row { gap: 4px; }
+            .estesa-row .ek { padding: 4px 2px; font-size: 11px; min-height: 28px; border-radius: 8px; font-weight: 600; }
+            .estesa-row .ek .hint { font-size: 6px; top: 1px; left: 2px; }
+            #tastieraEstesaOverlay { padding: 4px; }
+            #estesaHintTesto { display: none; } /* v6.6f FIX: era #tastieraEstesaOverlay > div:last-child,
+                che nascondeva il pannello simboli extra invece del testo di suggerimento, da quando
+                il pannello è diventato l'ultimo figlio del contenitore */
+        }
+        .estesa-row .ek .hint {
+            position: absolute; top: 2px; left: 4px; font-size: 8px; color: var(--muted); font-weight: 500;
+        }
+        .estesa-row .ek.wide { flex: 1.6; }
+        .estesa-row .ek.space { flex: 6; }
+        .estesa-row .ek.mod { background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); color: var(--accent); font-size: 11px; border-color: rgba(0,0,0,0.05); font-weight: 700; }
+        .estesa-row .ek.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .estesa-row .ek.rosso { background: linear-gradient(135deg, #ffdbdb 0%, #ffcfcf 100%); border-color: rgba(198, 40, 40, 0.15); color: #c62828; }
+        .estesa-row .ek.verde { background: linear-gradient(135deg, #d4f5e8 0%, #c8f1e0 100%); border-color: rgba(56, 142, 60, 0.15); color: #2e7d32; }
+        .estesa-row .ek.tenuto, .floating-bar .f.tenuto { background: var(--accent) !important; color: #fff !important; box-shadow: 0 2px 12px rgba(0,122,255,0.4) !important; }
+
+        /* v6.7: sezioni collassabili — chiuse di default per liberare
+           spazio, un tap sull'etichetta le apre/chiude */
+        .kbd-section.collassabile .label {
+            cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+            user-select: none; -webkit-user-select: none; padding: 4px 2px;
+        }
+        .kbd-section.collassabile .label .freccia { font-size: 10px; transition: transform 0.15s; color: var(--muted); }
+        .kbd-section.collassabile.chiusa .freccia { transform: rotate(-90deg); }
+        .kbd-section.collassabile .contenuto { display: block; }
+        .kbd-section.collassabile.chiusa .contenuto { display: none; }
+        .sotto-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px; }
+        .kbd-row .k.tenuto { background: var(--accent) !important; color: #fff !important; box-shadow: 0 2px 12px rgba(0,122,255,0.4) !important; }
+        .estesa-row .ek.attivo { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 12px rgba(0,122,255,0.3); }
+
+        /* ============================================================
+           v6.4c — Popup caratteri alternativi (long-press sulle lettere,
+           stesso comportamento della tastiera nativa del telefono)
+           ============================================================ */
+        .char-popup {
+            position: fixed; z-index: 300; display: flex; gap: 2px;
+            background: var(--text); border-radius: 8px; padding: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .char-popup .opzione {
+            min-width: 34px; min-height: 34px; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 16px; font-weight: 600; border-radius: 5px;
+            font-family: var(--font);
+        }
+        .char-popup .opzione.evidenziata { background: var(--accent); }
+
+        /* Tasto Fn */
+        .estesa-row .ek.fn { background: #e8e0ff; color: #5e35b1; font-size: 11px; }
+        .estesa-row .ek.fn.attivo { background: #5e35b1; color: #fff; }
+
+        .estesa-portrait { display: none; }
+        @media (orientation: portrait) {
+            .estesa-portrait {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-height: 300px;
+                overflow-y: auto;
+                padding-top: 6px;
+            }
+            .estesa-grid .estesa-row:first-child {
+                position: sticky;
+                top: 0;
+                z-index: 6;
+                background: var(--bg);
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+            }
+            .estesa-mini-touchpad {
+                width: 100%;
+                min-height: 100px;
+                background: #ffffff;
+                border: 2px solid var(--border);
+                border-radius: 18px;
+                touch-action: none;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--muted);
+                font-size: 12px;
+                text-align: center;
+                box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
+                flex-shrink: 0;
+                padding: 10px;
+                line-height: 1.4;
+            }
+            .estesa-mini-touchpad-controls {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .estesa-mini-touchpad-controls .tp-btn {
+                flex: 1 1 120px;
+                min-width: 100px;
+                padding: 10px 8px;
+                background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%);
+                border: 1px solid rgba(0,0,0,0.08);
+                border-radius: 12px;
+                color: var(--text);
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.12s ease;
+            }
+            .estesa-mini-touchpad-controls .tp-btn:active {
+                background: var(--accent);
+                color: #fff;
+                transform: translateY(1px);
+            }
+            .estesa-shortcuts {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 6px;
+            }
+            .estesa-shortcuts .shortcut {
+                padding: 8px 6px;
+                background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%);
+                border: 1px solid rgba(0,0,0,0.05);
+                border-radius: 10px;
+                text-align: center;
+                font-size: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                color: var(--text);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                transition: all 0.12s ease;
+                min-height: 40px;
+            }
+            .estesa-shortcuts .shortcut:active {
+                background: var(--accent);
+                color: #fff;
+                transform: translateY(1px);
+                box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+            }
+            .estesa-shortcuts .shortcut.arrow { grid-column: span 1; }
+            .estesa-shortcuts .shortcut .icon { font-size: 13px; }
+            .estesa-shortcuts .shortcut span:last-child { font-size: 10px; }
+        }
+        @media (orientation: portrait) and (max-width: 520px) {
+            .estesa-row { gap: 4px; }
+            .estesa-row .ek {
+                padding: 4px 2px;
+                font-size: 10px;
+                min-height: 30px;
+                max-height: 36px;
+                border-radius: 8px;
+            }
+            .estesa-row:first-child {
+                position: sticky;
+                top: 0;
+                z-index: 5;
+                background: var(--bg);
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+            }
+            .estesa-row:first-child .ek:first-child,
+            .estesa-row:first-child .ek:last-child {
+                flex: 0 0 8%;
+            }
+            .estesa-row:first-child .ek:nth-child(n+2):nth-child(-n+13) {
+                flex: 0 0 6.8%;
+            }
+            .estesa-row .ek.wide { flex: 1.1; }
+            .estesa-row .ek.space { flex: 3; }
+            .estesa-row .ek.mod { flex: 0 0 16%; }
+            .estesa-row .ek.fn { flex: 0 0 11%; }
+            .estesa-row .ek.rosso { flex: 0 0 14%; }
+            #tastieraEstesaOverlay { padding: 4px; }
+            .estesa-header .titolo { font-size: 12px; }
+            .estesa-header .chiudi { padding: 4px 10px; font-size: 11px; }
+            #estesaHintTesto { display: none; }
+        }
+
+        /* Pannello simboli extra (🔣) */
+        #simboliPanel {
+            display: none; position: fixed; inset: 0; z-index: 250;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        #simboliPanel.aperto { display: flex; }
+        #simboliPanel .box {
+            background: var(--surface); border-radius: 12px; padding: 14px;
+            max-width: 340px; width: 90%;
+        }
+        #simboliPanel .titolo { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+        #simboliPanel .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+        #simboliPanel .sim {
+            padding: 10px 0; text-align: center; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; color: var(--text);
+        }
+        #simboliPanel .sim:active { background: var(--accent); color: #fff; }
+        #simboliPanel .chiudi-simboli {
+            margin-top: 10px; width: 100%; padding: 8px; background: var(--red); color: #fff;
+            border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+        }
         .toggle-qwerty { background: none; border: none; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 0; text-align: center; width: 100%; border-top: 1px solid var(--border); font-family: var(--font); margin-top: 4px; }
         .macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .macro-grid .m { padding: 12px 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); color: var(--text); }
@@ -86,6 +459,30 @@
         #panel-chat .chat-area .chat-actions { display: flex; gap: 6px; flex-shrink: 0; }
         #panel-chat .chat-area .chat-actions .btn { flex: 1; padding: 12px; background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--font); }
         #panel-chat .chat-area .chat-actions .btn.secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+
+        /* ============================================================
+           v6.5 — Maniglia di ridimensionamento (drag verticale)
+           ============================================================ */
+        .resize-handle {
+            flex-shrink: 0; min-height: 26px; display: flex; align-items: center; justify-content: center;
+            gap: 8px; cursor: ns-resize; touch-action: none; user-select: none; -webkit-user-select: none;
+            padding: 4px 8px; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); border-radius: 16px;
+        }
+        .resize-handle .grip {
+            width: 42px; height: 6px; border-radius: 999px; background: var(--border);
+        }
+        .resize-handle.attiva .grip { background: var(--accent); }
+        .resize-handle .handle-label {
+            font-size: 11px; color: var(--text); font-weight: 600; letter-spacing: 0.2px;
+            white-space: nowrap; text-transform: uppercase;
+        }
+        .resize-handle .reset-dim {
+            font-size: 11px; color: var(--muted); padding: 2px 8px; border-radius: 6px;
+            background: var(--surface); border: 1px solid var(--border);
+        }
+        #presetBtnAndroid.preset-attivo, #presetBtnIOS.preset-attivo {
+            background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700;
+        }
         .log { background: var(--surface); border-top: 1px solid var(--border); padding: 4px 10px; height: 30px; overflow-y: auto; font-family: monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; line-height: 1.8; }
         .wifi-config { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-top: 6px; }
         .wifi-config .row { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
@@ -140,44 +537,53 @@
         .conn-hint { font-size: 10px; color: var(--muted); padding: 4px 8px; background: #f5f5f5; border-radius: 6px; margin-top: 4px; }
         @media (prefers-color-scheme: dark) {
             :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); }
-            .kbd-row .k.verde { background: #1e3a2a; border-color: #2d5a3d; color: #81c784; }
-            .kbd-row .k.rosso { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; }
-            .kbd-row .k.blu { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; }
-            .kbd-row .k.giallo { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; }
-            .kbd-row .k.arancio { background: #3a2a1e; border-color: #5a3d2d; color: #ffcc80; }
-            .kbd-row .k.mod { background: #3a3a3c; border-color: #4a4a4c; color: #64b5f6; }
-            .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; }
-            .kbd-row .k.space { background: #3a3a3c; border-color: #4a4a4c; }
-            .kbd-row .k.caps-btn { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; }
-            .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; }
-            .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); }
-            .macro-grid .m.custom { background: #3a3a1e; border-color: #5a5a2d; }
-            .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); }
-            .controls-row .btn { background: var(--surface); border-color: var(--border); color: var(--text); }
-            .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; }
+            .kbd-row .k.verde { background: linear-gradient(135deg, #2a5540 0%, #1f3f31 100%); border-color: rgba(129, 199, 132, 0.2); color: #81c784; }
+            .kbd-row .k.rosso { background: linear-gradient(135deg, #523030 0%, #3d2424 100%); border-color: rgba(239, 154, 154, 0.2); color: #ef9a9a; }
+            .kbd-row .k.blu { background: linear-gradient(135deg, #2a3d52 0%, #1f2c3f 100%); border-color: rgba(144, 202, 249, 0.2); color: #90caf9; }
+            .kbd-row .k.giallo { background: linear-gradient(135deg, #524d2a 0%, #3f3a1f 100%); border-color: rgba(255, 224, 130, 0.2); color: #ffe082; }
+            .kbd-row .k.arancio { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 204, 128, 0.2); color: #ffcc80; }
+            .kbd-row .k.mod { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(100, 181, 246, 0.2); color: #64b5f6; font-weight: 700; }
+            .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(0,122,255,0.5); }
+            .kbd-row .k.space { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(58, 58, 60, 0.8); }
+            .kbd-row .k.caps-btn { background: linear-gradient(135deg, #2a3d52 0%, #1f2c3f 100%); border-color: rgba(144, 202, 249, 0.2); color: #90caf9; }
+            .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(0,122,255,0.5); }
+            .floating-bar .f.combo { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 204, 128, 0.2); color: #ffcc80; font-weight: 700; }
+            .floating-bar .f.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
+            .estesa-row .ek.mod { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); color: #64b5f6; border-color: rgba(100, 181, 246, 0.2); font-weight: 700; }
+            .estesa-row .ek.mod.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(0,122,255,0.5); }
+            .estesa-row .ek.rosso { background: linear-gradient(135deg, #523030 0%, #3d2424 100%); border-color: rgba(239, 154, 154, 0.2); color: #ef9a9a; }
+            .estesa-row .ek.verde { background: linear-gradient(135deg, #2a5540 0%, #1f3f31 100%); border-color: rgba(129, 199, 132, 0.2); color: #81c784; }
+            .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+            .macro-grid .m.custom { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 224, 130, 0.2); }
+            .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+            .controls-row .btn { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(58, 58, 60, 0.8); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+            .trackpad-area { background: #1a1a1c; border-color: #3a3a3c; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
             #panel-chat .chat-area textarea { background: #1a1a1c; border-color: #3a3a3c; color: #f5f5f5; }
             .log { background: var(--surface); border-color: var(--border); color: var(--muted); }
-            .bottom-bar { background: var(--surface); border-color: var(--border); }
-            .bottom-bar .btn.hold-btn { background: #3a3a1e; border-color: #5a5a2d; color: #ffe082; }
-            .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; }
-            .bottom-bar .btn.reset-btn { background: #3a1e1e; border-color: #5a2d2d; color: #ef9a9a; }
+            .bottom-bar { background: var(--surface); border-color: var(--border); box-shadow: 0 -2px 8px rgba(0,0,0,0.2); }
+            .bottom-bar .btn.hold-btn { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 224, 130, 0.2); color: #ffe082; }
+            .bottom-bar .btn.hold-btn.attivo { background: var(--yellow); color: #000; box-shadow: 0 2px 12px rgba(255, 193, 7, 0.4); }
+            .bottom-bar .btn.reset-btn { background: linear-gradient(135deg, #523030 0%, #3d2424 100%); border-color: rgba(239, 154, 154, 0.2); color: #ef9a9a; }
             .wifi-config { background: var(--surface); border-color: var(--border); }
             .wifi-config input { background: var(--surface); border-color: var(--border); color: var(--text); }
-            .connection-btn.connected { background: #1a3a2a; }
-            .toast { background: #2c2c2e; }
-            .ip-banner { background: #1e2a3a; border-color: #2d4a5a; color: #90caf9; }
+            .connection-btn.connected { background: linear-gradient(135deg, #2a5540 0%, #1f3f31 100%); }
+            .toast { background: #2c2c2e; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+            .ip-banner { background: linear-gradient(135deg, #2a3d52 0%, #1f2c3f 100%); border-color: rgba(144, 202, 249, 0.2); color: #90caf9; }
             .conn-hint { background: #2c2c2e; }
+            .kbd-row .k.tenuto { box-shadow: 0 2px 12px rgba(0,122,255,0.5) !important; }
         }
         @media (orientation: landscape) and (max-height: 500px) {
             .header { height: 36px; } .tab-bar { height: 32px; } .bottom-bar { height: 44px; }
-            .logo { font-size: 13px; } .tab { font-size: 7px; } .tab .icon { font-size: 14px; }
-            .panel { padding: 4px 6px; gap: 4px; } .trackpad-area { min-height: 50px; }
-            .kbd-row .k { min-height: 26px; padding: 4px 0; font-size: 10px; }
-            .controls-row .btn { padding: 6px 4px; font-size: 10px; min-height: 28px; }
+            .logo { font-size: 13px; font-weight: 700; } .tab { font-size: 7px; font-weight: 600; } .tab .icon { font-size: 14px; }
+            .panel { padding: 4px 6px; gap: 4px; } .trackpad-area { min-height: 50px; border-radius: 12px; }
+            .kbd-row { gap: 4px; margin-bottom: 4px; }
+            .kbd-row .k { min-height: 28px; padding: 6px 2px; font-size: 10px; border-radius: 8px; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+            .controls-row { gap: 6px; }
+            .controls-row .btn { padding: 8px 4px; font-size: 10px; min-height: 30px; border-radius: 8px; font-weight: 600; }
             .macro-grid { grid-template-columns: repeat(3, 1fr); }
             .cred-grid { grid-template-columns: repeat(3, 1fr); }
             .log { height: 24px; font-size: 8px; padding: 2px 8px; }
-            .bottom-bar .btn { font-size: 11px; padding: 6px 4px; min-height: 34px; }
+            .bottom-bar .btn { font-size: 11px; padding: 8px 4px; min-height: 34px; border-radius: 10px; font-weight: 700; }
             .bottom-bar .btn .sub { font-size: 7px; }
         }
         @media (min-width: 480px) and (orientation: portrait) {
@@ -192,7 +598,7 @@
 /* Fix pulsanti Files - non coperti da Hold/Reset */
 /* Fix pulsanti Files - non coperti da Hold/Reset */
 #panel-files {
-    padding-bottom: 0 !important;
+    padding-bottom: 60px !important;
 }
 
 .fm-actions {
@@ -318,10 +724,10 @@
 
         <nav class="tab-bar" id="tabBar">
             <button class="tab attivo" data-panel="trackpad"><span class="icon">🖱️</span> Track</button>
+            <button class="tab" data-panel="chat"><span class="icon">💬</span> Chat</button>
             <button class="tab" data-panel="tastiera"><span class="icon">⌨️</span> Tasti</button>
             <button class="tab" data-panel="macro"><span class="icon">⚡</span> Macro</button>
             <button class="tab" data-panel="terminal"><span class="icon">📟</span> Terminal</button>
-            <button class="tab" data-panel="chat"><span class="icon">💬</span> Chat</button>
             <button class="tab" data-panel="files"><span class="icon">📁</span> Files</button>
             <button class="tab" data-panel="impostazioni"><span class="icon">⚙️</span> Setup</button>
         </nav>
@@ -332,6 +738,11 @@
             <div id="panel-trackpad" class="panel attivo">
                 <div class="trackpad-area" id="trackpadArea">
                     <div class="hint">🖱️ Trascina per muovere<br>👆 1 dito = Click SX<br>👆👆 2 dita = Click DX</div>
+                </div>
+                <div class="resize-handle" id="resize-trackpadArea">
+                    <span class="grip"></span>
+                    <span class="reset-dim" onclick="resetDimensione('trackpadArea', event)">↺ auto</span>
+                    <span class="grip"></span>
                 </div>
                 <div class="slider-row">
                     <span class="label">🐢</span>
@@ -358,123 +769,281 @@
 
             <!-- TASTIERA -->
             <div id="panel-tastiera" class="panel">
-                <div class="kbd-section">
-                    <div class="label">Modificatori</div>
-                    <div class="kbd-row">
-                        <button class="k mod" id="mod-CTRL" onclick="toggleMod('CTRL')">⌃ CTRL</button>
-                        <button class="k mod" id="mod-ALT" onclick="toggleMod('ALT')">⌥ ALT</button>
-                        <button class="k mod" id="mod-SHIFT" onclick="toggleMod('SHIFT')">⇧ SHIFT</button>
-                        <button class="k mod" id="mod-WIN" onclick="toggleMod('WIN')">⊞ WIN</button>
-                        <button class="k caps-btn" id="btnCaps" onclick="toggleCaps()">⇪</button>
+                <div class="search-panel">
+                    <input id="globalSearch" type="search" placeholder="Cerca tasti, macro, credenziali..." autocomplete="off" oninput="aggiornaRicercaGlobale(this.value)">
+                    <button type="button" class="clear-search" onclick="aggiornaRicercaGlobale('')">✕</button>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+                <!-- v6.4: barra flottante scorciatoie, sempre visibile durante lo scroll -->
+                <div class="floating-bar">
+                    <div class="frow">
+                        <button class="f combo" onclick="inviaCombo('CTRL+A')">Ctrl+A</button>
+                        <button class="f combo" onclick="inviaCombo('CTRL+C')">Ctrl+C</button>
+                        <button class="f combo" onclick="inviaCombo('CTRL+X')">Ctrl+X</button>
+                        <button class="f combo" onclick="inviaCombo('CTRL+V')">Ctrl+V</button>
+                        <button class="f combo" onclick="inviaCombo('CTRL+S')">Ctrl+S</button>
+                        <button class="f combo" onclick="inviaCombo('CTRL+Z')">Ctrl+Z</button>
+                    </div>
+                    <div class="frow">
+                        <button class="f mod" id="fbar-CTRL" onclick="toggleMod('CTRL')">Ctrl</button>
+                        <button class="f mod" id="fbar-ALT" onclick="toggleMod('ALT')">Alt</button>
+                        <button class="f mod" id="fbar-WIN" onclick="toggleMod('WIN')">Win</button>
+                        <button class="f" data-repeat="TAB">Tab</button>
+                        <button class="f" data-repeat="UP">▲</button>
+                        <button class="f estesa-btn" onclick="apriTastieraEstesa()">⛶ Estesa</button>
+                    </div>
+                    <div class="frow">
+                        <button class="f" data-repeat="ESC">Esc</button>
+                        <button class="f mod" id="fbar-SHIFT" onclick="toggleMod('SHIFT')">Shift</button>
+                        <button class="f" data-repeat="DEL">Del</button>
+                        <button class="f" data-repeat="LEFT">◀</button>
+                        <button class="f" data-repeat="DOWN">▼</button>
+                        <button class="f" data-repeat="RIGHT">▶</button>
                     </div>
                 </div>
-                <div class="kbd-section">
-                    <div class="label">Funzione</div>
-                    <div class="kbd-row">
-                        <button class="k giallo" onclick="inviaTastoConMod('F1')">F1</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F2')">F2</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F3')">F3</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F4')">F4</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F5')">F5</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F6')">F6</button>
+                <!-- v6.7: Modificatori rimossi come sezione a sé — erano
+                     un duplicato esatto di Ctrl/Alt/Win/Shift già nella
+                     barra flottante sopra. Resta solo il Caps Lock, che
+                     è un vero toggle persistente e non ha un equivalente
+                     lì sopra. -->
+                <div class="kbd-row" style="margin-bottom:4px;">
+                    <button class="k caps-btn" id="btnCaps" onclick="toggleCaps()" style="flex:1;">⇪ Caps Lock</button>
+                </div>
+
+                <div class="kbd-section collassabile chiusa">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>Funzione (F1-F12)</span><span class="freccia">▼</span>
                     </div>
-                    <div class="kbd-row">
-                        <button class="k giallo" onclick="inviaTastoConMod('F7')">F7</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F8')">F8</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F9')">F9</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F10')">F10</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F11')">F11</button>
-                        <button class="k giallo" onclick="inviaTastoConMod('F12')">F12</button>
+                    <div class="contenuto">
+                        <div class="kbd-row">
+                            <button class="k giallo" data-repeat="F1">F1</button>
+                            <button class="k giallo" data-repeat="F2">F2</button>
+                            <button class="k giallo" data-repeat="F3">F3</button>
+                            <button class="k giallo" data-repeat="F4">F4</button>
+                            <button class="k giallo" data-repeat="F5">F5</button>
+                            <button class="k giallo" data-repeat="F6">F6</button>
+                        </div>
+                        <div class="kbd-row">
+                            <button class="k giallo" data-repeat="F7">F7</button>
+                            <button class="k giallo" data-repeat="F8">F8</button>
+                            <button class="k giallo" data-repeat="F9">F9</button>
+                            <button class="k giallo" data-repeat="F10">F10</button>
+                            <button class="k giallo" data-repeat="F11">F11</button>
+                            <button class="k giallo" data-repeat="F12">F12</button>
+                        </div>
                     </div>
                 </div>
-                <div class="kbd-section">
-                    <div class="label">Speciali</div>
-                    <div class="kbd-row">
-                        <button class="k rosso" onclick="inviaTastoConMod('ESC')">Esc</button>
-                        <button class="k" onclick="inviaTastoConMod('TAB')">⇥ Tab</button>
-                        <button class="k rosso" onclick="inviaTastoConMod('BS')">⌫ Back</button>
-                        <button class="k verde" onclick="inviaTastoConMod('ENTER')">↵ Invio</button>
-                        <button class="k rosso" onclick="inviaTastoConMod('DEL')">⌦ Canc</button>
+
+                <!-- v6.7: Speciali+Navigazione uniti in "Altri tasti" —
+                     Tab/Esc/Del/frecce erano già nella barra flottante,
+                     qui restano solo Enter/Backspace/Home/End/PgUp/PgDn
+                     che non hanno un altro posto rapido. -->
+                <div class="kbd-section collassabile chiusa">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>Altri tasti</span><span class="freccia">▼</span>
+                    </div>
+                    <div class="contenuto">
+                        <div class="kbd-row">
+                            <button class="k verde" data-repeat="ENTER">↵ Invio</button>
+                            <button class="k rosso" data-repeat="BS">⌫ Back</button>
+                            <button class="k rosso" data-repeat="DEL">⌦ Canc</button>
+                        </div>
+                        <div class="kbd-row">
+                            <button class="k blu" data-repeat="HOME">Home</button>
+                            <button class="k blu" data-repeat="END">End</button>
+                            <button class="k blu" data-repeat="PGUP">PgSu</button>
+                            <button class="k blu" data-repeat="PGDN">PgGiù</button>
+                        </div>
                     </div>
                 </div>
-                <div class="kbd-section">
-                    <div class="label">Navigazione</div>
-                    <div class="kbd-row">
-                        <button class="k blu" onclick="inviaTastoConMod('HOME')">Home</button>
-                        <button class="k blu" onclick="inviaTastoConMod('END')">End</button>
-                        <button class="k blu" onclick="inviaTastoConMod('PGUP')">PgSu</button>
-                        <button class="k blu" onclick="inviaTastoConMod('PGDN')">PgGiù</button>
+
+                <!-- v6.7: Combinazioni rapide ripulite — rimossi i 6
+                     duplicati già coperti dalla barra flottante (Copia,
+                     Incolla, Taglia, Annulla, Seleziona, Salva). Le 7
+                     rimaste sono ora raggruppate per categoria reale
+                     invece che in una lista piatta. -->
+                <div class="kbd-section collassabile">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>Scorciatoie</span><span class="freccia">▼</span>
                     </div>
-                    <div class="kbd-row">
-                        <button class="k blu" onclick="inviaTastoConMod('LEFT')">◀</button>
-                        <button class="k blu" onclick="inviaTastoConMod('UP')">▲</button>
-                        <button class="k blu" onclick="inviaTastoConMod('DOWN')">▼</button>
-                        <button class="k blu" onclick="inviaTastoConMod('RIGHT')">▶</button>
+                    <div class="contenuto">
+                        <div class="sotto-label">Sistema</div>
+                        <div class="kbd-row">
+                            <button class="k arancio" onclick="inviaCombo('WIN+R')">▶️ Esegui</button>
+                            <button class="k arancio" onclick="inviaCombo('WIN+E')">📁 Explorer</button>
+                        </div>
+                        <div class="kbd-row">
+                            <button class="k arancio" onclick="inviaCombo('WIN+L')">🔒 Blocca</button>
+                            <button class="k arancio" onclick="inviaCombo('WIN+X')">📋 Win+X</button>
+                        </div>
+                        <div class="kbd-row">
+                            <button class="k arancio" onclick="inviaCombo('ALT+F4')">❌ Chiudi app</button>
+                        </div>
+                        <div class="sotto-label">Emergenza / Diagnostica</div>
+                        <div class="kbd-row">
+                            <button class="k arancio" onclick="inviaCombo('CTRL+ALT+DEL')">⚡ Ctrl+Alt+Canc</button>
+                            <button class="k arancio" onclick="inviaCombo('CTRL+ALT+T')">📟 Terminal</button>
+                        </div>
                     </div>
                 </div>
-                <button class="toggle-qwerty" id="toggleQwerty" onclick="toggleQWERTY()">
-                    <span class="arrow" id="qwertyArrow">▶</span> Mostra tastiera
-                </button>
-                <div id="qwertyContainer">
-                    <div class="kbd-row">
-                        <button class="k" onclick="inviaTastoConMod('1')">1</button><button class="k" onclick="inviaTastoConMod('2')">2</button>
-                        <button class="k" onclick="inviaTastoConMod('3')">3</button><button class="k" onclick="inviaTastoConMod('4')">4</button>
-                        <button class="k" onclick="inviaTastoConMod('5')">5</button><button class="k" onclick="inviaTastoConMod('6')">6</button>
-                        <button class="k" onclick="inviaTastoConMod('7')">7</button><button class="k" onclick="inviaTastoConMod('8')">8</button>
-                        <button class="k" onclick="inviaTastoConMod('9')">9</button><button class="k" onclick="inviaTastoConMod('0')">0</button>
-                        <button class="k rosso" onclick="inviaTastoConMod('BS')">⌫</button>
-                    </div>
-                    <div class="kbd-row">
-                        <button class="k" id="qw-q" onclick="inviaTastoConMod('q')">q</button><button class="k" id="qw-w" onclick="inviaTastoConMod('w')">w</button>
-                        <button class="k" id="qw-e" onclick="inviaTastoConMod('e')">e</button><button class="k" id="qw-r" onclick="inviaTastoConMod('r')">r</button>
-                        <button class="k" id="qw-t" onclick="inviaTastoConMod('t')">t</button><button class="k" id="qw-y" onclick="inviaTastoConMod('y')">y</button>
-                        <button class="k" id="qw-u" onclick="inviaTastoConMod('u')">u</button><button class="k" id="qw-i" onclick="inviaTastoConMod('i')">i</button>
-                        <button class="k" id="qw-o" onclick="inviaTastoConMod('o')">o</button><button class="k" id="qw-p" onclick="inviaTastoConMod('p')">p</button>
-                    </div>
-                    <div class="kbd-row">
-                        <button class="k mod" onclick="toggleMod('CTRL')">⌃</button>
-                        <button class="k" id="qw-a" onclick="inviaTastoConMod('a')">a</button><button class="k" id="qw-s" onclick="inviaTastoConMod('s')">s</button>
-                        <button class="k" id="qw-d" onclick="inviaTastoConMod('d')">d</button><button class="k" id="qw-f" onclick="inviaTastoConMod('f')">f</button>
-                        <button class="k" id="qw-g" onclick="inviaTastoConMod('g')">g</button><button class="k" id="qw-h" onclick="inviaTastoConMod('h')">h</button>
-                        <button class="k" id="qw-j" onclick="inviaTastoConMod('j')">j</button><button class="k" id="qw-k" onclick="inviaTastoConMod('k')">k</button>
-                        <button class="k" id="qw-l" onclick="inviaTastoConMod('l')">l</button><button class="k verde" onclick="inviaTastoConMod('ENTER')">↵</button>
-                    </div>
-                    <div class="kbd-row">
-                        <button class="k mod" onclick="toggleMod('SHIFT')">⇧</button>
-                        <button class="k" id="qw-z" onclick="inviaTastoConMod('z')">z</button><button class="k" id="qw-x" onclick="inviaTastoConMod('x')">x</button>
-                        <button class="k" id="qw-c" onclick="inviaTastoConMod('c')">c</button><button class="k" id="qw-v" onclick="inviaTastoConMod('v')">v</button>
-                        <button class="k" id="qw-b" onclick="inviaTastoConMod('b')">b</button><button class="k" id="qw-n" onclick="inviaTastoConMod('n')">n</button>
-                        <button class="k" id="qw-m" onclick="inviaTastoConMod('m')">m</button>
-                        <button class="k mod" onclick="toggleMod('ALT')">⌥</button><button class="k mod" onclick="toggleMod('WIN')">⊞</button>
-                    </div>
-                    <div class="kbd-row"><button class="k space" onclick="inviaTastoConMod('SPACE')">␣ Spazio</button></div>
+            </div>
+
+            <!-- v6.4: TASTIERA ESTESA — overlay a schermo intero ("Completo") -->
+            <div id="tastieraEstesaOverlay">
+                <div class="resize-handle" id="resize-estesa-top">
+                    <span class="grip"></span>
+                    <span class="handle-label">Sposta / Ridimensiona</span>
+                    <span class="reset-dim" onclick="resetDimensione('tastieraEstesaOverlay', event, '--estesa-top')">↺ auto</span>
+                    <span class="grip"></span>
                 </div>
-                <div class="kbd-section">
-                    <div class="label">Combinazioni rapide</div>
-                    <div class="kbd-row">
-                        <button class="k arancio" onclick="inviaCombo('CTRL+C')">📋 Copia</button>
-                        <button class="k arancio" onclick="inviaCombo('CTRL+V')">📄 Incolla</button>
-                        <button class="k arancio" onclick="inviaCombo('CTRL+X')">✂️ Taglia</button>
-                        <button class="k arancio" onclick="inviaCombo('CTRL+Z')">↩ Annulla</button>
+                <div class="estesa-header">
+                    <span class="titolo">⌨️ Tastiera Estesa</span>
+                    <button class="chiudi" onclick="chiudiTastieraEstesa()">✕ Chiudi</button>
+                </div>
+                <div class="estesa-grid" id="estesaGrid">
+                    <div class="estesa-row">
+                        <div class="ek rosso" data-key="ESC">Esc</div>
+                        <div class="ek" data-key="F1">F1</div>
+                        <div class="ek" data-key="F2">F2</div>
+                        <div class="ek" data-key="F3">F3</div>
+                        <div class="ek" data-key="F4">F4</div>
+                        <div class="ek" data-key="F5">F5</div>
+                        <div class="ek" data-key="F6">F6</div>
+                        <div class="ek" data-key="F7">F7</div>
+                        <div class="ek" data-key="F8">F8</div>
+                        <div class="ek" data-key="F9">F9</div>
+                        <div class="ek" data-key="F10">F10</div>
+                        <div class="ek" data-key="F11">F11</div>
+                        <div class="ek" data-key="F12">F12</div>
+                        <div class="ek rosso" data-key="DEL">Canc</div>
                     </div>
-                    <div class="kbd-row">
-                        <button class="k arancio" onclick="inviaCombo('WIN+R')">▶️ Esegui</button>
-                        <button class="k arancio" onclick="inviaCombo('WIN+E')">📁 Explorer</button>
-                        <button class="k arancio" onclick="inviaCombo('WIN+L')">🔒 Blocca</button>
-                        <button class="k arancio" onclick="inviaCombo('WIN+X')">📋 Win+X</button>
+                    <div class="estesa-row">
+                        <div class="ek" data-key="1" data-fn="!"><span class="hint">!</span>1</div>
+                        <div class="ek" data-key="2" data-fn="@"><span class="hint">@</span>2</div>
+                        <div class="ek" data-key="3" data-fn="#"><span class="hint">#</span>3</div>
+                        <div class="ek" data-key="4" data-fn="$"><span class="hint">$</span>4</div>
+                        <div class="ek" data-key="5" data-fn="%"><span class="hint">%</span>5</div>
+                        <div class="ek" data-key="6" data-fn="^"><span class="hint">^</span>6</div>
+                        <div class="ek" data-key="7" data-fn="&amp;"><span class="hint">&amp;</span>7</div>
+                        <div class="ek" data-key="8" data-fn="*"><span class="hint">*</span>8</div>
+                        <div class="ek" data-key="9" data-fn="("><span class="hint">(</span>9</div>
+                        <div class="ek" data-key="0" data-fn=")"><span class="hint">)</span>0</div>
+                        <div class="ek rosso" data-key="BS">⌫</div>
+                        <div class="ek" onclick="apriSimboli()">🔣</div>
                     </div>
-                    <div class="kbd-row">
-                        <button class="k arancio" onclick="inviaCombo('ALT+F4')">❌ Chiudi</button>
-                        <button class="k arancio" onclick="inviaCombo('CTRL+ALT+DEL')">⚡ CAD</button>
-                        <button class="k arancio" onclick="inviaCombo('CTRL+ALT+T')">📟 Terminal</button>
-                        <button class="k arancio" onclick="inviaCombo('CTRL+A')">📌 Seleziona</button>
+                    <div class="estesa-row">
+                        <div class="ek wide" data-key="TAB">Tab</div>
+                        <div class="ek" data-key="q">q</div>
+                        <div class="ek" data-key="w">w</div>
+                        <div class="ek" data-key="e">e</div>
+                        <div class="ek" data-key="r">r</div>
+                        <div class="ek" data-key="t">t</div>
+                        <div class="ek" data-key="y">y</div>
+                        <div class="ek" data-key="u">u</div>
+                        <div class="ek" data-key="i">i</div>
+                        <div class="ek" data-key="o">o</div>
+                        <div class="ek" data-key="p">p</div>
                     </div>
-                    <div class="kbd-row"><button class="k arancio" onclick="inviaCombo('CTRL+S')">💾 Salva</button></div>
+                    <div class="estesa-row">
+                        <div class="ek wide" id="estesa-CAPS" onclick="toggleCaps()">Caps</div>
+                        <div class="ek" data-key="a">a</div>
+                        <div class="ek" data-key="s">s</div>
+                        <div class="ek" data-key="d">d</div>
+                        <div class="ek" data-key="f">f</div>
+                        <div class="ek" data-key="g">g</div>
+                        <div class="ek" data-key="h">h</div>
+                        <div class="ek" data-key="j">j</div>
+                        <div class="ek" data-key="k">k</div>
+                        <div class="ek" data-key="l">l</div>
+                        <div class="ek wide verde" data-key="ENTER">Invio</div>
+                    </div>
+                    <div class="estesa-row">
+                        <div class="ek wide mod" id="estesa-SHIFT" data-mod="SHIFT">Shift</div>
+                        <div class="ek" data-key="z">z</div>
+                        <div class="ek" data-key="x">x</div>
+                        <div class="ek" data-key="c">c</div>
+                        <div class="ek" data-key="v">v</div>
+                        <div class="ek" data-key="b">b</div>
+                        <div class="ek" data-key="n">n</div>
+                        <div class="ek" data-key="m">m</div>
+                        <div class="ek wide mod" id="estesa-SHIFT2" data-mod="SHIFT">Shift</div>
+                    </div>
+                    <div class="estesa-row">
+                        <div class="ek fn" id="estesa-FN" onclick="toggleFn()">Fn</div>
+                        <div class="ek mod" id="estesa-CTRL" data-mod="CTRL">Ctrl</div>
+                        <div class="ek mod" id="estesa-WIN" data-mod="WIN">Win</div>
+                        <div class="ek mod" id="estesa-ALT" data-mod="ALT">Alt</div>
+                        <div class="ek space" data-key="SPACE" style="flex:5;">Spazio</div>
+                        <div class="ek mod" id="estesa-ALT2" data-mod="ALT">Alt</div>
+                        <div class="ek" data-key="LEFT">◀</div>
+                        <div class="ek" data-key="UP">▲</div>
+                        <div class="ek" data-key="DOWN">▼</div>
+                        <div class="ek" data-key="RIGHT">▶</div>
+                    </div>
+                </div>
+                <div id="estesaHintTesto" style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px;">
+                    Tieni premuto una lettera per accenti · Fn per simboli sui numeri · 🔣 per altri simboli
+                </div>
+                <div class="resize-handle" id="resize-estesa-bottom">
+                    <span class="grip"></span>
+                    <span class="handle-label">Sposta / Ridimensiona</span>
+                    <span class="reset-dim" onclick="resetDimensione('tastieraEstesaOverlay', event, '--estesa-bottom')">↺ auto</span>
+                    <span class="grip"></span>
+                </div>
+
+                <!-- Portrait mode: Mini-touchpad + Scorciatoie professionali -->
+                <div class="estesa-portrait">
+                    <div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;">Mini Touchpad</div>
+                    <div class="estesa-mini-touchpad-wrap">
+                        <div class="estesa-mini-touchpad" id="estesa-mini-touchpad">
+                            1 dito = mouse / tocco senza muovere = Click Sx · 2 dita = scroll / Click Dx
+                        </div>
+                        <div class="resize-handle" id="resize-estesa-mini-touchpad">
+                            <span class="grip"></span>
+                            <span class="handle-label">Ridimensiona touchpad</span>
+                            <span class="reset-dim" onclick="resetDimensione('estesa-mini-touchpad', event)">↺ auto</span>
+                            <span class="grip"></span>
+                        </div>
+                    </div>
+                    <div class="estesa-mini-touchpad-controls">
+                        <button class="tp-btn" onpointerdown="mouseDown('L')" onpointerup="mouseUp('L')">Click Sx</button>
+                        <button class="tp-btn" onpointerdown="mouseDown('R')" onpointerup="mouseUp('R')">Click Dx</button>
+                    </div>
+                    <div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;">Scorciatoie professionali</div>
+                    <div class="estesa-shortcuts">
+                        <div class="shortcut" onclick="inviaCombinazione('CTRL', 'c')"><span class="icon">📋</span><span>Copia</span></div>
+                        <div class="shortcut" onclick="inviaCombinazione('CTRL', 'v')"><span class="icon">📌</span><span>Incolla</span></div>
+                        <div class="shortcut" onclick="inviaCombinazione('CTRL', 'x')"><span class="icon">✂️</span><span>Taglia</span></div>
+                        <div class="shortcut" onclick="inviaCombinazione('CTRL', 'a')"><span class="icon">◻</span><span>Tutto</span></div>
+                        <div class="shortcut" onclick="inviaCombinazione('CTRL', 's')"><span class="icon">💾</span><span>Salva</span></div>
+                        <div class="shortcut" onclick="inviaTasto('HOME')"><span class="icon">⇤</span><span>Home</span></div>
+                        <div class="shortcut" onclick="inviaTasto('END')"><span class="icon">⇥</span><span>End</span></div>
+                        <div class="shortcut" onclick="inviaTasto('TAB')"><span class="icon">↹</span><span>Tab</span></div>
+                    </div>
+                </div>
+
+                <!-- v6.6d FIX: spostato DENTRO l'overlay tastiera estesa —
+                     prima era un fratello nel DOM, quindi quando la tastiera
+                     estesa entra in fullscreen (Fullscreen API) questo pannello
+                     restava fuori dall'albero visibile e diventava inaccessibile.
+                     Ora fa parte dello stesso sottoalbero, si vede correttamente
+                     sopra la tastiera anche a schermo intero. -->
+                <div id="simboliPanel">
+                    <div class="box">
+                        <div class="titolo">🔣 Simboli</div>
+                        <div class="grid" id="simboliGrid"></div>
+                        <button class="chiudi-simboli" onclick="chiudiSimboli()">Chiudi</button>
+                    </div>
                 </div>
             </div>
 
             <!-- MACRO -->
             <div id="panel-macro" class="panel">
+                <div class="macro-search-panel">
+                    <input id="macroSearchInput" type="search" placeholder="Cerca macro e credenziali..." autocomplete="off" oninput="aggiornaRicercaMacroCred(this.value)">
+                    <button type="button" onclick="aggiornaRicercaMacroCred('')">✕</button>
+                </div>
+                <div id="macroSearchHint" class="macro-search-hint"></div>
                 <div class="kbd-section">
                     <div class="label">⚡ Macro predefinite</div>
                     <div class="macro-grid">
@@ -486,6 +1055,7 @@
                         <div class="m" onclick="eseguiMacro('win_cmd')"><span class="icona">⌨️</span>CMD</div>
                         <div class="m" onclick="eseguiMacro('win_ps')"><span class="icona">💙</span>PowerShell</div>
                         <div class="m" onclick="eseguiMacro('win_terminal')"><span class="icona">📟</span>Terminale</div>
+                        <div class="m" onclick="eseguiMacro('win_terminal_admin')"><span class="icona">🛡️</span>Terminale (Admin)</div>
                         <div class="m" onclick="eseguiMacro('lnx_term')"><span class="icona">📟</span>Terminale Linux</div>
                         <div class="m" onclick="eseguiMacro('bios_f2')"><span class="icona">⚙️</span>BIOS F2</div>
                         <div class="m" onclick="eseguiMacro('bios_f12')"><span class="icona">🔧</span>Boot F12</div>
@@ -514,32 +1084,128 @@
 
             <!-- TERMINAL -->
             <div id="panel-terminal" class="panel">
-                <div class="kbd-section">
-                    <div class="label">🟦 Windows (CMD / PowerShell)</div>
-                    <div class="macro-grid terminal-grid" style="grid-template-columns:1fr 1fr 1fr;">
-                        <div class="m" onclick="eseguiMacro('dos_ipconfig')"><span class="icona">🌐</span>ipconfig /all</div>
-                        <div class="m" onclick="eseguiMacro('dos_ping')"><span class="icona">📡</span>ping 8.8.8.8</div>
-                        <div class="m" onclick="eseguiMacro('dos_chkdsk')"><span class="icona">💾</span>chkdsk /f /r</div>
-                        <div class="m" onclick="eseguiMacro('dos_sfc')"><span class="icona">🔧</span>sfc /scannow</div>
-                        <div class="m" onclick="eseguiMacro('dos_winget_up')"><span class="icona">📦</span>winget upgrade</div>
-                        <div class="m" onclick="eseguiMacro('dos_netstat')"><span class="icona">🔌</span>netstat -ano</div>
-                        <div class="m" onclick="eseguiMacro('dos_tasklist')"><span class="icona">📋</span>tasklist</div>
+                <!-- ⚡ SCORCIATOIE RAPIDE TERMINALI - sempre visibili -->
+                <div class="kbd-section" style="position:sticky;top:0;z-index:10;background:var(--bg);padding-bottom:6px;">
+                    <div class="label" style="font-size:10px;color:var(--accent);font-weight:700;">⚡ Apri terminale</div>
+                    <div class="kbd-row" style="gap:4px;">
+                        <button class="k blu" onclick="eseguiMacro('win_cmd')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">🪟 CMD</button>
+                        <button class="k blu" onclick="eseguiMacro('win_ps')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">💙 PowerShell</button>
+                        <button class="k rosso" onclick="eseguiMacro('win_cmd_admin')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">🛡️ CMD Admin</button>
+                        <button class="k rosso" onclick="eseguiMacro('win_ps_admin')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">🛡️ PS Admin</button>
+                    </div>
+                    <div class="kbd-row" style="gap:4px;">
+                        <button class="k verde" onclick="eseguiMacro('lnx_term')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">🐧 Bash</button>
+                        <button class="k rosso" onclick="eseguiMacro('lnx_term_admin')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">🛡️ Bash Admin</button>
+                        <button class="k giallo" onclick="eseguiMacro('win_terminal')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">📟 Windows Term</button>
+                        <button class="k giallo" onclick="eseguiMacro('win_terminal_admin')" style="flex:1;font-size:9px;padding:6px 2px;min-height:28px;">🛡️ Term Admin</button>
                     </div>
                 </div>
-                <div class="kbd-section">
-                    <div class="label">🟩 Linux (Ubuntu / Debian)</div>
-                    <div class="macro-grid terminal-grid" style="grid-template-columns:1fr 1fr 1fr;">
-                        <div class="m" onclick="eseguiMacro('lnx_update')"><span class="icona">🔄</span>apt update</div>
-                        <div class="m" onclick="eseguiMacro('lnx_upgrade')"><span class="icona">⬆️</span>apt upgrade -y</div>
-                        <div class="m" onclick="eseguiMacro('lnx_clean')"><span class="icona">🧹</span>apt autoremove</div>
-                        <div class="m" onclick="eseguiMacro('lnx_df')"><span class="icona">💾</span>df -h</div>
-                        <div class="m" onclick="eseguiMacro('lnx_free')"><span class="icona">🧠</span>free -h</div>
-                        <div class="m" onclick="eseguiMacro('lnx_top')"><span class="icona">📈</span>top</div>
-                        <div class="m" onclick="eseguiMacro('lnx_lsblk')"><span class="icona">💽</span>lsblk</div>
+
+                <!-- Sezione 1: Diagnostica di rete -->
+                <div class="kbd-section collassabile">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>🌐 Diagnostica di rete</span><span class="freccia">▼</span>
+                    </div>
+                    <div class="contenuto">
+                        <div class="macro-grid" style="grid-template-columns:1fr 1fr;">
+                            <div class="m" onclick="eseguiMacro('dos_ipconfig')"><span class="icona">🌐</span>ipconfig /all <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Tutte le interfacce di rete</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_ping')"><span class="icona">📡</span>ping 8.8.8.8 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Test connettività DNS Google</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_netstat')"><span class="icona">🔌</span>netstat -ano <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Porte aperte e connessioni attive</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_tracert')"><span class="icona">📍</span>tracert 8.8.8.8 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Tracciamento route verso Google</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_nslookup')"><span class="icona">🔍</span>nslookup google.com <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Risoluzione DNS</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_pathping')"><span class="icona">📊</span>pathping 8.8.8.8 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Diagnostica rete avanzata</span></div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Sezione 2: Diagnostica dischi (Windows) -->
+                <div class="kbd-section collassabile">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>💽 Diagnostica dischi (Windows)</span><span class="freccia">▼</span>
+                    </div>
+                    <div class="contenuto">
+                        <div class="macro-grid" style="grid-template-columns:1fr 1fr;">
+                            <div class="m" onclick="eseguiMacro('dos_chkdsk')"><span class="icona">🔍</span>chkdsk /f /r <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Verifica e ripara settori danneggiati</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_sfc')"><span class="icona">🔧</span>sfc /scannow <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Controllo file di sistema</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_dism')"><span class="icona">🏗️</span>DISM /Online /Cleanup-Image /RestoreHealth <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Ripristino immagine di sistema</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_diskpart')"><span class="icona">🗄️</span>diskpart /list <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Elenco dischi e partizioni</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_wmic_disk')"><span class="icona">📊</span>wmic diskdrive get status <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Stato SMART dei dischi</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_fsutil')"><span class="icona">💾</span>fsutil behavior query <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Query comportamento filesystem</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_cleanmgr')"><span class="icona">🧹</span>cleanmgr /sageset:1 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Pulizia disco (configurazione)</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_defrag')"><span class="icona">⚡</span>defrag C: /O <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Ottimizzazione unità C:</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione 3: Diagnostica dischi (Linux) -->
+                <div class="kbd-section collassabile">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>💽 Diagnostica dischi (Linux)</span><span class="freccia">▼</span>
+                    </div>
+                    <div class="contenuto">
+                        <div class="macro-grid" style="grid-template-columns:1fr 1fr;">
+                            <div class="m" onclick="eseguiMacro('lnx_df')"><span class="icona">💾</span>df -h <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Spazio libero su tutte le partizioni</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_lsblk')"><span class="icona">💽</span>lsblk <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Elenco dispositivi a blocchi</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_fdisk')"><span class="icona">🗄️</span>fdisk -l <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Tabella partizioni dettagliata</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_blkid')"><span class="icona">🏷️</span>blkid <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">UUID e label dei filesystem</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_smartctl')"><span class="icona">🔍</span>smartctl -a /dev/sda <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Dati SMART disco sda</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_fsck')"><span class="icona">🔧</span>fsck -Af <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Controllo filesystem all'avvio</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_du')"><span class="icona">📊</span>du -sh /* <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Dimensione cartelle in radice</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_iostat')"><span class="icona">📈</span>iostat -x 1 3 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Statistiche I/O dischi in tempo reale</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione 4: Sistema e processi (Windows) -->
+                <div class="kbd-section collassabile">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>🖥️ Sistema e processi (Windows)</span><span class="freccia">▼</span>
+                    </div>
+                    <div class="contenuto">
+                        <div class="macro-grid" style="grid-template-columns:1fr 1fr;">
+                            <div class="m" onclick="eseguiMacro('dos_tasklist')"><span class="icona">📋</span>tasklist <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Elenco processi in esecuzione</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_systeminfo')"><span class="icona">ℹ️</span>systeminfo <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Informazioni complete sul sistema</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_msinfo')"><span class="icona">🔬</span>msinfo32 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Rapporto dettagliato sistema</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_winget_up')"><span class="icona">📦</span>winget upgrade <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Aggiornamenti software disponibili</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_driverquery')"><span class="icona">🔌</span>driverquery /v <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Elenco driver installati</span></div>
+                            <div class="m" onclick="eseguiMacro('dos_powercfg')"><span class="icona">🔋</span>powercfg /energy <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Report efficienza energetica</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione 5: Sistema e processi (Linux) -->
+                <div class="kbd-section collassabile">
+                    <div class="label" onclick="toggleSezione(this)">
+                        <span>🐧 Sistema e processi (Linux)</span><span class="freccia">▼</span>
+                    </div>
+                    <div class="contenuto">
+                        <div class="macro-grid" style="grid-template-columns:1fr 1fr;">
+                            <div class="m" onclick="eseguiMacro('lnx_update')"><span class="icona">🔄</span>apt update <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Aggiorna lista pacchetti</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_upgrade')"><span class="icona">⬆️</span>apt upgrade -y <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Aggiorna tutti i pacchetti</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_clean')"><span class="icona">🧹</span>apt autoremove <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Rimuovi pacchetti orfani</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_free')"><span class="icona">🧠</span>free -h <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Memoria RAM libera/occupata</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_top')"><span class="icona">📈</span>top -b -n 1 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Processi e uso risorse (istantanea)</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_uname')"><span class="icona">ℹ️</span>uname -a <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Info kernel e architettura</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_dmesg')"><span class="icona">📜</span>dmesg | tail -20 <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Ultimi messaggi del kernel</span></div>
+                            <div class="m" onclick="eseguiMacro('lnx_journalctl')"><span class="icona">📋</span>journalctl -xe <span style="display:block;font-size:8px;color:var(--muted);font-weight:400;">Log di sistema dettagliati</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione 6: Comandi personalizzati (salvati come le macro) -->
                 <div class="kbd-section">
-                    <div class="label">✏️ Comando personalizzato</div>
+                    <div class="label">✏️ Comandi personali</div>
+                    <div class="macro-grid" id="cmdCustomGrid" style="grid-template-columns:1fr 1fr;"></div>
+                    <div class="macro-add" style="flex-wrap:nowrap;margin-top:6px;">
+                        <input type="text" id="cmdNome" placeholder="Nome comando" style="flex:1;">
+                        <input type="text" id="cmdSeq" placeholder="es. ping 1.1.1.1" style="flex:2;">
+                        <button class="btn-add" onclick="salvaCmdCustom()">+</button>
+                    </div>
+                </div>
+
+                <!-- Comando rapido (non salvato) -->
+                <div class="kbd-section">
+                    <div class="label">⚡ Comando rapido (invio singolo)</div>
                     <div class="macro-add" style="flex-wrap:nowrap;">
                         <input type="text" id="customCmd" placeholder="es. ping 1.1.1.1" style="flex:2;">
                         <button class="btn-add" onclick="inviaCustomCmd()" style="flex:0.5;">▶️</button>
@@ -551,6 +1217,11 @@
             <div id="panel-chat" class="panel">
                 <div class="chat-area">
                     <textarea id="chatText" placeholder="Scrivi qui... (supporta dettatura)"></textarea>
+                    <div class="resize-handle" id="resize-chatText">
+                        <span class="grip"></span>
+                        <span class="reset-dim" onclick="resetDimensione('chatText', event)">↺ auto</span>
+                        <span class="grip"></span>
+                    </div>
                     <div class="chat-actions">
                         <button class="btn" onclick="inviaChat()">🚀 Invia</button>
                         <button class="btn secondary" onclick="document.getElementById('chatText').value=''">🗑️ Svuota</button>
@@ -622,6 +1293,14 @@
                 </div>
 
                 <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
+                <div class="label" style="font-size:11px;font-weight:700;margin-bottom:4px;">📱 Profilo touchpad</div>
+                <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">
+                    Punto di partenza consigliato per piattaforma — poi regola gli slider sotto a piacere.
+                </div>
+                <div class="controls-row" style="gap:6px;margin-bottom:8px;">
+                    <button class="btn" id="presetBtnAndroid" onclick="applicaPreset('android')" style="flex:1;padding:8px;font-size:11px;">🤖 Android</button>
+                    <button class="btn" id="presetBtnIOS" onclick="applicaPreset('ios')" style="flex:1;padding:8px;font-size:11px;">🍎 iOS/iPad</button>
+                </div>
                 <div class="slider-row">
                     <span class="label">🖱️ Sensibilità</span>
                     <input type="range" id="sensSlider" min="1" max="15" step="0.5" value="4">
@@ -636,6 +1315,26 @@
                     <span class="label">⏱️ Intervallo (ms)</span>
                     <input type="range" id="sendIntervalSlider" min="10" max="150" step="5" value="80">
                     <span class="val" id="sendIntervalVal">80</span>
+                </div>
+                <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
+                <div class="label" style="font-size:11px;font-weight:700;margin-bottom:4px;">🖐️ Scroll (2 dita)</div>
+                <div class="slider-row">
+                    <span class="label">🚀 Sensibilità</span>
+                    <input type="range" id="scrollSensSlider" min="0.2" max="2" step="0.1" value="0.7">
+                    <span class="val" id="scrollSensVal">0.7</span>
+                </div>
+                <div class="slider-row">
+                    <span class="label">💧 Fluidità (ms)</span>
+                    <input type="range" id="scrollFluiditaSlider" min="8" max="50" step="2" value="16">
+                    <span class="val" id="scrollFluiditaVal">16</span>
+                </div>
+                <div class="slider-row">
+                    <span class="label">🎿 Cinetismo</span>
+                    <input type="range" id="scrollCinetismoSlider" min="0" max="2200" step="50" value="250">
+                    <span class="val" id="scrollCinetismoVal">250ms</span>
+                </div>
+                <div style="font-size:10px;color:var(--muted);margin:2px 0 6px;">
+                    Fluidità più bassa = aggiornamenti più frequenti. Cinetismo = tempo (ms) perché la velocità di scorrimento si dimezzi — 0 = nessuna inerzia, 2000+ = effetto tipo MacBook molto prolungato.
                 </div>
                 <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
                 <div class="controls-row">
@@ -671,10 +1370,20 @@
                 </div>
 
                 <!-- Lista file -->
+                <div class="fm-search-bar" style="display:flex;gap:8px;align-items:center;padding:10px 0;">
+                    <input id="fmSearchInput" type="search" placeholder="Filtra file e cartelle..." autocomplete="off" oninput="fmFilterFiles()" style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-size:13px;">
+                    <button type="button" onclick="fmClearSearch()" style="padding:10px 14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);font-size:13px;cursor:pointer;">✕</button>
+                </div>
+                <div id="fmSearchHint" style="font-size:11px;color:var(--muted);padding-bottom:8px;min-height:18px;"></div>
                 <div id="fmList" style="flex:1;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
                     <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">
                         Connetti in WiFi/AP per usare il file manager
                     </div>
+                </div>
+
+                <!-- Maniglia ridimensionamento Files -->
+                <div class="resize-handle" id="resize-fmList">
+                    <div class="grip"></div>
                 </div>
 
                 <!-- Azioni -->
@@ -724,6 +1433,7 @@ let holdMods = {};
 let holdGlobalActive = false, capsLockActive = false;
 let macroCustom = [];
 let credenziali = [];
+let cmdCustom = []; // v6.7b: comandi personali terminale
 let bleChunkBuffer = { macro: '', cred: '', fsList: '', fsRead: '' };
 // FIX v6.1.2: mappa di promise in attesa di risposta BLE per il File Manager
 let blePendingFS = {};
@@ -736,9 +1446,20 @@ let restartPolling = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+// v6.6: due preset distinti selezionabili manualmente (non solo auto-detect),
+// perché lo user-agent non è sempre affidabile al 100% (es. iPad in modalità
+// desktop) e perché a volte conviene scegliere a mano. Valori ricalibrati:
+// più fluidi di prima su entrambe le piattaforme (l'utente ha verificato
+// empiricamente che soglie più basse riducono la scattosità), ma restiamo
+// più cauti su iOS per via della latenza BLE nota (vedi ghosting cursore
+// diagnosticato in precedenza) — non è il refresh rate del touch a limitare,
+// è il canale radio.
+const PRESET_ANDROID = { sens: 4, minMovement: 2, sendInterval: 30 };
+const PRESET_IOS      = { sens: 4, minMovement: 4, sendInterval: 60 };
+
 const DEFAULT_SENS = 4;
-const DEFAULT_MIN_MOVEMENT = isIOS ? 8 : 4;
-const DEFAULT_SEND_INTERVAL = isIOS ? 100 : 50;
+const DEFAULT_MIN_MOVEMENT = isIOS ? PRESET_IOS.minMovement : PRESET_ANDROID.minMovement;
+const DEFAULT_SEND_INTERVAL = isIOS ? PRESET_IOS.sendInterval : PRESET_ANDROID.sendInterval;
 
 let pointers = {};
 let lastTap = 0, lastMoveTime = 0, stopTimeout = null;
@@ -746,9 +1467,36 @@ let lastMoveX = 0, lastMoveY = 0;
 let velocityHistory = [];
 const VELOCITY_SAMPLES = 5;
 
+// v6.6: stato per lo scroll con inerzia (2 dita)
+let scrollVelocityHistory = [];
+let scrollAccumDy = 0;
+let lastScrollSendTime = 0;
+let scrollInertiaFrame = null;
+let ultimaEraScroll = false;
+let residuoInerzia = 0; // v6.6g: resto frazionario dell'inerzia, conservato tra un frame e l'altro
+// v6.6e: SCROLL_SEND_INTERVAL e SCROLL_INERTIA_DECAY sono diventati
+// regolabili (scrollFluidita, scrollCinetismo, vedi sopra) — restano
+// costanti solo la finestra di calcolo velocità e il tetto di sicurezza.
+const SCROLL_FINESTRA_MS = 100;       // finestra temporale per calcolare la velocità reale
+const SCROLL_INERTIA_MIN_VELOCITY = 0.012; // px/ms — soglia più bassa = dissolvenza finale più dolce
+const SCROLL_INERTIA_MAX_MS = 3000;   // v6.6f: alzato da 900 — con cinetismo alto (0.99+) tagliava
+                                       // via l'inerzia troppo presto, impedendo il "lungo scivolamento"
+                                       // tipico di un trackpad MacBook
+// v6.6g: quanti pixel di trascinamento servono per un singolo "scatto
+// di rotellina" inviato al PC — il firmware interpreta SC: come scatti
+// (Mouse.move wheel), non pixel. La sensibilità divide questo valore:
+// più sensibilità = meno pixel necessari per scatto = scroll più rapido.
+const PX_PER_CLICK_BASE = 50;
+
 let sens = parseFloat(localStorage.getItem('kvm_sens')) || DEFAULT_SENS;
 let minMovement = parseInt(localStorage.getItem('kvm_minMovement')) || DEFAULT_MIN_MOVEMENT;
 let sendInterval = parseInt(localStorage.getItem('kvm_sendInterval')) || DEFAULT_SEND_INTERVAL;
+
+// v6.6e: scroll (2 dita) ora regolabile — prima erano costanti fisse
+let scrollSens = parseFloat(localStorage.getItem('kvm_scrollSens')) || 0.7;
+let scrollFluidita = parseInt(localStorage.getItem('kvm_scrollFluidita')) || 16;
+const _savedCinetismoMs = localStorage.getItem('kvm_scrollCinetismoMs');
+let scrollCinetismoMs = _savedCinetismoMs !== null ? parseInt(_savedCinetismoMs) : 250; // 0 è un valore valido ("nessuna inerzia")
 
 // ============================================================
 // TOAST / LOG
@@ -794,9 +1542,15 @@ function goToKVM() {
     document.getElementById('screen-kvm').style.display = 'flex';
     kvmLog('✅ KVM attivo - Modalità: ' + connectionMode.toUpperCase());
     // FIX v5.30: carica stato WiFi e reti salvate entrando nel KVM
+    // FIX v6.4c: mancava il caricamento automatico di macro/credenziali
+    // per WiFi/AP (via BLE avveniva già in connectBLE) — le credenziali
+    // sembravano "non sincronizzarsi" solo perché qui non venivano mai
+    // richieste finché non si premeva "Ricarica" manualmente.
     if (connectionMode === 'wifi' || connectionMode === 'ap') {
         wifiStatus();
         setTimeout(wifiLoadNetworks, 500);
+        setTimeout(loadMacrosHTTP, 800);
+        setTimeout(loadCredsHTTP, 1100);
     }
 }
 function goToConnection() {
@@ -1440,21 +2194,16 @@ document.querySelectorAll('#tabBar .tab').forEach(tab => {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('attivo'));
         this.classList.add('attivo');
         document.getElementById('panel-' + this.dataset.panel).classList.add('attivo');
-        if (this.dataset.panel !== 'tastiera') {
-            document.getElementById('qwertyContainer').style.display = 'none';
-            document.getElementById('toggleQwerty').innerHTML = '<span class="arrow">▶</span> Mostra tastiera';
-        }
         // FIX v5.30: aggiorna stato WiFi quando si apre impostazioni
         if (this.dataset.panel === 'impostazioni') wifiStatus();
     });
 });
 
-function toggleQWERTY() {
-    const c = document.getElementById('qwertyContainer');
-    const btn = document.getElementById('toggleQwerty');
-    const shown = c.style.display === 'block';
-    c.style.display = shown ? 'none' : 'block';
-    btn.innerHTML = shown ? '<span class="arrow">▶</span> Mostra tastiera' : '<span class="arrow open">▼</span> Nascondi tastiera';
+// v6.7: toggle per le sezioni collassabili del tab Tastiera
+// (sostituisce la vecchia toggleQWERTY(), rimossa insieme alla
+// mini-tastiera che duplicava la Tastiera Estesa)
+function toggleSezione(labelEl) {
+    labelEl.closest('.kbd-section').classList.toggle('chiusa');
 }
 
 // ============================================================
@@ -1487,20 +2236,70 @@ sendIntervalSlider.addEventListener('input', function() {
     localStorage.setItem('kvm_sendInterval', sendInterval);
     document.getElementById('statusInterval').textContent = sendInterval;
 });
+// v6.6e: slider scroll (2 dita)
+const scrollSensSlider = document.getElementById('scrollSensSlider');
+const scrollSensVal = document.getElementById('scrollSensVal');
+scrollSensSlider.addEventListener('input', function() {
+    scrollSens = parseFloat(this.value); scrollSensVal.textContent = scrollSens.toFixed(1);
+    localStorage.setItem('kvm_scrollSens', scrollSens);
+});
+const scrollFluiditaSlider = document.getElementById('scrollFluiditaSlider');
+const scrollFluiditaVal = document.getElementById('scrollFluiditaVal');
+scrollFluiditaSlider.addEventListener('input', function() {
+    scrollFluidita = parseInt(this.value); scrollFluiditaVal.textContent = scrollFluidita;
+    localStorage.setItem('kvm_scrollFluidita', scrollFluidita);
+});
+const scrollCinetismoSlider = document.getElementById('scrollCinetismoSlider');
+const scrollCinetismoVal = document.getElementById('scrollCinetismoVal');
+scrollCinetismoSlider.addEventListener('input', function() {
+    scrollCinetismoMs = parseInt(this.value);
+    scrollCinetismoVal.textContent = scrollCinetismoMs === 0 ? 'off' : scrollCinetismoMs + 'ms';
+    localStorage.setItem('kvm_scrollCinetismoMs', scrollCinetismoMs);
+});
 function loadSettings() {
     sensSlider.value = sens; sensVal.textContent = sens.toFixed(1);
     sensSliderTrack.value = sens; sensValTrack.textContent = sens.toFixed(1);
     minMovementSlider.value = minMovement; minMovementVal.textContent = minMovement;
     sendIntervalSlider.value = sendInterval; sendIntervalVal.textContent = sendInterval;
+    scrollSensSlider.value = scrollSens; scrollSensVal.textContent = scrollSens.toFixed(1);
+    scrollFluiditaSlider.value = scrollFluidita; scrollFluiditaVal.textContent = scrollFluidita;
+    scrollCinetismoSlider.value = scrollCinetismoMs;
+    scrollCinetismoVal.textContent = scrollCinetismoMs === 0 ? 'off' : scrollCinetismoMs + 'ms';
     document.getElementById('statusSens').textContent = sens.toFixed(1);
     document.getElementById('statusMinMov').textContent = minMovement;
     document.getElementById('statusInterval').textContent = sendInterval;
+    aggiornaEvidenziaPreset();
 }
 function resetDefaultSettings() {
     if (!confirm('Ripristinare tutte le impostazioni ai valori predefiniti?')) return;
     sens = DEFAULT_SENS; minMovement = DEFAULT_MIN_MOVEMENT; sendInterval = DEFAULT_SEND_INTERVAL;
+    scrollSens = 0.7; scrollFluidita = 16; scrollCinetismoMs = 250;
     localStorage.setItem('kvm_sens', sens); localStorage.setItem('kvm_minMovement', minMovement); localStorage.setItem('kvm_sendInterval', sendInterval);
+    localStorage.setItem('kvm_scrollSens', scrollSens); localStorage.setItem('kvm_scrollFluidita', scrollFluidita); localStorage.setItem('kvm_scrollCinetismoMs', scrollCinetismoMs);
     loadSettings(); showToast('✅ Impostazioni ripristinate');
+}
+
+// ============================================================
+// v6.6 — PRESET PIATTAFORMA (Android / iOS)
+// Punto di partenza rapido: applica i tre valori consigliati per
+// la piattaforma scelta, poi restano comunque liberamente
+// regolabili con gli slider sotto. La scelta manuale prevale
+// sempre sull'auto-detect.
+// ============================================================
+function applicaPreset(piattaforma) {
+    const p = piattaforma === 'ios' ? PRESET_IOS : PRESET_ANDROID;
+    sens = p.sens; minMovement = p.minMovement; sendInterval = p.sendInterval;
+    localStorage.setItem('kvm_sens', sens);
+    localStorage.setItem('kvm_minMovement', minMovement);
+    localStorage.setItem('kvm_sendInterval', sendInterval);
+    localStorage.setItem('kvm_preset', piattaforma);
+    loadSettings();
+    showToast('✅ Profilo ' + (piattaforma === 'ios' ? 'iOS/iPad' : 'Android') + ' applicato');
+}
+function aggiornaEvidenziaPreset() {
+    const attivo = localStorage.getItem('kvm_preset') || (isIOS ? 'ios' : 'android');
+    document.getElementById('presetBtnAndroid').classList.toggle('preset-attivo', attivo === 'android');
+    document.getElementById('presetBtnIOS').classList.toggle('preset-attivo', attivo === 'ios');
 }
 
 // ============================================================
@@ -1525,13 +2324,19 @@ function toggleHoldGlobal() {
 function toggleCaps() {
     capsLockActive = !capsLockActive;
     document.getElementById('btnCaps').classList.toggle('attivo', capsLockActive);
+    const capsEstesa = document.getElementById('estesa-CAPS');
+    if (capsEstesa) capsEstesa.classList.toggle('attivo', capsLockActive);
     invia('CAPS_TOGGLE'); aggiornaQWERTY();
 }
+const LETTERE = ['q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m'];
 function aggiornaQWERTY() {
     const mostraMaiuscolo = (holdMods['SHIFT'] || false) !== capsLockActive;
-    ['q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m'].forEach(l => {
-        const el = document.getElementById('qw-' + l);
-        if (el) el.textContent = mostraMaiuscolo ? l.toUpperCase() : l;
+    LETTERE.forEach(l => {
+        // v6.7: rimosso il lookup 'qw-'+l — la vecchia mini-tastiera
+        // che usava quegli id è stata rimossa (sostituita dalla
+        // Tastiera Estesa, più completa)
+        const elEstesa = document.querySelector('#estesaGrid .ek[data-key="' + l + '"]');
+        if (elEstesa) elEstesa.textContent = mostraMaiuscolo ? l.toUpperCase() : l;
     });
 }
 
@@ -1554,8 +2359,25 @@ function setModo(modo) {
 // ============================================================
 // CHAT / ACCENTI
 // ============================================================
+// v6.6c REVERT: la conversione in [ALT+xxxx] resta il metodo
+// scelto perché è l'UNICO confermato funzionante su PC Windows
+// nei test reali — il "percorso diretto" UTF-8 sembrava corretto
+// nel codice ma non è mai stato verificato affidabile in pratica.
+// v6.6d FIX: delimitatori cambiati da [ ] a caratteri di controllo
+// (\x01 \x02) — le parentesi quadre letterali nel testo (es. array,
+// JSON, codice) si confondevano con i delimitatori sintetici,
+// corrompendo il parsing di tutto il testo successivo.
 function traduciAccenti(testo) {
-    const mappa = {'à':'[ALT+0224]','è':'[ALT+0232]','é':'[ALT+0233]','ì':'[ALT+0236]','ò':'[ALT+0242]','ù':'[ALT+0249]','À':'[ALT+0192]','È':'[ALT+0200]','É':'[ALT+0201]','Ì':'[ALT+0204]','Ò':'[ALT+0210]','Ù':'[ALT+0217]'};
+    const mappa = {
+        'à':'\x01ALT+0224\x02','è':'\x01ALT+0232\x02','é':'\x01ALT+0233\x02','ì':'\x01ALT+0236\x02','ò':'\x01ALT+0242\x02','ù':'\x01ALT+0249\x02',
+        'À':'\x01ALT+0192\x02','È':'\x01ALT+0200\x02','É':'\x01ALT+0201\x02','Ì':'\x01ALT+0204\x02','Ò':'\x01ALT+0210\x02','Ù':'\x01ALT+0217\x02',
+        'ç':'\x01ALT+0231\x02','Ç':'\x01ALT+0199\x02','ñ':'\x01ALT+0241\x02','Ñ':'\x01ALT+0209\x02',
+        '€':'\x01ALT+0128\x02','£':'\x01ALT+0163\x02','¥':'\x01ALT+0165\x02','§':'\x01ALT+0167\x02','°':'\x01ALT+0176\x02',
+        '©':'\x01ALT+0169\x02','®':'\x01ALT+0174\x02','«':'\x01ALT+0171\x02','»':'\x01ALT+0187\x02',
+        '¿':'\x01ALT+0191\x02','¡':'\x01ALT+0161\x02','×':'\x01ALT+0215\x02','÷':'\x01ALT+0247\x02','µ':'\x01ALT+0181\x02',
+        '¢':'\x01ALT+0162\x02','•':'\x01ALT+0149\x02','™':'\x01ALT+0153\x02',
+        '~':'\x01ALT+0126\x02','`':'\x01ALT+0096\x02','{':'\x01ALT+0123\x02','}':'\x01ALT+0125\x02'
+    };
     return [...testo].map(c => mappa[c] || c).join('');
 }
 function inviaChat() {
@@ -1569,10 +2391,22 @@ function inviaChat() {
 // ============================================================
 // TASTIERA
 // ============================================================
+// v6.4: mappa mod → tutti gli id "gemelli" da tenere sincronizzati
+// (pannello classico, barra flottante, tastiera estesa — alcuni
+// modificatori compaiono due volte nella tastiera estesa, es. Shift
+// a sinistra e a destra, Alt a sinistra e a destra)
+const MOD_TWIN_IDS = {
+    CTRL:  ['fbar-CTRL', 'estesa-CTRL'],
+    ALT:   ['fbar-ALT', 'estesa-ALT', 'estesa-ALT2'],
+    SHIFT: ['fbar-SHIFT', 'estesa-SHIFT', 'estesa-SHIFT2'],
+    WIN:   ['fbar-WIN', 'estesa-WIN'],
+};
 function toggleMod(mod) {
     holdMods[mod] = !holdMods[mod];
-    const el = document.getElementById('mod-' + mod);
-    if (el) el.classList.toggle('attivo', holdMods[mod]);
+    (MOD_TWIN_IDS[mod] || ['mod-' + mod]).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('attivo', holdMods[mod]);
+    });
     if (mod === 'SHIFT') aggiornaQWERTY();
     invia('HD:' + mod);
 }
@@ -1582,11 +2416,440 @@ function inviaTastoConMod(tasto) {
     if (attivi.length > 0) {
         invia('K:' + attivi.join('+') + '+' + tasto);
         holdMods = {};
-        document.querySelectorAll('.k.mod.attivo').forEach(el => el.classList.remove('attivo'));
+        // v6.4: ripulisce anche i gemelli nella barra flottante e nella tastiera estesa
+        document.querySelectorAll('.k.mod.attivo, .f.mod.attivo, .ek.mod.attivo').forEach(el => el.classList.remove('attivo'));
         setTimeout(() => invia('HD:OFF'), 80);
     } else { invia('K:' + tasto); }
 }
+function inviaTasto(tasto) {
+    invia('K:' + tasto);
+}
+function inviaCombinazione(mod, tasto) {
+    invia('K:' + mod + '+' + tasto);
+}
 function inviaCombo(c) { invia('K:' + c); }
+
+let miniTouchpadData = { startX: 0, startY: 0, x: 0, y: 0, touchCount: 0, moved: false };
+const miniTouchpad = document.getElementById('estesa-mini-touchpad');
+if (miniTouchpad) {
+    miniTouchpad.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        miniTouchpadData.startX = touch.clientX;
+        miniTouchpadData.startY = touch.clientY;
+        miniTouchpadData.touchCount = e.touches.length;
+        miniTouchpadData.moved = false;
+    });
+    miniTouchpad.addEventListener('touchmove', (e) => {
+        if (e.cancelable) e.preventDefault();
+        if (e.touches.length === 2) {
+            const touch = e.touches[0];
+            const touch2 = e.touches[1];
+            const currentY = (touch.clientY + touch2.clientY) / 2;
+            const deltaY = currentY - miniTouchpadData.startY;
+            if (Math.abs(deltaY) > 8) {
+                miniTouchpadData.moved = true;
+                const scrollDelta = Math.sign(deltaY) * Math.max(1, Math.floor(Math.abs(deltaY) * (scrollSens || 0.7) * 0.12));
+                invia('SC:' + scrollDelta);
+                miniTouchpadData.startY = currentY;
+            }
+            return;
+        }
+        const touch = e.touches[0];
+        miniTouchpadData.x = touch.clientX - miniTouchpadData.startX;
+        miniTouchpadData.y = touch.clientY - miniTouchpadData.startY;
+        if (Math.abs(miniTouchpadData.x) > 5 || Math.abs(miniTouchpadData.y) > 5) {
+            miniTouchpadData.moved = true;
+            const moveFactor = Math.max(0.5, Math.min(1.5, (typeof sens === 'number' ? sens : 4) / 4));
+            const moveX = Math.floor(miniTouchpadData.x * moveFactor);
+            const moveY = Math.floor(miniTouchpadData.y * moveFactor);
+            if (moveX !== 0 || moveY !== 0) {
+                invia('M:' + moveX + ',' + moveY);
+                miniTouchpadData.startX = touch.clientX;
+                miniTouchpadData.startY = touch.clientY;
+            }
+        }
+    });
+    miniTouchpad.addEventListener('touchend', () => {
+        if (!miniTouchpadData.moved) {
+            if (miniTouchpadData.touchCount === 1) invia('C:L');
+            else if (miniTouchpadData.touchCount === 2) invia('C:R');
+        }
+        miniTouchpadData = { startX: 0, startY: 0, x: 0, y: 0, touchCount: 0, moved: false };
+    });
+    miniTouchpad.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+        miniTouchpadData.startX = e.clientX;
+        miniTouchpadData.startY = e.clientY;
+        miniTouchpadData.touchCount = 1;
+        miniTouchpadData.moved = false;
+        miniTouchpad.setPointerCapture(e.pointerId);
+    });
+    miniTouchpad.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+        if (miniTouchpadData.touchCount !== 1) return;
+        const deltaX = e.clientX - miniTouchpadData.startX;
+        const deltaY = e.clientY - miniTouchpadData.startY;
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            miniTouchpadData.moved = true;
+            const moveFactor = Math.max(0.5, Math.min(1.5, (typeof sens === 'number' ? sens : 4) / 4));
+            const moveX = Math.floor(deltaX * moveFactor);
+            const moveY = Math.floor(deltaY * moveFactor);
+            if (moveX !== 0 || moveY !== 0) {
+                invia('M:' + moveX + ',' + moveY);
+                miniTouchpadData.startX = e.clientX;
+                miniTouchpadData.startY = e.clientY;
+            }
+        }
+    });
+    miniTouchpad.addEventListener('pointerup', (e) => {
+        if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+        if (!miniTouchpadData.moved) invia('C:L');
+        miniTouchpadData = { startX: 0, startY: 0, x: 0, y: 0, touchCount: 0, moved: false };
+    });
+}
+
+// ============================================================
+// v6.4 — HOLD-TO-REPEAT
+// Tenendo premuto un tasto, lo stesso comando viene reinviato a
+// intervalli regolari (esattamente come la "ripetizione automatica"
+// di una tastiera fisica) finché il dito resta sul tasto.
+// Nessuna modifica firmware necessaria: ogni ripetizione è un
+// normale ciclo K:tasto già supportato.
+// ============================================================
+const HOLD_REPEAT_DELAY = 450;   // ms prima che parta la ripetizione
+const HOLD_REPEAT_RATE  = 60;    // ms tra una ripetizione e l'altra
+
+function bindHoldRepeat(el, sendFn) {
+    let delayTimer = null, repeatTimer = null, attivo = false;
+
+    function avvia(e) {
+        if (e.cancelable) e.preventDefault();
+        if (attivo) return;
+        attivo = true;
+        el.classList.add('tenuto');
+        sendFn(); // primo invio immediato
+        delayTimer = setTimeout(() => {
+            repeatTimer = setInterval(sendFn, HOLD_REPEAT_RATE);
+        }, HOLD_REPEAT_DELAY);
+    }
+    function ferma() {
+        if (!attivo) return;
+        attivo = false;
+        el.classList.remove('tenuto');
+        clearTimeout(delayTimer);
+        clearInterval(repeatTimer);
+    }
+    el.addEventListener('touchstart', avvia, { passive: false });
+    el.addEventListener('touchend', ferma);
+    el.addEventListener('touchcancel', ferma);
+    // Fallback mouse (test da desktop/browser senza touch)
+    el.addEventListener('mousedown', avvia);
+    el.addEventListener('mouseup', ferma);
+    el.addEventListener('mouseleave', ferma);
+}
+
+// ============================================================
+// v6.4 — TASTIERA ESTESA (overlay a schermo intero)
+// ============================================================
+let estesaInizializzata = false;
+let fnActive = false;
+
+function apriTastieraEstesa() {
+    document.getElementById('tastieraEstesaOverlay').classList.add('aperta');
+    document.getElementById('estesa-CAPS').classList.toggle('attivo', capsLockActive);
+    aggiornaQWERTY();
+    const overlay = document.getElementById('tastieraEstesaOverlay');
+    if (overlay.requestFullscreen) {
+        overlay.requestFullscreen().catch(() => {});
+    }
+    if (!estesaInizializzata) {
+        estesaInizializzata = true;
+        document.querySelectorAll('#estesaGrid .ek[data-key]').forEach(el => {
+            const tasto = el.dataset.key;
+            if (LETTERE.includes(tasto)) {
+                // v6.4c: lettere → tap normale, long-press apre popup
+                // accenti (dove esiste una variante). Niente ripetizione:
+                // su una tastiera vera le lettere non si "ripetono" da sole
+                // in modo utile, e qui interferirebbe col popup.
+                bindLetterKey(el, tasto);
+            } else if (el.dataset.fn) {
+                // v6.4c: numeri con simbolo Fn associato
+                bindHoldRepeat(el, () => {
+                    if (fnActive) invia('T:' + el.dataset.fn);
+                    else inviaTastoConMod(tasto);
+                });
+            } else {
+                bindHoldRepeat(el, () => inviaTastoConMod(tasto));
+            }
+        });
+        document.querySelectorAll('#estesaGrid .ek[data-mod]').forEach(el => {
+            el.addEventListener('click', () => toggleMod(el.dataset.mod));
+        });
+    }
+}
+function chiudiTastieraEstesa() {
+    document.getElementById('tastieraEstesaOverlay').classList.remove('aperta');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+
+// ============================================================
+// v6.4c — TASTO FN
+// Toggle semplice: quando attivo, i numeri della riga superiore
+// inviano il simbolo stampato in alto (! @ # $ ecc.) invece della
+// cifra. Il tasto resta acceso finché non lo tocchi di nuovo
+// (niente auto-off dopo un solo carattere, per digitare più
+// simboli di fila senza dover riattivare ogni volta).
+// ============================================================
+function toggleFn() {
+    fnActive = !fnActive;
+    document.getElementById('estesa-FN').classList.toggle('attivo', fnActive);
+}
+
+// ============================================================
+// v6.4c — LONG-PRESS LETTERE → POPUP ACCENTI
+// Comportamento identico alla tastiera nativa del telefono:
+// tap normale = lettera semplice; tieni premuto = popup con le
+// varianti accentate disponibili, scorri il dito per scegliere,
+// rilascia per confermare (rilascio fermo = lettera base).
+// ============================================================
+const LETTERE_ALT = {
+    a: ['à'], e: ['è', 'é'], i: ['ì'], o: ['ò', 'ó'], u: ['ù'], c: ['ç'], n: ['ñ']
+};
+const POPUP_DELAY = 350;
+
+function bindLetterKey(el, lettera) {
+    const alternative = LETTERE_ALT[lettera];
+    let timer = null, popupEl = null, aperto = false;
+
+    function mostraPopup() {
+        if (!alternative) return;
+        aperto = true;
+        el.classList.add('tenuto');
+        const rect = el.getBoundingClientRect();
+        popupEl = document.createElement('div');
+        popupEl.className = 'char-popup';
+        [lettera, ...alternative].forEach((ch, idx) => {
+            const opz = document.createElement('div');
+            opz.className = 'opzione' + (idx === 0 ? ' evidenziata' : '');
+            opz.textContent = ch;
+            opz.dataset.char = ch;
+            popupEl.appendChild(opz);
+        });
+        document.getElementById('tastieraEstesaOverlay').appendChild(popupEl); // v6.7 FIX: era document.body,
+            // invisibile durante la Fullscreen API perché fuori dal sottoalbero a schermo intero
+        const larghezza = (alternative.length + 1) * 38;
+        let left = rect.left + rect.width / 2 - larghezza / 2;
+        left = Math.max(4, Math.min(left, window.innerWidth - larghezza - 4));
+        popupEl.style.left = left + 'px';
+        popupEl.style.top = Math.max(4, rect.top - 46) + 'px';
+    }
+    function aggiornaEvidenziazione(x, y) {
+        if (!popupEl) return;
+        const sotto = document.elementFromPoint(x, y);
+        popupEl.querySelectorAll('.opzione').forEach(o => o.classList.toggle('evidenziata', o === sotto));
+    }
+    function chiudiEInvia() {
+        if (!popupEl) return;
+        const scelta = popupEl.querySelector('.opzione.evidenziata');
+        const carattere = scelta ? scelta.dataset.char : lettera;
+        if (carattere === lettera) inviaTastoConMod(lettera);
+        else invia('T:' + traduciAccenti(carattere)); // v6.6c: stesso meccanismo Alt+numpad confermato funzionante
+        popupEl.remove(); popupEl = null; aperto = false;
+        el.classList.remove('tenuto');
+    }
+
+    el.addEventListener('touchstart', (e) => {
+        if (e.cancelable) e.preventDefault();
+        el.classList.add('tenuto'); // v6.6f FIX: feedback visivo immediato, non solo quando si apre il popup
+        timer = setTimeout(mostraPopup, POPUP_DELAY);
+    }, { passive: false });
+    el.addEventListener('touchmove', (e) => {
+        if (aperto && e.touches[0]) aggiornaEvidenziazione(e.touches[0].clientX, e.touches[0].clientY);
+    });
+    el.addEventListener('touchend', () => {
+        clearTimeout(timer);
+        el.classList.remove('tenuto');
+        if (aperto) chiudiEInvia();
+        else inviaTastoConMod(lettera); // tap normale, nessun popup aperto
+    });
+    el.addEventListener('touchcancel', () => {
+        clearTimeout(timer);
+        if (popupEl) { popupEl.remove(); popupEl = null; }
+        aperto = false; el.classList.remove('tenuto');
+    });
+}
+
+// ============================================================
+// v6.4c — PANNELLO SIMBOLI EXTRA (🔣)
+// Solo simboli confermati sicuri con il firmware attuale (UTF-8
+// a 2 byte, già gestiti da inviaCarattereAccentato(), più l'euro
+// che ha già un fix dedicato). Esclusi apposta simboli a 3 byte
+// come ™ – — „ perché il firmware oggi li sostituirebbe con '?'.
+// ============================================================
+const SIMBOLI_EXTRA = ['€', '£', '¥', '§', '°', '©', '®', '«', '»', '¿', '¡', '×', '÷', 'µ', '¢', '•', '™'];
+function apriSimboli() {
+    const grid = document.getElementById('simboliGrid');
+    if (grid.children.length === 0) {
+        SIMBOLI_EXTRA.forEach(s => {
+            const d = document.createElement('div');
+            d.className = 'sim';
+            d.textContent = s;
+            d.onclick = () => invia('T:' + traduciAccenti(s));
+            grid.appendChild(d);
+        });
+    }
+    document.getElementById('simboliPanel').classList.add('aperto');
+}
+function chiudiSimboli() {
+    document.getElementById('simboliPanel').classList.remove('aperto');
+}
+
+// ============================================================
+// v6.5 — RIDIMENSIONAMENTO MANUALE PANNELLI
+// Trascinando la maniglia sotto un'area (Touchpad, Chat) puoi
+// sovrascrivere l'altezza automatica con un valore fisso, come
+// trascinare il bordo di una finestra sul PC. Il valore scelto
+// si salva (localStorage) e resta anche dopo aver chiuso la
+// pagina; "↺ auto" torna al dimensionamento automatico.
+// ============================================================
+const DIM_MIN = 90;   // px minimi, sotto non ha senso restringere oltre
+const DIM_MAX_VH = 75; // % massima dell'altezza schermo, per non coprire tutto
+
+function bindResizeHandle(targetId, handleId) {
+    const target = document.getElementById(targetId);
+    const handle = document.getElementById(handleId);
+    if (!target || !handle) return;
+
+    let startY = 0, startH = 0, trascinando = false;
+    const maxPx = () => window.innerHeight * (DIM_MAX_VH / 100);
+
+    // Applica dimensione salvata all'avvio
+    const salvata = localStorage.getItem('dim_' + targetId);
+    if (salvata) {
+        target.style.flex = 'none';
+        target.style.height = salvata;
+    }
+
+    function inizia(clientY) {
+        trascinando = true;
+        startY = clientY;
+        startH = target.getBoundingClientRect().height;
+        handle.classList.add('attiva');
+    }
+    function muovi(clientY) {
+        if (!trascinando) return;
+        let nuovaAltezza = startH + (clientY - startY);
+        nuovaAltezza = Math.max(DIM_MIN, Math.min(nuovaAltezza, maxPx()));
+        target.style.flex = 'none';
+        target.style.height = nuovaAltezza + 'px';
+    }
+    function fine() {
+        if (!trascinando) return;
+        trascinando = false;
+        handle.classList.remove('attiva');
+        const h = target.style.height;
+        if (h && parseFloat(h) > DIM_MIN) {
+            localStorage.setItem('dim_' + targetId, h);
+        } else {
+            localStorage.removeItem('dim_' + targetId);
+        }
+    }
+
+    handle.addEventListener('touchstart', (e) => { inizia(e.touches[0].clientY); }, { passive: true });
+    handle.addEventListener('touchmove', (e) => { muovi(e.touches[0].clientY); }, { passive: true });
+    handle.addEventListener('touchend', fine);
+    handle.addEventListener('touchcancel', fine);
+    // Fallback mouse (test da desktop/browser)
+    handle.addEventListener('mousedown', (e) => { inizia(e.clientY); e.preventDefault(); });
+    document.addEventListener('mousemove', (e) => { if (trascinando) muovi(e.clientY); });
+    document.addEventListener('mouseup', fine);
+}
+
+function resetDimensione(targetId, event, varName) {
+    if (event) event.stopPropagation();
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    if (varName) {
+        target.style.removeProperty(varName);
+        localStorage.removeItem('dim_' + targetId + '_' + varName);
+        return;
+    }
+    target.style.flex = '';
+    target.style.height = '';
+    localStorage.removeItem('dim_' + targetId);
+}
+
+function bindInsetHandle(targetId, handleId, propName) {
+    const target = document.getElementById(targetId);
+    const handle = document.getElementById(handleId);
+    if (!target || !handle) return;
+
+    let startY = 0, startValue = 0, trascinando = false;
+    const maxPx = () => window.innerHeight * (DIM_MAX_VH / 100);
+
+    // Legge il valore corrente, con fallback 0
+    function leggiValore() {
+        const v = getComputedStyle(target).getPropertyValue(propName);
+        return parseFloat(v) || 0;
+    }
+
+    function inizia(clientY) {
+        trascinando = true;
+        startY = clientY;
+        startValue = leggiValore();
+        handle.classList.add('attiva');
+    }
+    function muovi(clientY) {
+        if (!trascinando) return;
+        let nuovoValore = startValue + (clientY - startY);
+        nuovoValore = Math.max(0, Math.min(nuovoValore, maxPx()));
+        target.style.setProperty(propName, nuovoValore + 'px');
+    }
+    function fine() {
+        if (!trascinando) return;
+        trascinando = false;
+        handle.classList.remove('attiva');
+        const valoreFinale = leggiValore();
+        if (valoreFinale > 0) {
+            localStorage.setItem('dim_' + targetId + '_' + propName, valoreFinale + 'px');
+        } else {
+            localStorage.removeItem('dim_' + targetId + '_' + propName);
+        }
+    }
+
+    handle.addEventListener('touchstart', (e) => { inizia(e.touches[0].clientY); }, { passive: true });
+    handle.addEventListener('touchmove', (e) => { muovi(e.touches[0].clientY); }, { passive: true });
+    handle.addEventListener('touchend', fine);
+    handle.addEventListener('touchcancel', fine);
+    handle.addEventListener('mousedown', (e) => { inizia(e.clientY); e.preventDefault(); });
+    document.addEventListener('mousemove', (e) => { if (trascinando) muovi(e.clientY); });
+    document.addEventListener('mouseup', fine);
+
+    // Applica valore salvato, se presente
+    const salvata = localStorage.getItem('dim_' + targetId + '_' + propName);
+    if (salvata) {
+        target.style.setProperty(propName, salvata);
+    }
+}
+
+bindResizeHandle('trackpadArea', 'resize-trackpadArea');
+bindResizeHandle('chatText', 'resize-chatText');
+bindResizeHandle('estesa-mini-touchpad', 'resize-estesa-mini-touchpad');
+bindInsetHandle('tastieraEstesaOverlay', 'resize-estesa-top', '--estesa-top');
+bindInsetHandle('tastieraEstesaOverlay', 'resize-estesa-bottom', '--estesa-bottom');
+
+// v6.4b: hold-to-repeat universale — qualsiasi elemento con
+// data-repeat="TASTO" ottiene automaticamente la ripetizione
+// tenendo premuto, esattamente come su una tastiera fisica.
+// Copre: barra flottante, Funzione, Speciali, Navigazione.
+// (La tastiera estesa usa un meccanismo analogo ma separato,
+// vedi apriTastieraEstesa, perché i suoi tasti non esistono
+// finché l'overlay non viene aperto la prima volta.)
+(function initHoldRepeatGenerico() {
+    document.querySelectorAll('[data-repeat]').forEach(el => {
+        bindHoldRepeat(el, () => inviaTastoConMod(el.dataset.repeat));
+    });
+})();
 
 // ============================================================
 // MACRO / CREDENZIALI
@@ -1714,6 +2977,60 @@ function inviaCustomCmd() {
     setTimeout(() => invia('K:ENTER'), 200);
 }
 
+// v6.7b: comandi personali terminale (salvati localmente come le macro)
+function salvaCmdCustom() {
+    const nome = document.getElementById('cmdNome').value.trim();
+    const seq  = document.getElementById('cmdSeq').value.trim();
+    if (!nome || !seq) { alert('Inserisci nome e comando'); return; }
+    cmdCustom.push({ nome, seq });
+    aggiornaCmdCustom();
+    document.getElementById('cmdNome').value = '';
+    document.getElementById('cmdSeq').value = '';
+    // Salva in localStorage per persistenza
+    localStorage.setItem('kvm_cmdCustom', JSON.stringify(cmdCustom));
+    showToast('✅ Comando "' + nome + '" salvato');
+}
+function rimuoviCmdCustom(i) {
+    if (confirm('Rimuovere "' + cmdCustom[i].nome + '"?')) {
+        cmdCustom.splice(i, 1);
+        aggiornaCmdCustom();
+        localStorage.setItem('kvm_cmdCustom', JSON.stringify(cmdCustom));
+    }
+}
+function eseguiCmdCustom(i) {
+    const cmd = cmdCustom[i].seq;
+    invia('T:' + traduciAccenti(cmd));
+    setTimeout(() => invia('K:ENTER'), 200);
+    log('▶️ Comando: ' + cmd);
+}
+function aggiornaCmdCustom() {
+    const grid = document.getElementById('cmdCustomGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    cmdCustom.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'm custom';
+        div.innerHTML = `<span class="icona">⌨️</span>${c.nome}<br><span style="font-size:8px;color:var(--muted);">${c.seq.substring(0,16)}${c.seq.length>16?'…':''}</span>`;
+        div.onclick = () => eseguiCmdCustom(i);
+        div.addEventListener('contextmenu', e => { e.preventDefault(); rimuoviCmdCustom(i); });
+        let timer;
+        div.addEventListener('touchstart', () => { timer = setTimeout(() => rimuoviCmdCustom(i), 800); });
+        div.addEventListener('touchend', () => clearTimeout(timer));
+        div.addEventListener('touchmove', () => clearTimeout(timer));
+        grid.appendChild(div);
+    });
+}
+// Carica comandi personali salvati
+(function caricaCmdCustom() {
+    try {
+        const salvati = localStorage.getItem('kvm_cmdCustom');
+        if (salvati) {
+            cmdCustom = JSON.parse(salvati);
+            aggiornaCmdCustom();
+        }
+    } catch(e) {}
+})();
+
 // ============================================================
 // TRACKPAD
 // ============================================================
@@ -1723,6 +3040,10 @@ trackpad.addEventListener('pointerdown', function(e) {
     e.preventDefault(); trackpad.setPointerCapture(e.pointerId);
     pointers[e.pointerId] = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
     accumulatedX = 0; accumulatedY = 0; stopSent = false; velocityHistory = [];
+    // v6.6: un nuovo tocco interrompe subito un'eventuale inerzia scroll
+    // in corso — esattamente come "afferrare" la pagina su un trackpad vero.
+    if (scrollInertiaFrame) { cancelAnimationFrame(scrollInertiaFrame); scrollInertiaFrame = null; }
+    scrollAccumDy = 0; scrollVelocityHistory = []; ultimaEraScroll = false;
 });
 trackpad.addEventListener('pointermove', function(e) {
     e.preventDefault();
@@ -1751,8 +3072,31 @@ trackpad.addEventListener('pointermove', function(e) {
                 }
             }
         } else if (n === 2) {
-            const sy = Math.round(dy * 0.7); if (sy !== 0) invia('SC:' + (-sy));
+            // v6.6g FIX: il firmware manda il valore a Mouse.move(0,0,val),
+            // dove val sono "scatti di rotellina" (ogni scatto ≈ 3 righe),
+            // NON pixel! Prima trattavamo il movimento del dito quasi 1:1,
+            // producendo moltissimi scatti per un trascinamento normale —
+            // da qui "scrolla tante pagine per ogni tocco". Ora accumuliamo
+            // i pixel grezzi e li convertiamo in scatti solo quando se ne
+            // accumula abbastanza (PX_PER_CLICK_BASE / sensibilità),
+            // conservando il resto frazionario invece di scartarlo.
+            ultimaEraScroll = true;
+            scrollAccumDy += dy; // pixel grezzi, non più pre-moltiplicati
+            const adesso = Date.now();
+            scrollVelocityHistory.push({ dy: dy, t: adesso });
+            while (scrollVelocityHistory.length > 1 && adesso - scrollVelocityHistory[0].t > SCROLL_FINESTRA_MS) {
+                scrollVelocityHistory.shift();
+            }
             p.x = e.clientX; p.y = e.clientY;
+            if (adesso - lastScrollSendTime >= scrollFluidita) {
+                const pxPerClick = PX_PER_CLICK_BASE / scrollSens;
+                const click = Math.trunc(scrollAccumDy / pxPerClick);
+                if (click !== 0) {
+                    invia('SC:' + (-click));
+                    scrollAccumDy -= click * pxPerClick; // conserva il resto, non azzera tutto
+                }
+                lastScrollSendTime = adesso;
+            }
         }
     }
 });
@@ -1770,12 +3114,79 @@ trackpad.addEventListener('pointerup', function(e) {
     if (!stopSent) { fermaCursore(); stopSent = true; }
     accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
     delete pointers[e.pointerId];
+    // v6.6: ultimo dito sollevato dopo uno scroll → avvia l'inerzia
+    if (ultimaEraScroll && Object.keys(pointers).length === 0) {
+        avviaInerziaScroll();
+    }
 });
 trackpad.addEventListener('pointercancel', function(e) {
     delete pointers[e.pointerId];
     if (!stopSent) { fermaCursore(); stopSent = true; }
     accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
+    // Cancel = gesto interrotto, non un rilascio naturale: niente inerzia
+    scrollAccumDy = 0; scrollVelocityHistory = []; ultimaEraScroll = false;
 });
+
+// ============================================================
+// v6.6g — INERZIA SCROLL (kinetic scrolling)
+// Al rilascio delle due dita, calcola la velocità recente dello
+// scroll e continua a mandare comandi SC: via via più piccoli,
+// esattamente come un trackpad fisico. Si ferma da sola sotto
+// una soglia minima o dopo un tempo massimo — e si interrompe
+// subito se l'utente tocca di nuovo lo schermo (vedi pointerdown).
+//
+// v6.6g FIX (due bug distinti trovati con test reale):
+//  1) Conversione pixel→scatti: prima ogni frame arrotondava il
+//     valore a un numero intero di "scatti rotellina" scartando il
+//     resto — con velocità basse (fine dell'inerzia) quasi ogni
+//     frame arrotondava a zero, dando l'impressione di uno stop
+//     improvviso invece di una dissolvenza graduale. Ora il resto
+//     si accumula (residuoInerzia) e non va mai perso.
+//  2) Scala temporale dello slider: prima il cinetismo era un
+//     coefficiente di decadimento grezzo (0.80-0.995) che non
+//     corrisponde a nessuna unità intuitiva — spostare lo slider
+//     a metà scala non significava "metà durata". Ora il valore
+//     scelto (scrollCinetismoMs) è letteralmente il tempo in
+//     millisecondi perché la velocità si dimezzi: uno slider
+//     lineare ora produce una sensazione lineare.
+// ============================================================
+function avviaInerziaScroll() {
+    if (scrollVelocityHistory.length < 2 || scrollCinetismoMs <= 0) { scrollVelocityHistory = []; return; }
+    const primo = scrollVelocityHistory[0], ultimo = scrollVelocityHistory[scrollVelocityHistory.length - 1];
+    const deltaT = ultimo.t - primo.t;
+    if (deltaT <= 0) { scrollVelocityHistory = []; return; }
+    let sommaDy = 0;
+    scrollVelocityHistory.forEach(v => sommaDy += v.dy);
+    let velocitaPxMs = sommaDy / deltaT; // px al millisecondo
+    scrollVelocityHistory = [];
+    if (Math.abs(velocitaPxMs) < SCROLL_INERTIA_MIN_VELOCITY) return;
+
+    // decadimento tale per cui la velocità si dimezza ogni scrollCinetismoMs
+    const decay = Math.pow(0.5, 16 / scrollCinetismoMs);
+    const pxPerClick = PX_PER_CLICK_BASE / scrollSens;
+    residuoInerzia = 0;
+
+    let ultimoTick = performance.now();
+    const inizioInerzia = ultimoTick;
+    function tick(ora) {
+        const frameMs = ora - ultimoTick;
+        ultimoTick = ora;
+        if (Math.abs(velocitaPxMs) < SCROLL_INERTIA_MIN_VELOCITY || (ora - inizioInerzia) > SCROLL_INERTIA_MAX_MS) {
+            scrollInertiaFrame = null;
+            residuoInerzia = 0;
+            return;
+        }
+        residuoInerzia += velocitaPxMs * frameMs;
+        const click = Math.trunc(residuoInerzia / pxPerClick);
+        if (click !== 0) {
+            invia('SC:' + (-click));
+            residuoInerzia -= click * pxPerClick;
+        }
+        velocitaPxMs *= Math.pow(decay, frameMs / 16); // decadimento indipendente dal framerate
+        scrollInertiaFrame = requestAnimationFrame(tick);
+    }
+    scrollInertiaFrame = requestAnimationFrame(tick);
+}
 
 function toggleHold() {
     holdTouch = !holdTouch;
@@ -1807,7 +3218,7 @@ function scroll_(v) { invia('SC:' + v); }
 // ============================================================
 // INIT
 // ============================================================
-loadSettings(); aggiornaMacroCustom(); aggiornaCredenziali(); aggiornaQWERTY();
+loadSettings(); aggiornaMacroCustom(); aggiornaCredenziali(); aggiornaCmdCustom(); aggiornaQWERTY();
 log('✅ KVM v6.0_claude — Seleziona una connessione');
 kvmLog('✅ KVM v6.0_claude — Pronto');
 
@@ -1989,27 +3400,194 @@ async function fmNavigate(path) {
         }
 (data.files || []).forEach(f => {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);';
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;';
     const fullPath = (path === '/' ? '' : path) + '/' + f.name;
+    const searchText = (f.name + ' ' + (f.isDir ? 'directory' : 'file')).toLowerCase();
+    row.dataset.search = searchText;
     const sizeStr = f.isDir ? '' : (f.size > 1048576 ? (f.size/1048576).toFixed(1)+'MB' : f.size > 1024 ? (f.size/1024).toFixed(1)+'KB' : f.size+'B');
     row.innerHTML = `
         <span style="font-size:18px;">${f.icon}</span>
         <span style="flex:1;font-size:12px;font-weight:600;word-break:break-all;">${f.name}</span>
         ${sizeStr ? '<span style="font-size:10px;color:var(--muted);">'+sizeStr+'</span>' : ''}
         <div style="display:flex;gap:4px;">
-            ${f.isDir ? `<button onclick="fmNavigate('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">📂 Apri</button>` : ''}
-            ${!f.isDir ? `<button onclick="fmEdit('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--green);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>` : ''}
+            ${f.isDir ? `<button type="button" onclick="event.stopPropagation(); fmNavigate('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">📂 Apri</button>` : ''}
+            ${!f.isDir ? `<button type="button" onclick="event.stopPropagation(); fmEdit('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--green);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>` : ''}
             <!-- ★★★ PULSANTE RINOMINA PER TUTTI (FILE E CARTELLE) ★★★ -->
-            <button onclick="fmRenameFile('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#8e44ad;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>
-            ${!f.isDir ? `<button onclick="fmDownload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#007aff;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">⬇️</button>` : ''}
-            ${(f.name.endsWith('.txt')||f.name.endsWith('.ducky')||f.name.endsWith('.sh')) ? `<button onclick="fmRunPayload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#ff3b30;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">▶️</button>` : ''}
-            <button onclick="fmDelete('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--red);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">🗑️</button>
+            <button type="button" onclick="event.stopPropagation(); fmRenameFile('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#8e44ad;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">✏️</button>
+            ${!f.isDir ? `<button type="button" onclick="event.stopPropagation(); fmDownload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#007aff;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">⬇️</button>` : ''}
+            ${(f.name.endsWith('.txt')||f.name.endsWith('.ducky')||f.name.endsWith('.sh')) ? `<button type="button" onclick="event.stopPropagation(); fmRunPayload('${fullPath.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:#ff3b30;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">▶️</button>` : ''}
+            <button type="button" onclick="event.stopPropagation(); fmDelete('${fullPath.replace(/'/g,"\\'")}','${f.name.replace(/'/g,"\\'")}');" style="padding:3px 8px;background:var(--red);color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer;">🗑️</button>
         </div>`;
+    row.onclick = () => {
+        if (f.isDir) fmNavigate(fullPath);
+        else fmEdit(fullPath, f.name);
+    };
     listEl.appendChild(row);
 });
+    fmFilterFiles();
     } catch(e) {
         listEl.innerHTML = '<div style="padding:16px;color:var(--red);">❌ Errore: ' + e.message + '</div>';
     }
+}
+
+function fmFilterFiles() {
+    const query = document.getElementById('fmSearchInput')?.value.trim().toLowerCase() || '';
+    const listEl = document.getElementById('fmList');
+    if (!listEl) return;
+    let visibleCount = 0;
+    listEl.querySelectorAll('[data-search]').forEach(row => {
+        const match = !query || row.dataset.search.includes(query);
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+    const hint = document.getElementById('fmSearchHint');
+    if (!hint) return;
+    if (!query) {
+        hint.textContent = '';
+    } else if (visibleCount === 0) {
+        hint.textContent = 'Nessun file o cartella corrispondente';
+    } else {
+        hint.textContent = 'Filtrati ' + visibleCount + ' elemento' + (visibleCount === 1 ? '' : 'i');
+    }
+}
+
+function fmClearSearch() {
+    const input = document.getElementById('fmSearchInput');
+    if (!input) return;
+    input.value = '';
+    fmFilterFiles();
+    input.focus();
+}
+
+function aggiornaRicercaGlobale(query) {
+    const q = query.trim().toLowerCase();
+    const resultsEl = document.getElementById('searchResults');
+    if (!resultsEl) return;
+    if (!q) {
+        resultsEl.textContent = 'Digita per cercare tra tasti, macro e credenziali.';
+        return;
+    }
+
+    const entries = [];
+    const addEntry = (label, action) => entries.push({ label, action });
+
+    const searches = [
+        { name: 'Ctrl+A', label: 'Ctrl+A', action: "inviaCombo('CTRL+A')" },
+        { name: 'Ctrl+C', label: 'Ctrl+C', action: "inviaCombo('CTRL+C')" },
+        { name: 'Ctrl+V', label: 'Ctrl+V', action: "inviaCombo('CTRL+V')" },
+        { name: 'Ctrl+X', label: 'Ctrl+X', action: "inviaCombo('CTRL+X')" },
+        { name: 'Ctrl+S', label: 'Ctrl+S', action: "inviaCombo('CTRL+S')" },
+        { name: 'Ctrl+Z', label: 'Ctrl+Z', action: "inviaCombo('CTRL+Z')" },
+        { name: 'Esc', label: 'Esc', action: "inviaTasto('ESC')" },
+        { name: 'Tab', label: 'Tab', action: "inviaTasto('TAB')" },
+        { name: 'Del', label: 'Canc', action: "inviaTasto('DEL')" },
+        { name: 'Home', label: 'Home', action: "inviaTasto('HOME')" },
+        { name: 'End', label: 'End', action: "inviaTasto('END')" },
+        { name: 'PgUp', label: 'PgSu', action: "inviaTasto('PGUP')" },
+        { name: 'PgDn', label: 'PgGiù', action: "inviaTasto('PGDN')" },
+        { name: 'Win+R', label: 'Esegui', action: "inviaCombo('WIN+R')" },
+        { name: 'Win+E', label: 'Explorer', action: "inviaCombo('WIN+E')" },
+        { name: 'Win+L', label: 'Blocca', action: "inviaCombo('WIN+L')" },
+        { name: 'Alt+F4', label: 'Chiudi app', action: "inviaCombo('ALT+F4')" },
+        { name: 'Ctrl+Alt+Del', label: 'Ctrl+Alt+Canc', action: "inviaCombo('CTRL+ALT+DEL')" },
+        // Terminal shortcuts
+        { name: 'CMD', label: 'CMD (Windows)', action: "eseguiMacro('win_cmd')" },
+        { name: 'PowerShell', label: 'PowerShell', action: "eseguiMacro('win_ps')" },
+        { name: 'CMD Admin', label: 'CMD Admin', action: "eseguiMacro('win_cmd_admin')" },
+        { name: 'PS Admin', label: 'PowerShell Admin', action: "eseguiMacro('win_ps_admin')" },
+        { name: 'Windows Terminal', label: 'Windows Terminal', action: "eseguiMacro('win_terminal')" },
+        { name: 'Terminal Admin', label: 'Terminal Admin', action: "eseguiMacro('win_terminal_admin')" },
+        { name: 'Bash Linux', label: 'Bash Linux', action: "eseguiMacro('lnx_term')" },
+        { name: 'Bash Admin', label: 'Bash Admin Linux', action: "eseguiMacro('lnx_term_admin')" },
+        // Diagnostica rete
+        { name: 'ipconfig', label: 'ipconfig /all', action: "eseguiMacro('dos_ipconfig')" },
+        { name: 'ping', label: 'ping 8.8.8.8', action: "eseguiMacro('dos_ping')" },
+        { name: 'netstat', label: 'netstat -ano', action: "eseguiMacro('dos_netstat')" },
+        { name: 'tracert', label: 'tracert route', action: "eseguiMacro('dos_tracert')" },
+        { name: 'nslookup', label: 'nslookup DNS', action: "eseguiMacro('dos_nslookup')" },
+        { name: 'pathping', label: 'pathping diagnostica', action: "eseguiMacro('dos_pathping')" },
+        // Diagnostica dischi Windows
+        { name: 'chkdsk', label: 'chkdsk /f /r', action: "eseguiMacro('dos_chkdsk')" },
+        { name: 'sfc', label: 'sfc /scannow', action: "eseguiMacro('dos_sfc')" },
+        { name: 'DISM', label: 'DISM ripristino sistema', action: "eseguiMacro('dos_dism')" },
+        { name: 'diskpart', label: 'diskpart lista dischi', action: "eseguiMacro('dos_diskpart')" },
+        { name: 'wmic disk', label: 'wmic stato dischi', action: "eseguiMacro('dos_wmic_disk')" },
+        { name: 'fsutil', label: 'fsutil filesystem', action: "eseguiMacro('dos_fsutil')" },
+        { name: 'cleanmgr', label: 'cleanmgr pulizia disco', action: "eseguiMacro('dos_cleanmgr')" },
+        { name: 'defrag', label: 'defrag ottimizzazione', action: "eseguiMacro('dos_defrag')" },
+        // Sistema Windows
+        { name: 'tasklist', label: 'tasklist processi', action: "eseguiMacro('dos_tasklist')" },
+        { name: 'systeminfo', label: 'systeminfo sistema', action: "eseguiMacro('dos_systeminfo')" },
+        { name: 'msinfo32', label: 'msinfo32 dettagli', action: "eseguiMacro('dos_msinfo')" },
+        { name: 'winget', label: 'winget upgrade', action: "eseguiMacro('dos_winget_up')" },
+        { name: 'driverquery', label: 'driverquery driver', action: "eseguiMacro('dos_driverquery')" },
+        { name: 'powercfg', label: 'powercfg energia', action: "eseguiMacro('dos_powercfg')" },
+        // Diagnostica dischi Linux
+        { name: 'df -h', label: 'df -h spazio dischi', action: "eseguiMacro('lnx_df')" },
+        { name: 'lsblk', label: 'lsblk dispositivi', action: "eseguiMacro('lnx_lsblk')" },
+        { name: 'fdisk -l', label: 'fdisk partizioni', action: "eseguiMacro('lnx_fdisk')" },
+        { name: 'blkid', label: 'blkid UUID', action: "eseguiMacro('lnx_blkid')" },
+        { name: 'smartctl', label: 'smartctl SMART', action: "eseguiMacro('lnx_smartctl')" },
+        { name: 'fsck', label: 'fsck filesystem', action: "eseguiMacro('lnx_fsck')" },
+        { name: 'du -sh', label: 'du dimensioni cartelle', action: "eseguiMacro('lnx_du')" },
+        { name: 'iostat', label: 'iostat I/O dischi', action: "eseguiMacro('lnx_iostat')" },
+        // Sistema Linux
+        { name: 'apt update', label: 'apt update', action: "eseguiMacro('lnx_update')" },
+        { name: 'apt upgrade', label: 'apt upgrade -y', action: "eseguiMacro('lnx_upgrade')" },
+        { name: 'apt autoremove', label: 'apt autoremove', action: "eseguiMacro('lnx_clean')" },
+        { name: 'free -h', label: 'free -h RAM', action: "eseguiMacro('lnx_free')" },
+        { name: 'top', label: 'top processi', action: "eseguiMacro('lnx_top')" },
+        { name: 'uname -a', label: 'uname kernel', action: "eseguiMacro('lnx_uname')" },
+        { name: 'dmesg', label: 'dmesg kernel log', action: "eseguiMacro('lnx_dmesg')" },
+        { name: 'journalctl', label: 'journalctl log sistema', action: "eseguiMacro('lnx_journalctl')" }
+    ];
+    searches.forEach(item => {
+        if (item.name.toLowerCase().includes(q) || item.label.toLowerCase().includes(q)) addEntry(item.label, item.action);
+    });
+
+    if (macroCustom && macroCustom.length) {
+        macroCustom.forEach((m, i) => {
+            if (m.nome.toLowerCase().includes(q) || m.seq.toLowerCase().includes(q)) {
+                addEntry('Macro: ' + m.nome, "eseguiMacroCustom(" + i + ")");
+            }
+        });
+    }
+    if (credenziali && credenziali.length) {
+        credenziali.forEach((c, i) => {
+            if (c.nome.toLowerCase().includes(q) || c.user.toLowerCase().includes(q)) {
+                addEntry('Credenziali: ' + c.nome, "inviaCred(" + i + ")");
+            }
+        });
+    }
+    if (cmdCustom && cmdCustom.length) {
+        cmdCustom.forEach((c, i) => {
+            if (c.nome.toLowerCase().includes(q) || c.seq.toLowerCase().includes(q)) {
+                addEntry('Comando: ' + c.nome, "eseguiCmdCustom(" + i + ")");
+            }
+        });
+    }
+
+    if (!entries.length) {
+        resultsEl.textContent = 'Nessun risultato trovato.';
+        return;
+    }
+
+    resultsEl.innerHTML = entries.slice(0, 6).map(entry => {
+        return '<button class="result-btn" onclick="' + entry.action + '">' + entry.label + '</button>';
+    }).join('');
+}
+
+function aggiornaRicercaMacroCred(query) {
+    const q = query.trim().toLowerCase();
+    document.querySelectorAll('#panel-macro .macro-grid .m, #panel-macro .cred-grid .c').forEach(el => {
+        const text = el.textContent.toLowerCase();
+        const visible = !q || text.includes(q);
+        el.classList.toggle('hidden', !visible);
+    });
+    const visibleCount = document.querySelectorAll('#panel-macro .macro-grid .m:not(.hidden), #panel-macro .cred-grid .c:not(.hidden)').length;
+    const hint = document.getElementById('macroSearchHint');
+    if (!hint) return;
+    hint.textContent = q ? (visibleCount ? 'Mostrati ' + visibleCount + ' elementi.' : 'Nessun risultato trovato.') : '';
 }
 
 async function fmEdit(path, name) {
@@ -2214,11 +3792,11 @@ document.querySelectorAll('#tabBar .tab').forEach(tab => {
  'mostraAttesaRiavvio','toggleConnessione','toggleHold','toggleHoldGlobal','toggleCaps',
  'toggleMod','inviaTastoConMod','inviaCombo','inviaChat','eseguiMacro','salvaMacroCustom',
  'salvaCredenziale','inviaCred','inviaCustomCmd','resetAll','resetDefaultSettings','mouseDown',
- 'mouseUp','dblClick','scroll_','setLayout','setModo','toggleQWERTY','wifiSetMode','wifiStatus',
+ 'mouseUp','dblClick','scroll_','setLayout','setModo','toggleSezione','wifiSetMode','wifiStatus',
  'wifiConnect2','wifiScan2','wifiLoadNetworks','wifiDeleteNetwork','wifiConnectSaved',
  'sdRefresh','fmNavigate','fmEdit','fmEditorSave','fmEditorClose','fmEditorRunPayload',
  'fmRunPayload','fmDownload','fmDelete','fmUpload','fmDoUpload','fmNewFile','fmNewDir','fmRenameFile',
- 'ricaricaDati'
+ 'ricaricaDati','salvaCmdCustom','rimuoviCmdCustom','eseguiCmdCustom','aggiornaCmdCustom'
 ].forEach(fn => { try { if (typeof window[fn] === 'undefined') window[fn] = eval(fn); } catch(e){} });
 
 console.log('✅ KVM v6.1_claude — App pronta');
@@ -2250,6 +3828,20 @@ console.log('✅ KVM v6.1_claude — App pronta');
         goToKVM();
     }, 100);
 })();
+
+// ============================================================
+// v6.4b — Registrazione Service Worker per installabilità PWA
+// Solo se servito via HTTPS (GitHub Pages) — su file:// locale
+// e sull'IP del dongle (http:// semplice) il browser non lo
+// permette comunque, quindi il controllo è innocuo ovunque.
+// ============================================================
+if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+            .then(() => console.log('✅ Service worker registrato — PWA installabile'))
+            .catch((err) => console.log('⚠️ Service worker non registrato:', err.message));
+    });
+}
 </script>
 </body>
 </html>
