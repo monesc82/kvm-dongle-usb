@@ -1,25 +1,17 @@
 {
   "name": "KVM Dongle",
   "short_name": "KVM",
-  "description": "Controlla il tuo PC da smartphone",
-  "scope": "/",
-  "start_url": "/KVM_v7.0_fused.html",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f5f5f5",
-  "theme_color": "#007aff",
+  "start_url": "/kvm-dongle-usb/KVM_v7.0_fused.html",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/kvm-dongle-usb/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "/kvm-dongle-usb/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
