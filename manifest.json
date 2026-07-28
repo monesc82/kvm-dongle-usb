@@ -1,0 +1,27 @@
+{
+  "name": "KVM Dongle",
+  "short_name": "KVM-S3",
+  "description": "Controllo remoto KVM via BLE/WiFi per T-Dongle S3",
+  "start_url": "/kvm-dongle-usb/",
+  "scope": "/kvm-dongle-usb/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#007aff",
+  "categories": ["utilities", "hardware"],
+  "lang": "it",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/kvm-dongle-usb/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/kvm-dongle-usb/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
