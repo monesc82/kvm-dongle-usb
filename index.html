@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="KVM Dongle">
-    <meta name="theme-color" content="#f5f5f5">
+    <meta name="theme-color" content="#161616">
     <!-- v7.0: il manifest è ora servito in due modi diversi a seconda
          di dove è aperta questa pagina, grazie al percorso relativo:
          - Dal dongle stesso (http://IP/kvm): il firmware genera
@@ -23,7 +23,21 @@
     <title>KVM Dongle v7.0</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        :root { --bg: #f5f5f5; --surface: #ffffff; --border: #e0e0e0; --accent: #007aff; --green: #34c759; --yellow: #ffcc00; --red: #ff3b30; --text: #1c1c1e; --muted: #8e8e93; --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.08); --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        /* RESTYLE v7.1_ui: palette adattiva chiaro/scuro ispirata a
+           KeyCmd/Openterface — accento ambra/bruno al posto del blu iOS,
+           ma con supporto pieno sia per tema chiaro che scuro di sistema.
+           Le variabili sotto sono la base chiara; il blocco
+           @media (prefers-color-scheme: dark) più sotto le sovrascrive
+           per il tema scuro. Tutto il resto del CSS le referenzia via
+           var(...) quindi il cambio si propaga automaticamente. */
+        :root {
+            --bg: #f2efe9; --surface: #ffffff; --border: #e5e0d8;
+            --accent: #c8702e; --accent-soft: #e8b98f;
+            --green: #34c759; --yellow: #ffcc00; --red: #ff3b30;
+            --text: #2b2926; --muted: #8a857c;
+            --radius: 14px; --shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
         html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); }
         .app { display: flex; flex-direction: column; height: 100%; max-width: 700px; margin: 0 auto; background: var(--bg); position: relative; }
         .header { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; height: 44px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -33,9 +47,10 @@
         .header-btn.ricerca { background: var(--yellow); color: #000; }
         .header-btn.wifi { background: #007aff; }
         .header-back { background: none; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
-        .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; height: 40px; }
-        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 8px; font-weight: 500; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; font-family: var(--font); min-width: 36px; padding: 0 2px; }
-        .tab .icon { font-size: 16px; } .tab.attivo { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; height: 40px; padding: 4px 6px; gap: 4px; }
+        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 8px; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: none; border-radius: 10px; font-family: var(--font); min-width: 36px; padding: 0 2px; transition: background 0.15s, color 0.15s; }
+        .tab .icon { font-size: 16px; }
+        .tab.attivo { color: #fff; background: var(--accent); box-shadow: 0 2px 8px rgba(200,112,46,0.35); }
         .panels { flex: 1; overflow: hidden; position: relative; }
         .panel { display: none; flex-direction: column; height: 100%; padding: 6px 8px 72px 8px; overflow-y: auto; gap: 6px; background: var(--bg); }
         .panel.attivo { display: flex; }
@@ -48,7 +63,7 @@
         .bottom-bar .btn .sub { font-size: 9px; font-weight: 400; color: var(--muted); }
         .trackpad-area { flex: 1; min-height: 100px; background: #ffffff; border: 2px solid var(--border); border-radius: 18px; touch-action: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; text-align: center; line-height: 1.8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .controls-row { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
-        .controls-row .btn { flex: 1; min-width: 44px; padding: 12px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 11px; font-weight: 600; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-family: var(--font); transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0); }
+        .controls-row .btn { flex: 1; min-width: 44px; min-height: clamp(36px, 8vh, 46px); padding: clamp(6px, 1.6vh, 12px) clamp(4px, 1.5vw, 8px); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: clamp(10px, 2.6vh, 11px); font-weight: 600; text-align: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-family: var(--font); transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0); }
         .controls-row .btn:active { background: var(--accent); color: #fff; transform: translateY(1px) scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
         .controls-row .btn.hold-on { background: var(--yellow); color: #000; border-color: var(--yellow); }
         .controls-row .btn.premuto { background: var(--accent); color: #fff; }
@@ -61,7 +76,7 @@
         .kbd-section { flex-shrink: 0; }
         .kbd-section .label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 700; }
         .kbd-row { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
-        .kbd-row .k { flex: 1; padding: 10px 4px; background: var(--surface); border: 1px solid rgba(0,0,0,0.05); border-radius: 10px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); min-height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6); color: var(--text); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0); }
+        .kbd-row .k { flex: 1; padding: clamp(6px, 1.8vh, 10px) clamp(2px, 1vw, 4px); background: var(--surface); border: 1px solid rgba(0,0,0,0.05); border-radius: 13px; text-align: center; font-size: clamp(10px, 2.8vh, 12px); font-weight: 600; cursor: pointer; font-family: var(--font); min-height: clamp(34px, 8vh, 42px); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6); color: var(--text); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0); }
         .kbd-row .k:active { background: var(--accent); color: #fff; transform: translateY(2px) scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.12), inset 0 1px 2px rgba(0,0,0,0.1); border-color: var(--accent); }
         .kbd-row .k.verde { background: linear-gradient(135deg, #d4f5e8 0%, #c8f1e0 100%); border-color: rgba(56, 142, 60, 0.15); color: #2e7d32; }
         .kbd-row .k.rosso { background: linear-gradient(135deg, #ffdbdb 0%, #ffcfcf 100%); border-color: rgba(198, 40, 40, 0.15); color: #c62828; }
@@ -69,13 +84,13 @@
         .kbd-row .k.giallo { background: linear-gradient(135deg, #fff4d6 0%, #ffecc8 100%); border-color: rgba(230, 81, 0, 0.15); color: #e65100; }
         .kbd-row .k.arancio { background: linear-gradient(135deg, #ffe8d6 0%, #ffdcc8 100%); border-color: rgba(191, 54, 12, 0.15); color: #bf360c; }
         .kbd-row .k.mod { background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border-color: rgba(0,0,0,0.05); color: var(--accent); font-size: 10px; font-weight: 700; }
-        .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
         .kbd-row .k.space { flex: 4; background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border-color: rgba(0,0,0,0.05); }
         .kbd-row .k.caps-btn { background: linear-gradient(135deg, #d4e9f7 0%, #c8dff1 100%); border-color: rgba(13, 71, 161, 0.15); color: #0d47a1; }
+        .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
         .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
         .kbd-row .k.layout-btn, .kbd-row .k.mode-btn { flex: 0 0 auto; padding: 6px 12px; font-size: 10px; min-height: 32px; background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; color: var(--text); cursor: pointer; font-family: var(--font); font-weight: 600; transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 6px rgba(0,0,0,0.06); transform: translateY(0); }
         .kbd-row .k.layout-btn:active, .kbd-row .k.mode-btn:active { transform: translateY(1px) scale(0.97); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,122,255,0.3); }
+        .kbd-row .k.layout-btn.active, .kbd-row .k.mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 8px rgba(200,112,46,0.3); }
 
 
 
@@ -95,13 +110,13 @@
             flex: 1; padding: 8px 4px; text-align: center; font-size: 10px; font-weight: 700;
             border-radius: 9px; cursor: pointer; font-family: var(--font);
             background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%); border: 1px solid rgba(0,0,0,0.05); color: var(--text);
-            min-height: 30px; display: flex; align-items: center; justify-content: center;
+            min-height: clamp(32px, 7vh, 40px); display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateY(0);
         }
         .floating-bar .f:active { background: var(--accent); color: #fff; transform: translateY(2px) scale(0.97); box-shadow: 0 1px 4px rgba(0,0,0,0.12); border-color: var(--accent); }
         .floating-bar .f.combo { background: linear-gradient(135deg, #ffe8d6 0%, #ffdcc8 100%); border-color: rgba(191, 54, 12, 0.15); color: #bf360c; font-weight: 700; }
         .floating-bar .f.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .floating-bar .f.estesa-btn { background: var(--accent); color: #fff; border-color: var(--accent); font-size: 9px; font-weight: 700; box-shadow: 0 2px 12px rgba(0,122,255,0.3); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .floating-bar .f.estesa-btn { background: var(--accent); color: #fff; border-color: var(--accent); font-size: 9px; font-weight: 700; box-shadow: 0 2px 12px rgba(200,112,46,0.3); transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
         .search-panel {
             position: sticky;
@@ -127,7 +142,7 @@
         .search-panel input:focus {
             outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+            box-shadow: 0 0 0 3px rgba(200,112,46,0.12);
         }
         .search-panel .clear-search {
             padding: 12px 14px;
@@ -150,10 +165,10 @@
             border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
             color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer;
         }
-        .search-results .result-btn:hover { background: rgba(0,122,255,0.06); }
+        .search-results .result-btn:hover { background: rgba(200,112,46,0.06); }
         .macro-search-panel, .fm-search-bar { display:flex; gap:8px; align-items:center; padding:10px 0; }
         .macro-search-panel input, .fm-search-bar input { flex:1; min-width:0; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:13px; }
-        .macro-search-panel input:focus, .fm-search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,122,255,0.12); }
+        .macro-search-panel input:focus, .fm-search-bar input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(200,112,46,0.12); }
         .macro-search-panel button, .fm-search-bar button, .search-panel .clear-search { padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:13px; cursor:pointer; }
         .macro-search-panel button:hover, .fm-search-bar button:hover, .search-panel .clear-search:hover { background: rgba(0,0,0,0.04); }
         .macro-search-hint, .fm-search-hint { font-size:11px; color:var(--muted); padding-bottom:8px; min-height:18px; }
@@ -183,6 +198,23 @@
             padding: 6px 14px; background: var(--red); color: #fff; border: none;
             border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
         }
+        /* ============================================================
+           LAYOUT ORIZZONTALE tastiera estesa (struttura a 3 colonne dal
+           file utente): Esc+F e riga numeri divise a meta', touchpad
+           al centro. Sfondo/bordo del touchpad NON sono piu' fissi
+           (#fff): ereditano .estesa-mini-touchpad, che ha gia' la
+           versione chiara e quella scura (media prefers-color-scheme).
+           ============================================================ */
+        .solo-landscape { display: none; }
+        .solo-portrait { display: flex; }
+        @media (orientation: landscape) {
+            .solo-portrait { display: none; }
+            .solo-landscape { display: flex; }
+            .estesa-landscape-top { display: flex; gap: 6px; flex: 1; min-height: 0; }
+            .estesa-landscape-col { display: flex; flex-direction: column; gap: 4px; flex: 3; min-width: 0; }
+            .estesa-landscape-touchpad { flex: 2; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+            .estesa-landscape-touchpad .estesa-mini-touchpad { flex: 1; min-height: 0; border-radius: 10px; touch-action: none; }
+        }
         .estesa-grid {
             display: flex;
             flex-direction: column;
@@ -201,9 +233,9 @@
         }
         .estesa-row .ek {
             flex: 1;
-            padding: 6px 4px;
-            font-size: 12px;
-            min-height: 36px;
+            padding: clamp(4px, 1.2vh, 6px) clamp(2px, 1vw, 4px);
+            font-size: clamp(10px, 2.6vh, 12px);
+            min-height: clamp(34px, 7.5vh, 48px);
             max-height: 48px;
             position: relative;
             text-align: center;
@@ -236,7 +268,7 @@
             .estesa-header .chiudi { padding: 4px 12px; font-size: 11px; border-radius: 8px; font-weight: 600; }
             .estesa-grid { gap: 4px; }
             .estesa-row { gap: 4px; }
-            .estesa-row .ek { padding: 4px 2px; font-size: 11px; min-height: 28px; border-radius: 8px; font-weight: 600; }
+            .estesa-row .ek { border-radius: 8px; font-weight: 600; }
             .estesa-row .ek .hint { font-size: 6px; top: 1px; left: 2px; }
             #tastieraEstesaOverlay { padding: 4px; }
             #estesaHintTesto { display: none; } /* v6.6f FIX: era #tastieraEstesaOverlay > div:last-child,
@@ -252,7 +284,7 @@
         .estesa-row .ek.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
         .estesa-row .ek.rosso { background: linear-gradient(135deg, #ffdbdb 0%, #ffcfcf 100%); border-color: rgba(198, 40, 40, 0.15); color: #c62828; }
         .estesa-row .ek.verde { background: linear-gradient(135deg, #d4f5e8 0%, #c8f1e0 100%); border-color: rgba(56, 142, 60, 0.15); color: #2e7d32; }
-        .estesa-row .ek.tenuto, .floating-bar .f.tenuto { background: var(--accent) !important; color: #fff !important; box-shadow: 0 2px 12px rgba(0,122,255,0.4) !important; }
+        .estesa-row .ek.tenuto, .floating-bar .f.tenuto { background: var(--accent) !important; color: #fff !important; box-shadow: 0 2px 12px rgba(200,112,46,0.4) !important; }
 
         /* v6.7: sezioni collassabili — chiuse di default per liberare
            spazio, un tap sull'etichetta le apre/chiude */
@@ -265,8 +297,8 @@
         .kbd-section.collassabile .contenuto { display: block; }
         .kbd-section.collassabile.chiusa .contenuto { display: none; }
         .sotto-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px; }
-        .kbd-row .k.tenuto { background: var(--accent) !important; color: #fff !important; box-shadow: 0 2px 12px rgba(0,122,255,0.4) !important; }
-        .estesa-row .ek.attivo { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 12px rgba(0,122,255,0.3); }
+        .kbd-row .k.tenuto { background: var(--accent) !important; color: #fff !important; box-shadow: 0 2px 12px rgba(200,112,46,0.4) !important; }
+        .estesa-row .ek.attivo { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 12px rgba(200,112,46,0.3); }
 
         /* ============================================================
            v6.4c — Popup caratteri alternativi (long-press sulle lettere,
@@ -290,6 +322,16 @@
 
         .estesa-portrait { display: none; }
         @media (orientation: portrait) {
+            /* RESTYLE v7.1_ui: mini-touchpad SOPRA la tastiera in verticale,
+               come da modello di riferimento (immagine 3). Puramente
+               posizionale via CSS order — nessun nodo DOM spostato, quindi
+               zero rischio per onclick/id/logica. .estesa-portrait e'
+               gia' un blocco a se' visibile solo qui, quindi il riordino
+               non tocca in alcun modo la modalita' orizzontale. */
+            .estesa-header { order: 0; }
+            .estesa-portrait { order: 1; }
+            .estesa-grid { order: 2; }
+            #estesaHintTesto { order: 3; }
             .estesa-portrait {
                 display: flex;
                 flex-direction: column;
@@ -339,7 +381,8 @@
             .estesa-mini-touchpad-controls .tp-btn {
                 flex: 1 1 120px;
                 min-width: 100px;
-                padding: 10px 8px;
+                min-height: clamp(36px, 8vh, 46px);
+                padding: clamp(6px, 1.6vh, 10px) 8px;
                 background: linear-gradient(135deg, #f8f8f8 0%, #f5f5f5 100%);
                 border: 1px solid rgba(0,0,0,0.08);
                 border-radius: 12px;
@@ -394,10 +437,10 @@
         @media (orientation: portrait) and (max-width: 520px) {
             .estesa-row { gap: 4px; }
             .estesa-row .ek {
-                padding: 4px 2px;
-                font-size: 10px;
-                min-height: 30px;
-                max-height: 36px;
+                padding: clamp(3px, 0.8vh, 5px) 2px;
+                font-size: clamp(10px, 1.7vh, 11px);
+                min-height: clamp(32px, 5.6vh, 40px);
+                max-height: 42px;
                 border-radius: 8px;
             }
             .estesa-row:first-child {
@@ -548,23 +591,37 @@
         /* FIX v5.30: avviso connessione attiva */
         .conn-hint { font-size: 10px; color: var(--muted); padding: 4px 8px; background: #f5f5f5; border-radius: 6px; margin-top: 4px; }
         @media (prefers-color-scheme: dark) {
-            :root { --bg: #1c1c1e; --surface: #2c2c2e; --border: #3a3a3c; --text: #f5f5f5; --muted: #98989e; --shadow: 0 2px 8px rgba(0,0,0,0.3); }
+            /* RESTYLE v7.1_ui: qui la palette scura vera e propria —
+               attiva automaticamente quando il sistema e' in dark mode,
+               non piu' permanente. La base chiara sta in :root sopra. */
+            :root {
+                --bg: #161616; --surface: #232324; --border: #35353699;
+                --accent-soft: #7a4823;
+                --text: #f0ede8; --muted: #8f8d8a;
+                --shadow: 0 2px 10px rgba(0,0,0,0.35);
+            }
             .kbd-row .k.verde { background: linear-gradient(135deg, #2a5540 0%, #1f3f31 100%); border-color: rgba(129, 199, 132, 0.2); color: #81c784; }
             .kbd-row .k.rosso { background: linear-gradient(135deg, #523030 0%, #3d2424 100%); border-color: rgba(239, 154, 154, 0.2); color: #ef9a9a; }
             .kbd-row .k.blu { background: linear-gradient(135deg, #2a3d52 0%, #1f2c3f 100%); border-color: rgba(144, 202, 249, 0.2); color: #90caf9; }
             .kbd-row .k.giallo { background: linear-gradient(135deg, #524d2a 0%, #3f3a1f 100%); border-color: rgba(255, 224, 130, 0.2); color: #ffe082; }
             .kbd-row .k.arancio { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 204, 128, 0.2); color: #ffcc80; }
-            .kbd-row .k.mod { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(100, 181, 246, 0.2); color: #64b5f6; font-weight: 700; }
-            .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(0,122,255,0.5); }
-            .kbd-row .k.space { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(58, 58, 60, 0.8); }
+            .kbd-row .k.mod { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(100, 181, 246, 0.2); color: #64b5f6; font-size: 10px; font-weight: 700; }
+            .kbd-row .k.mod.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(200,112,46,0.5); }
+            .kbd-row .k.space { flex: 4; background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border-color: rgba(58, 58, 60, 0.8); }
             .kbd-row .k.caps-btn { background: linear-gradient(135deg, #2a3d52 0%, #1f2c3f 100%); border-color: rgba(144, 202, 249, 0.2); color: #90caf9; }
-            .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(0,122,255,0.5); }
+            .kbd-row .k.caps-btn.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(200,112,46,0.5); }
+            .kbd-row .k.layout-btn, .kbd-row .k.mode-btn { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+            .floating-bar .f { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border: 1px solid rgba(255,255,255,0.06); }
             .floating-bar .f.combo { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 204, 128, 0.2); color: #ffcc80; font-weight: 700; }
             .floating-bar .f.mod.attivo { background: var(--accent); color: #fff; border-color: var(--accent); }
+            .estesa-row .ek.fn { background: #2e2640; color: #b39ddb; }
             .estesa-row .ek.mod { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); color: #64b5f6; border-color: rgba(100, 181, 246, 0.2); font-weight: 700; }
-            .estesa-row .ek.mod.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(0,122,255,0.5); }
+            .estesa-row .ek.mod.attivo { background: var(--accent); color: #fff; box-shadow: 0 2px 12px rgba(200,112,46,0.5); }
             .estesa-row .ek.rosso { background: linear-gradient(135deg, #523030 0%, #3d2424 100%); border-color: rgba(239, 154, 154, 0.2); color: #ef9a9a; }
             .estesa-row .ek.verde { background: linear-gradient(135deg, #2a5540 0%, #1f3f31 100%); border-color: rgba(129, 199, 132, 0.2); color: #81c784; }
+            .estesa-mini-touchpad { background: #1a1a1c; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+            .estesa-mini-touchpad-controls .tp-btn { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border: 1px solid rgba(255,255,255,0.06); }
+            .estesa-shortcuts .shortcut { background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%); border: 1px solid rgba(255,255,255,0.06); }
             .macro-grid .m { background: var(--surface); border-color: var(--border); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
             .macro-grid .m.custom { background: linear-gradient(135deg, #523a2a 0%, #3f2a1f 100%); border-color: rgba(255, 224, 130, 0.2); }
             .cred-grid .c { background: var(--surface); border-color: var(--border); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
@@ -582,16 +639,16 @@
             .toast { background: #2c2c2e; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
             .ip-banner { background: linear-gradient(135deg, #2a3d52 0%, #1f2c3f 100%); border-color: rgba(144, 202, 249, 0.2); color: #90caf9; }
             .conn-hint { background: #2c2c2e; }
-            .kbd-row .k.tenuto { box-shadow: 0 2px 12px rgba(0,122,255,0.5) !important; }
+            .kbd-row .k.tenuto { box-shadow: 0 2px 12px rgba(200,112,46,0.5) !important; }
         }
         @media (orientation: landscape) and (max-height: 500px) {
             .header { height: 36px; } .tab-bar { height: 32px; } .bottom-bar { height: 44px; }
             .logo { font-size: 13px; font-weight: 700; } .tab { font-size: 7px; font-weight: 600; } .tab .icon { font-size: 14px; }
             .panel { padding: 4px 6px; gap: 4px; } .trackpad-area { min-height: 50px; border-radius: 12px; }
             .kbd-row { gap: 4px; margin-bottom: 4px; }
-            .kbd-row .k { min-height: 28px; padding: 6px 2px; font-size: 10px; border-radius: 8px; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+            .kbd-row .k { border-radius: 8px; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
             .controls-row { gap: 6px; }
-            .controls-row .btn { padding: 8px 4px; font-size: 10px; min-height: 30px; border-radius: 8px; font-weight: 600; }
+            .controls-row .btn { border-radius: 8px; font-weight: 600; }
             .macro-grid { grid-template-columns: repeat(3, 1fr); }
             .cred-grid { grid-template-columns: repeat(3, 1fr); }
             .log { height: 24px; font-size: 8px; padding: 2px 8px; }
@@ -919,7 +976,7 @@
                     <button class="chiudi" onclick="chiudiTastieraEstesa()">✕ Chiudi</button>
                 </div>
                 <div class="estesa-grid" id="estesaGrid">
-                    <div class="estesa-row">
+                    <div class="estesa-row solo-portrait">
                         <div class="ek rosso" data-key="ESC">Esc</div>
                         <div class="ek" data-key="F1">F1</div>
                         <div class="ek" data-key="F2">F2</div>
@@ -935,7 +992,7 @@
                         <div class="ek" data-key="F12">F12</div>
                         <div class="ek rosso" data-key="DEL">Canc</div>
                     </div>
-                    <div class="estesa-row">
+                    <div class="estesa-row solo-portrait">
                         <div class="ek" data-key="1" data-fn="!"><span class="hint">!</span>1</div>
                         <div class="ek" data-key="2" data-fn="@"><span class="hint">@</span>2</div>
                         <div class="ek" data-key="3" data-fn="#"><span class="hint">#</span>3</div>
@@ -948,6 +1005,57 @@
                         <div class="ek" data-key="0" data-fn=")"><span class="hint">)</span>0</div>
                         <div class="ek rosso" data-key="BS">⌫</div>
                         <div class="ek" onclick="apriSimboli()">🔣</div>
+                    </div>
+
+                    <!-- v7.2: versione orizzontale — Esc/F-keys e numeri
+                         divisi a metà, touchpad inserito nel mezzo, fedele
+                         al modello KeyMod di riferimento -->
+                    <div class="estesa-landscape-top solo-landscape">
+                        <div class="estesa-landscape-col">
+                            <div class="estesa-row">
+                                <div class="ek rosso" data-key="ESC">Esc</div>
+                                <div class="ek" data-key="F1">F1</div>
+                                <div class="ek" data-key="F2">F2</div>
+                                <div class="ek" data-key="F3">F3</div>
+                                <div class="ek" data-key="F4">F4</div>
+                                <div class="ek" data-key="F5">F5</div>
+                                <div class="ek" data-key="F6">F6</div>
+                            </div>
+                            <div class="estesa-row">
+                                <div class="ek" data-key="1" data-fn="!"><span class="hint">!</span>1</div>
+                                <div class="ek" data-key="2" data-fn="@"><span class="hint">@</span>2</div>
+                                <div class="ek" data-key="3" data-fn="#"><span class="hint">#</span>3</div>
+                                <div class="ek" data-key="4" data-fn="$"><span class="hint">$</span>4</div>
+                                <div class="ek" data-key="5" data-fn="%"><span class="hint">%</span>5</div>
+                                <div class="ek" data-key="6" data-fn="^"><span class="hint">^</span>6</div>
+                            </div>
+                        </div>
+                        <div class="estesa-landscape-touchpad">
+                            <div class="estesa-mini-touchpad" id="estesa-mini-touchpad-land"></div>
+                            <div class="estesa-mini-touchpad-controls">
+                                <div class="tp-btn" onpointerdown="mouseDown('L')" onpointerup="mouseUp('L')">L</div>
+                                <div class="tp-btn" onpointerdown="mouseDown('R')" onpointerup="mouseUp('R')">R</div>
+                            </div>
+                        </div>
+                        <div class="estesa-landscape-col">
+                            <div class="estesa-row">
+                                <div class="ek" data-key="F7">F7</div>
+                                <div class="ek" data-key="F8">F8</div>
+                                <div class="ek" data-key="F9">F9</div>
+                                <div class="ek" data-key="F10">F10</div>
+                                <div class="ek" data-key="F11">F11</div>
+                                <div class="ek" data-key="F12">F12</div>
+                                <div class="ek rosso" data-key="DEL">Canc</div>
+                            </div>
+                            <div class="estesa-row">
+                                <div class="ek" data-key="7" data-fn="&amp;"><span class="hint">&amp;</span>7</div>
+                                <div class="ek" data-key="8" data-fn="*"><span class="hint">*</span>8</div>
+                                <div class="ek" data-key="9" data-fn="("><span class="hint">(</span>9</div>
+                                <div class="ek" data-key="0" data-fn=")"><span class="hint">)</span>0</div>
+                                <div class="ek rosso" data-key="BS">⌫</div>
+                                <div class="ek" onclick="apriSimboli()">🔣</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="estesa-row">
                         <div class="ek wide" data-key="TAB">Tab</div>
@@ -1242,11 +1350,11 @@
                     <div class="kbd-row" style="flex-wrap: wrap; gap: 4px;">
                         <button class="k layout-btn active" data-layout="IT" onclick="setLayout('IT')">🇮🇹 IT</button>
                         <button class="k layout-btn" data-layout="US" onclick="setLayout('US')">🇺🇸 US</button>
-                        <button class="k layout-btn" data-layout="UK" onclick="setLayout('UK')">🇬🇧 UK</button>
-                        <button class="k layout-btn" data-layout="FR" onclick="setLayout('FR')">🇫🇷 FR</button>
-                        <button class="k layout-btn" data-layout="DE" onclick="setLayout('DE')">🇩🇪 DE</button>
-                        <button class="k layout-btn" data-layout="ES" onclick="setLayout('ES')">🇪🇸 ES</button>
-                        <button class="k layout-btn" data-layout="PT" onclick="setLayout('PT')">🇵🇹 PT</button>
+                        <button class="k layout-btn" data-layout="UK" disabled style="opacity:.4" title="Non ancora supportato dal firmware" onclick="setLayout('UK')">🇬🇧 UK</button>
+                        <button class="k layout-btn" data-layout="FR" disabled style="opacity:.4" title="Non ancora supportato dal firmware" onclick="setLayout('FR')">🇫🇷 FR</button>
+                        <button class="k layout-btn" data-layout="DE" disabled style="opacity:.4" title="Non ancora supportato dal firmware" onclick="setLayout('DE')">🇩🇪 DE</button>
+                        <button class="k layout-btn" data-layout="ES" disabled style="opacity:.4" title="Non ancora supportato dal firmware" onclick="setLayout('ES')">🇪🇸 ES</button>
+                        <button class="k layout-btn" data-layout="PT" disabled style="opacity:.4" title="Non ancora supportato dal firmware" onclick="setLayout('PT')">🇵🇹 PT</button>
                     </div>
                 </div>
                 <div class="kbd-section">
@@ -1467,19 +1575,15 @@ const DEFAULT_SENS = 4;
 const DEFAULT_MIN_MOVEMENT = isIOS ? PRESET_IOS.minMovement : PRESET_ANDROID.minMovement;
 const DEFAULT_SEND_INTERVAL = isIOS ? PRESET_IOS.sendInterval : PRESET_ANDROID.sendInterval;
 
-let pointers = {};
-let lastTap = 0, lastMoveTime = 0, stopTimeout = null;
+// lastMoveTime/stopTimeout/lastMoveX/lastMoveY restano globali: sono
+// scritte da inviaMovimento()/fermaCursore(), condivise da entrambi i
+// touchpad perche' esiste un solo cursore fisico da fermare.
+let lastMoveTime = 0, stopTimeout = null;
 let lastMoveX = 0, lastMoveY = 0;
-let velocityHistory = [];
-const VELOCITY_SAMPLES = 5;
+const VELOCITY_SAMPLES = 5; // costante condivisa, letta da attachTouchpad()
 
-// v6.6: stato per lo scroll con inerzia (2 dita)
-let scrollVelocityHistory = [];
-let scrollAccumDy = 0;
-let lastScrollSendTime = 0;
-let scrollInertiaFrame = null;
-let ultimaEraScroll = false;
-let residuoInerzia = 0; // v6.6g: resto frazionario dell'inerzia, conservato tra un frame e l'altro
+// Stato dello scroll con inerzia (2 dita): ora vive dentro
+// attachTouchpad() come stato per-istanza (closure), non piu' globale.
 // v6.6e: SCROLL_SEND_INTERVAL e SCROLL_INERTIA_DECAY sono diventati
 // regolabili (scrollFluidita, scrollCinetismo, vedi sopra) — restano
 // costanti solo la finestra di calcolo velocità e il tetto di sicurezza.
@@ -1604,21 +1708,30 @@ function mostraAttesaRiavvio(msg, targetIP) {
 // ============================================================
 function invia(cmd) {
     if (connectionMode === 'ble' && connesso && bleRx) {
-        try {
-            bleRx.writeValue(new TextEncoder().encode(cmd + '\n'));
-            if (!cmd.startsWith('M:')) log('📶 BLE ▶ ' + cmd.substring(0, 50));
-        } catch (e) { log('❌ Errore BLE: ' + e.message); }
-        return;
+        // FIX: writeValue() e' asincrona e ritorna una Promise — prima
+        // non veniva mai attesa, quindi chiamate ravvicinate (es. testo
+        // spezzato in blocchi) potevano sovrapporsi: il BLE richiede
+        // che le scritture GATT siano serializzate una alla volta, e
+        // sovrapporle causa perdite/corruzioni imprevedibili di testo.
+        // Ora la funzione restituisce la Promise reale (sempre risolta,
+        // anche in caso di errore già loggato qui) cosi' chi invia più
+        // comandi in sequenza (es. inviaChat) può attendere il
+        // completamento effettivo di ognuno prima del successivo, senza
+        // cambiare il comportamento delle chiamate "spara e dimentica"
+        // già esistenti altrove nel codice.
+        if (!cmd.startsWith('M:')) log('📶 BLE ▶ ' + cmd.substring(0, 50));
+        return bleRx.writeValue(new TextEncoder().encode(cmd + '\n'))
+            .catch(e => { log('❌ Errore BLE: ' + e.message); });
     }
     if (connectionMode === 'wifi' || connectionMode === 'ap') {
         const ip = connectionMode === 'ap' ? apIP : wifiIP;
-        fetch('http://' + ip + '/api?run=' + encodeURIComponent(cmd))
+        return fetch('http://' + ip + '/api?run=' + encodeURIComponent(cmd))
             .then(r => r.json())
             .then(data => { if (data.status === 'ok' && !cmd.startsWith('M:')) kvmLog('📡 HTTP ▶ ' + cmd.substring(0,50)); })
-            .catch(err => kvmLog('❌ HTTP errore: ' + err.message));
-        return;
+            .catch(err => { kvmLog('❌ HTTP errore: ' + err.message); });
     }
     log('❌ Nessuna connessione attiva');
+    return Promise.resolve();
 }
 
 function inviaMovimento(mx, my) {
@@ -1670,6 +1783,7 @@ async function connectBLE() {
             invia('MACRO_LIST');
             setTimeout(() => invia('CRED_LIST'), 500);
             setTimeout(() => invia('WIFI_STATUS'), 1000);
+            setTimeout(() => invia('LAYOUT?'), 1400);
         }, 1500);
     } catch (e) {
         document.getElementById('statusBLE').textContent = '❌ Errore';
@@ -1868,6 +1982,12 @@ function toggleConnessione() {
 // BLE RESPONSES
 // ============================================================
 function handleBLEResponse(data) {
+    if (data.startsWith('LAYOUT:')) {
+        const l = data.substring(7).trim();
+        document.querySelectorAll('.layout-btn').forEach(b => b.classList.toggle('active', b.dataset.layout === l));
+        return;
+    }
+    if (data.startsWith('ERR:LAYOUT_NON_SUPPORTATO')) { showToast('⚠️ Layout non supportato dal firmware'); return; }
     if (data.startsWith('MACRO_START:')) { bleChunkBuffer.macro = ''; return; }
     if (data.startsWith('MACRO_DATA:'))  { bleChunkBuffer.macro += data.substring(11); return; }
     if (data === 'MACRO_END') {
@@ -2386,12 +2506,71 @@ function traduciAccenti(testo) {
     };
     return [...testo].map(c => mappa[c] || c).join('');
 }
-function inviaChat() {
+// FIX: la chat ora gestisce correttamente testo multi-riga e testo
+// lungo. Prima veniva inviato tutto in un unico comando T:...\n via
+// invia(): siccome il firmware usa proprio \n come fine-comando, un
+// "a capo" nel mezzo del testo troncava tutto dopo la prima riga
+// (le righe successive arrivavano senza il prefisso T: e venivano
+// scartate come comando sconosciuto). In più un testo lungo in una
+// sola chiamata BLE rischiava di superare l'MTU negoziato (512 byte)
+// e troncarsi. Ora: si divide il testo riga per riga, ogni riga
+// diventa uno o più comandi T: separati (mai un \n grezzo dentro un
+// comando), e tra una riga e l'altra si preme K:ENTER esplicitamente.
+const CHAT_CHUNK_SIZE = 180; // margine ampio sotto il limite MTU BLE
+
+// Spezza una riga già tradotta in blocchi sicuri per l'MTU, senza mai
+// tagliare a metà una sequenza speciale \x01ALT+xxxx\x02 (usata per
+// accenti/simboli): altrimenti il blocco successivo riceverebbe un
+// pezzo di sequenza orfano e la lettera accentata si romperebbe.
+function spezzaInBlocchiSicuri(testoTradotto, dimensioneMax) {
+    const blocchi = [];
+    let blocco = '';
+    let i = 0;
+    while (i < testoTradotto.length) {
+        let pezzo;
+        if (testoTradotto[i] === '\x01') {
+            // Prendi l'intera sequenza \x01...\x02 come unico pezzo indivisibile
+            const fine = testoTradotto.indexOf('\x02', i);
+            pezzo = (fine >= 0) ? testoTradotto.substring(i, fine + 1) : testoTradotto[i];
+        } else {
+            pezzo = testoTradotto[i];
+        }
+        if (blocco.length + pezzo.length > dimensioneMax && blocco.length > 0) {
+            blocchi.push(blocco);
+            blocco = '';
+        }
+        blocco += pezzo;
+        i += pezzo.length;
+    }
+    if (blocco.length > 0) blocchi.push(blocco);
+    return blocchi;
+}
+
+async function inviaChat() {
     const text = document.getElementById('chatText').value;
     if (!text) { log('❌ Testo vuoto'); return; }
     document.getElementById('chatText').value = '';
-    invia('T:' + traduciAccenti(text));
-    log('💬 Inviato (' + text.length + ' caratteri)');
+
+    const righe = text.split('\n');
+
+    for (let indiceRiga = 0; indiceRiga < righe.length; indiceRiga++) {
+        const tradotta = traduciAccenti(righe[indiceRiga]);
+        const blocchi = spezzaInBlocchiSicuri(tradotta, CHAT_CHUNK_SIZE);
+        for (const blocco of blocchi) {
+            // FIX: si attende il completamento REALE di ogni scrittura
+            // BLE prima di inviare la successiva, invece di indovinare
+            // un ritardo fisso — quello vecchio approccio (setTimeout)
+            // causava sovrapposizioni imprevedibili quando il BLE reale
+            // era più lento del ritardo stimato, con perdita/corruzione
+            // di lettere e parole anche non correlate ad accenti.
+            await invia('T:' + blocco);
+        }
+        if (indiceRiga < righe.length - 1) {
+            await invia('K:ENTER');
+        }
+    }
+
+    log('💬 Inviato (' + text.length + ' caratteri, ' + righe.length + ' righe)');
 }
 
 // ============================================================
@@ -2441,89 +2620,17 @@ function inviaCombo(c) { invia('K:' + c); }
 // impostazioni di sensibilità. 1 dito = mouse, 2 dita = scroll.
 // Tocco fermo = Click Sx (1 dito) o Click Dx (2 dita).
 // ============================================================
-let miniPointers = {};
-let miniScrollAccum = 0;
-let miniLastScrollTime = 0;
-let miniLastTap = 0;
-let miniStopSent = false;
+// Il mini-touchpad della tastiera estesa ora usa la stessa identica
+// funzione del touchpad principale (attachTouchpad, definita più sotto
+// nel file — le dichiarazioni function sono "hoisted", quindi la
+// chiamata qui prima della definizione testuale è normale e sicura).
+// Eredita cosi' tutte le funzioni gia' presenti solo sul principale:
+// media mobile della velocità, resto frazionario dello scroll mai
+// perso, e inerzia allo scroll al rilascio delle due dita.
 const miniTouchpad = document.getElementById('estesa-mini-touchpad');
-if (miniTouchpad) {
-    miniTouchpad.addEventListener('pointerdown', function(e) {
-        e.preventDefault();
-        miniTouchpad.setPointerCapture(e.pointerId);
-        miniPointers[e.pointerId] = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
-        miniScrollAccum = 0;
-        miniStopSent = false;
-    });
-    miniTouchpad.addEventListener('pointermove', function(e) {
-        e.preventDefault();
-        const p = miniPointers[e.pointerId];
-        if (!p) return;
-        const dx = e.clientX - p.x;
-        const dy = e.clientY - p.y;
-        const n = Object.keys(miniPointers).length;
-        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
-            p.moved = true;
-            if (n === 1) {
-                // 1 dito = movimento mouse (stessa formula del trackpad principale)
-                const mx = Math.round(dx * (sens || 4));
-                const my = Math.round(dy * (sens || 4));
-                if (Math.abs(mx) >= (minMovement || 2) || Math.abs(my) >= (minMovement || 2)) {
-                    invia('M:' + mx + ',' + my);
-                    p.x = e.clientX;
-                    p.y = e.clientY;
-                    miniStopSent = false;
-                }
-            } else if (n === 2) {
-                // 2 dita = scroll verticale
-                const adesso = Date.now();
-                miniScrollAccum += dy;
-                if (adesso - miniLastScrollTime >= (scrollFluidita || 16)) {
-                    const pxPerClick = 50 / (scrollSens || 0.7);
-                    const click = Math.trunc(miniScrollAccum / pxPerClick);
-                    if (click !== 0) {
-                        invia('SC:' + (-click));
-                        miniScrollAccum -= click * pxPerClick;
-                    }
-                    miniLastScrollTime = adesso;
-                }
-                p.x = e.clientX;
-                p.y = e.clientY;
-            }
-        }
-    });
-    miniTouchpad.addEventListener('pointerup', function(e) {
-        e.preventDefault();
-        const p = miniPointers[e.pointerId];
-        if (!p) return;
-        const dist = Math.sqrt(Math.pow(e.clientX - p.startX, 2) + Math.pow(e.clientY - p.startY, 2));
-        const remaining = Object.keys(miniPointers).length - 1;
-        if (!p.moved || dist < 8) {
-            if (remaining === 0) {
-                // 1 dito = Click Sx (doppio tap se rapido)
-                const now = Date.now();
-                if (now - miniLastTap < 300) {
-                    invia('C:L'); setTimeout(() => invia('C:L'), 80);
-                    miniLastTap = 0;
-                } else {
-                    invia('C:L');
-                    miniLastTap = now;
-                }
-            } else if (remaining === 1) {
-                // 2 dita = Click Dx
-                invia('C:R');
-            }
-        }
-        if (!miniStopSent) { invia('M:0,0'); miniStopSent = true; }
-        delete miniPointers[e.pointerId];
-        miniScrollAccum = 0;
-    });
-    miniTouchpad.addEventListener('pointercancel', function(e) {
-        delete miniPointers[e.pointerId];
-        if (!miniStopSent) { invia('M:0,0'); miniStopSent = true; }
-        miniScrollAccum = 0;
-    });
-}
+if (miniTouchpad) attachTouchpad(miniTouchpad);
+const miniTouchpadLand = document.getElementById('estesa-mini-touchpad-land');
+if (miniTouchpadLand) attachTouchpad(miniTouchpadLand);
 
 // ============================================================
 // v6.4 — HOLD-TO-REPEAT
@@ -3057,159 +3164,156 @@ function aggiornaCmdCustom() {
 // ============================================================
 // TRACKPAD
 // ============================================================
-const trackpad = document.getElementById('trackpadArea');
-let accumulatedX = 0, accumulatedY = 0, stopSent = false;
-trackpad.addEventListener('pointerdown', function(e) {
-    e.preventDefault(); trackpad.setPointerCapture(e.pointerId);
-    pointers[e.pointerId] = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
-    accumulatedX = 0; accumulatedY = 0; stopSent = false; velocityHistory = [];
-    // v6.6: un nuovo tocco interrompe subito un'eventuale inerzia scroll
-    // in corso — esattamente come "afferrare" la pagina su un trackpad vero.
-    if (scrollInertiaFrame) { cancelAnimationFrame(scrollInertiaFrame); scrollInertiaFrame = null; }
-    scrollAccumDy = 0; scrollVelocityHistory = []; ultimaEraScroll = false;
-});
-trackpad.addEventListener('pointermove', function(e) {
-    e.preventDefault();
-    const p = pointers[e.pointerId]; if (!p) return;
-    const dx = e.clientX - p.x, dy = e.clientY - p.y;
-    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
-        p.moved = true;
-        const n = Object.keys(pointers).length;
-        if (n === 1) {
-            const dxRaw = dx * sens, dyRaw = dy * sens;
-            velocityHistory.push({ dx: dxRaw, dy: dyRaw });
-            if (velocityHistory.length > VELOCITY_SAMPLES) velocityHistory.shift();
-            let avgDx = 0, avgDy = 0;
-            velocityHistory.forEach(v => { avgDx += v.dx; avgDy += v.dy; });
-            avgDx /= velocityHistory.length; avgDy /= velocityHistory.length;
-            const currentSpeed = Math.abs(dxRaw) + Math.abs(dyRaw);
-            const avgSpeed = Math.abs(avgDx) + Math.abs(avgDy);
-            let decay = currentSpeed < avgSpeed * 0.1 ? 0 : currentSpeed < avgSpeed * 0.25 ? 0.25 : currentSpeed < avgSpeed * 0.5 ? 0.5 : 1.0;
-            accumulatedX += dxRaw * decay; accumulatedY += dyRaw * decay;
-            p.x = e.clientX; p.y = e.clientY;
-            const now = Date.now();
-            if (now - lastMoveTime >= sendInterval) {
-                const mx = Math.round(accumulatedX), my = Math.round(accumulatedY);
-                if (Math.abs(mx) >= minMovement || Math.abs(my) >= minMovement) {
-                    inviaMovimento(mx, my); accumulatedX = 0; accumulatedY = 0; lastMoveTime = now; stopSent = false;
-                }
-            }
-        } else if (n === 2) {
-            // v6.6g FIX: il firmware manda il valore a Mouse.move(0,0,val),
-            // dove val sono "scatti di rotellina" (ogni scatto ≈ 3 righe),
-            // NON pixel! Prima trattavamo il movimento del dito quasi 1:1,
-            // producendo moltissimi scatti per un trascinamento normale —
-            // da qui "scrolla tante pagine per ogni tocco". Ora accumuliamo
-            // i pixel grezzi e li convertiamo in scatti solo quando se ne
-            // accumula abbastanza (PX_PER_CLICK_BASE / sensibilità),
-            // conservando il resto frazionario invece di scartarlo.
-            ultimaEraScroll = true;
-            scrollAccumDy += dy; // pixel grezzi, non più pre-moltiplicati
-            const adesso = Date.now();
-            scrollVelocityHistory.push({ dy: dy, t: adesso });
-            while (scrollVelocityHistory.length > 1 && adesso - scrollVelocityHistory[0].t > SCROLL_FINESTRA_MS) {
-                scrollVelocityHistory.shift();
-            }
-            p.x = e.clientX; p.y = e.clientY;
-            if (adesso - lastScrollSendTime >= scrollFluidita) {
-                const pxPerClick = PX_PER_CLICK_BASE / scrollSens;
-                const click = Math.trunc(scrollAccumDy / pxPerClick);
-                if (click !== 0) {
-                    invia('SC:' + (-click));
-                    scrollAccumDy -= click * pxPerClick; // conserva il resto, non azzera tutto
-                }
-                lastScrollSendTime = adesso;
-            }
-        }
-    }
-});
-trackpad.addEventListener('pointerup', function(e) {
-    e.preventDefault();
-    const p = pointers[e.pointerId]; if (!p) return;
-    const dist = Math.sqrt(Math.pow(e.clientX - p.startX, 2) + Math.pow(e.clientY - p.startY, 2));
-    if (!p.moved || dist < 8) {
-        const now = Date.now(), remaining = Object.keys(pointers).length - 1;
-        if (remaining === 0) {
-            if (now - lastTap < 300) { invia('C:L'); setTimeout(() => invia('C:L'), 80); lastTap = 0; }
-            else { invia('C:L'); lastTap = now; }
-        } else if (remaining === 1) { invia('C:R'); }
-    }
-    if (!stopSent) { fermaCursore(); stopSent = true; }
-    accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
-    delete pointers[e.pointerId];
-    // v6.6: ultimo dito sollevato dopo uno scroll → avvia l'inerzia
-    if (ultimaEraScroll && Object.keys(pointers).length === 0) {
-        avviaInerziaScroll();
-    }
-});
-trackpad.addEventListener('pointercancel', function(e) {
-    delete pointers[e.pointerId];
-    if (!stopSent) { fermaCursore(); stopSent = true; }
-    accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
-    // Cancel = gesto interrotto, non un rilascio naturale: niente inerzia
-    scrollAccumDy = 0; scrollVelocityHistory = []; ultimaEraScroll = false;
-});
-
 // ============================================================
-// v6.6g — INERZIA SCROLL (kinetic scrolling)
-// Al rilascio delle due dita, calcola la velocità recente dello
-// scroll e continua a mandare comandi SC: via via più piccoli,
-// esattamente come un trackpad fisico. Si ferma da sola sotto
-// una soglia minima o dopo un tempo massimo — e si interrompe
-// subito se l'utente tocca di nuovo lo schermo (vedi pointerdown).
-//
-// v6.6g FIX (due bug distinti trovati con test reale):
-//  1) Conversione pixel→scatti: prima ogni frame arrotondava il
-//     valore a un numero intero di "scatti rotellina" scartando il
-//     resto — con velocità basse (fine dell'inerzia) quasi ogni
-//     frame arrotondava a zero, dando l'impressione di uno stop
-//     improvviso invece di una dissolvenza graduale. Ora il resto
-//     si accumula (residuoInerzia) e non va mai perso.
-//  2) Scala temporale dello slider: prima il cinetismo era un
-//     coefficiente di decadimento grezzo (0.80-0.995) che non
-//     corrisponde a nessuna unità intuitiva — spostare lo slider
-//     a metà scala non significava "metà durata". Ora il valore
-//     scelto (scrollCinetismoMs) è letteralmente il tempo in
-//     millisecondi perché la velocità si dimezzi: uno slider
-//     lineare ora produce una sensazione lineare.
+// TOUCHPAD UNIFICATO — un'unica implementazione riusata sia dal
+// touchpad principale (tab Trackpad) sia dal mini-touchpad della
+// tastiera estesa, invece di due copie mantenute a mano separatamente.
+// Ogni chiamata crea il proprio stato isolato (dita attive, buffer di
+// velocità, inerzia scroll) tramite closure — i due touchpad restano
+// indipendenti pur condividendo lo stesso comportamento, inclusi tutti
+// i fix v6.6g (resto frazionario dello scroll mai perso, inerzia
+// basata su velocità reale, non solo sul principale come prima).
+// Le impostazioni di sensibilità (sens, scrollSens, scrollCinetismoMs,
+// scrollFluidita, minMovement, sendInterval) restano globali e condivise:
+// chi le regola in Impostazioni vede l'effetto identico ovunque.
 // ============================================================
-function avviaInerziaScroll() {
-    if (scrollVelocityHistory.length < 2 || scrollCinetismoMs <= 0) { scrollVelocityHistory = []; return; }
-    const primo = scrollVelocityHistory[0], ultimo = scrollVelocityHistory[scrollVelocityHistory.length - 1];
-    const deltaT = ultimo.t - primo.t;
-    if (deltaT <= 0) { scrollVelocityHistory = []; return; }
-    let sommaDy = 0;
-    scrollVelocityHistory.forEach(v => sommaDy += v.dy);
-    let velocitaPxMs = sommaDy / deltaT; // px al millisecondo
-    scrollVelocityHistory = [];
-    if (Math.abs(velocitaPxMs) < SCROLL_INERTIA_MIN_VELOCITY) return;
+function attachTouchpad(elemento, opzioni) {
+    opzioni = opzioni || {};
+    const scala = opzioni.scala || 1; // fattore extra per superfici più piccole (mini-touchpad)
 
-    // decadimento tale per cui la velocità si dimezza ogni scrollCinetismoMs
-    const decay = Math.pow(0.5, 16 / scrollCinetismoMs);
-    const pxPerClick = PX_PER_CLICK_BASE / scrollSens;
-    residuoInerzia = 0;
+    let pointers = {};
+    let lastTap = 0; // lastMoveTime/stopTimeout restano GLOBALI: c'e' un solo
+                      // cursore fisico, condiviso da inviaMovimento()/fermaCursore()
+                      // a prescindere da quale touchpad lo sta muovendo
+    let velocityHistory = [];
+    let accumulatedX = 0, accumulatedY = 0, stopSent = false;
+    let scrollAccumDy = 0, lastScrollSendTime = 0, ultimaEraScroll = false;
+    let scrollVelocityHistory = [];
+    let scrollInertiaFrame = null;
+    let residuoInerzia = 0;
 
-    let ultimoTick = performance.now();
-    const inizioInerzia = ultimoTick;
-    function tick(ora) {
-        const frameMs = ora - ultimoTick;
-        ultimoTick = ora;
-        if (Math.abs(velocitaPxMs) < SCROLL_INERTIA_MIN_VELOCITY || (ora - inizioInerzia) > SCROLL_INERTIA_MAX_MS) {
-            scrollInertiaFrame = null;
-            residuoInerzia = 0;
-            return;
+    function avviaInerziaLocale() {
+        if (scrollVelocityHistory.length < 2 || scrollCinetismoMs <= 0) { scrollVelocityHistory = []; return; }
+        const primo = scrollVelocityHistory[0], ultimo = scrollVelocityHistory[scrollVelocityHistory.length - 1];
+        const deltaT = ultimo.t - primo.t;
+        if (deltaT <= 0) { scrollVelocityHistory = []; return; }
+        let sommaDy = 0;
+        scrollVelocityHistory.forEach(v => sommaDy += v.dy);
+        let velocitaPxMs = sommaDy / deltaT;
+        scrollVelocityHistory = [];
+        if (Math.abs(velocitaPxMs) < SCROLL_INERTIA_MIN_VELOCITY) return;
+
+        const decay = Math.pow(0.5, 16 / scrollCinetismoMs);
+        const pxPerClick = PX_PER_CLICK_BASE / scrollSens;
+        residuoInerzia = 0;
+
+        let ultimoTick = performance.now();
+        const inizioInerzia = ultimoTick;
+        function tick(ora) {
+            const frameMs = ora - ultimoTick;
+            ultimoTick = ora;
+            if (Math.abs(velocitaPxMs) < SCROLL_INERTIA_MIN_VELOCITY || (ora - inizioInerzia) > SCROLL_INERTIA_MAX_MS) {
+                scrollInertiaFrame = null;
+                residuoInerzia = 0;
+                return;
+            }
+            residuoInerzia += velocitaPxMs * frameMs;
+            const click = Math.trunc(residuoInerzia / pxPerClick);
+            if (click !== 0) {
+                invia('SC:' + (-click));
+                residuoInerzia -= click * pxPerClick;
+            }
+            velocitaPxMs *= Math.pow(decay, frameMs / 16);
+            scrollInertiaFrame = requestAnimationFrame(tick);
         }
-        residuoInerzia += velocitaPxMs * frameMs;
-        const click = Math.trunc(residuoInerzia / pxPerClick);
-        if (click !== 0) {
-            invia('SC:' + (-click));
-            residuoInerzia -= click * pxPerClick;
-        }
-        velocitaPxMs *= Math.pow(decay, frameMs / 16); // decadimento indipendente dal framerate
         scrollInertiaFrame = requestAnimationFrame(tick);
     }
-    scrollInertiaFrame = requestAnimationFrame(tick);
+
+    elemento.addEventListener('pointerdown', function(e) {
+        e.preventDefault(); elemento.setPointerCapture(e.pointerId);
+        pointers[e.pointerId] = { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
+        accumulatedX = 0; accumulatedY = 0; stopSent = false; velocityHistory = [];
+        // Un nuovo tocco interrompe subito un'eventuale inerzia in corso
+        if (scrollInertiaFrame) { cancelAnimationFrame(scrollInertiaFrame); scrollInertiaFrame = null; }
+        scrollAccumDy = 0; scrollVelocityHistory = []; ultimaEraScroll = false;
+    });
+
+    elemento.addEventListener('pointermove', function(e) {
+        e.preventDefault();
+        const p = pointers[e.pointerId]; if (!p) return;
+        const dx = e.clientX - p.x, dy = e.clientY - p.y;
+        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+            p.moved = true;
+            const n = Object.keys(pointers).length;
+            if (n === 1) {
+                const dxRaw = dx * sens * scala, dyRaw = dy * sens * scala;
+                velocityHistory.push({ dx: dxRaw, dy: dyRaw });
+                if (velocityHistory.length > VELOCITY_SAMPLES) velocityHistory.shift();
+                let avgDx = 0, avgDy = 0;
+                velocityHistory.forEach(v => { avgDx += v.dx; avgDy += v.dy; });
+                avgDx /= velocityHistory.length; avgDy /= velocityHistory.length;
+                const currentSpeed = Math.abs(dxRaw) + Math.abs(dyRaw);
+                const avgSpeed = Math.abs(avgDx) + Math.abs(avgDy);
+                let decay = currentSpeed < avgSpeed * 0.1 ? 0 : currentSpeed < avgSpeed * 0.25 ? 0.25 : currentSpeed < avgSpeed * 0.5 ? 0.5 : 1.0;
+                accumulatedX += dxRaw * decay; accumulatedY += dyRaw * decay;
+                p.x = e.clientX; p.y = e.clientY;
+                const now = Date.now();
+                if (now - lastMoveTime >= sendInterval) {
+                    const mx = Math.round(accumulatedX), my = Math.round(accumulatedY);
+                    if (Math.abs(mx) >= minMovement || Math.abs(my) >= minMovement) {
+                        inviaMovimento(mx, my); accumulatedX = 0; accumulatedY = 0; lastMoveTime = now; stopSent = false;
+                    }
+                }
+            } else if (n === 2) {
+                ultimaEraScroll = true;
+                scrollAccumDy += dy;
+                const adesso = Date.now();
+                scrollVelocityHistory.push({ dy: dy, t: adesso });
+                while (scrollVelocityHistory.length > 1 && adesso - scrollVelocityHistory[0].t > SCROLL_FINESTRA_MS) {
+                    scrollVelocityHistory.shift();
+                }
+                p.x = e.clientX; p.y = e.clientY;
+                if (adesso - lastScrollSendTime >= scrollFluidita) {
+                    const pxPerClick = PX_PER_CLICK_BASE / scrollSens;
+                    const click = Math.trunc(scrollAccumDy / pxPerClick);
+                    if (click !== 0) {
+                        invia('SC:' + (-click));
+                        scrollAccumDy -= click * pxPerClick;
+                    }
+                    lastScrollSendTime = adesso;
+                }
+            }
+        }
+    });
+
+    elemento.addEventListener('pointerup', function(e) {
+        e.preventDefault();
+        const p = pointers[e.pointerId]; if (!p) return;
+        const dist = Math.sqrt(Math.pow(e.clientX - p.startX, 2) + Math.pow(e.clientY - p.startY, 2));
+        if (!p.moved || dist < 8) {
+            const now = Date.now(), remaining = Object.keys(pointers).length - 1;
+            if (remaining === 0) {
+                if (now - lastTap < 300) { invia('C:L'); setTimeout(() => invia('C:L'), 80); lastTap = 0; }
+                else { invia('C:L'); lastTap = now; }
+            } else if (remaining === 1) { invia('C:R'); }
+        }
+        if (!stopSent) { fermaCursore(); stopSent = true; }
+        accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
+        delete pointers[e.pointerId];
+        if (ultimaEraScroll && Object.keys(pointers).length === 0) {
+            avviaInerziaLocale();
+        }
+    });
+
+    elemento.addEventListener('pointercancel', function(e) {
+        delete pointers[e.pointerId];
+        if (!stopSent) { fermaCursore(); stopSent = true; }
+        accumulatedX = 0; accumulatedY = 0; velocityHistory = [];
+        scrollAccumDy = 0; scrollVelocityHistory = []; ultimaEraScroll = false;
+    });
 }
+
+attachTouchpad(document.getElementById('trackpadArea'));
 
 function toggleHold() {
     holdTouch = !holdTouch;
