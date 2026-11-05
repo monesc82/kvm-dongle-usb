@@ -1,31 +1,8 @@
 /*
  * ============================================================
- * KVM Dongle Unified - T-Dongle S3 - v6.1_claude
+ * KVM Dongle Unified - T-Dongle S3
  * ============================================================
  *
- * NOVITA' v6.1 RISPETTO v6.0:
- *   1. RIMOSSO tutto il codice SD Card (lettore hardware
- *      inaffidabile su questo modello — conflitti SPI/pin mai
- *      risolti in modo stabile). Il File Manager ora usa
- *      LittleFS (storage interno, sempre disponibile).
- *   2. RIMOSSO il redirect "/kvm" verso GitHub. La pagina KVM
- *      completa (touchpad, tastiera, macro, credenziali) viene
- *      ora servita DIRETTAMENTE dal dongle via LittleFS, quindi
- *      funziona anche senza Internet, da AP o da STA.
- *   3. La pagina KVM va caricata UNA SOLA VOLTA sul dongle
- *      tramite il pulsante "Carica interfaccia KVM" nella
- *      pagina di setup (/wifi) — da quel momento resta salvata
- *      in LittleFS e sopravvive ai riavvii.
- *   4. La pagina GitHub resta invariata come opzione alternativa
- *      di accesso via BLE (nessuna modifica richiesta, il file
- *      HTML è lo stesso — vedi KVM_v6_1.html).
- *   5. Payload DuckyScript-like ora eseguiti da LittleFS
- *      (cartella /payloads/) invece che da SD.
- *   6. Comandi BLE per File Manager (BLE_FS_LIST, BLE_FS_READ,
- *      BLE_FS_WRITE, BLE_FS_DELETE, BLE_FS_MKDIR) per accesso
- *      all'archivio anche in modalità BLE.
- *   7. Fix carattere Euro: ALT+0128 (universale, funziona su
- *      tutti i layout).
  *
  * IMPOSTAZIONI IDE ARDUINO:
  *   Board:            ESP32S3 Dev Module (LilyGo T-Dongle S3)
@@ -1737,6 +1714,7 @@ void setupWebServer() {
     json += "\"ssid\":\"" + ssid + "\",";
     json += "\"sd\":" + String(sdDisponibile ? "true" : "false") + ",";
     json += "\"kvmPage\":" + String(kvmPageDisponibile() ? "true" : "false") + ",";
+    json += "\"layout\":\"" + String(layoutCorrente == LAYOUT_US ? "US" : "IT") + "\",";
     json += "\"ble\":false";
     json += "}";
     server.send(200, "application/json", json);
