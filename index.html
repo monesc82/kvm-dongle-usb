@@ -692,7 +692,40 @@
     font-weight: 600 !important;
     cursor: pointer !important;
 }
-            </style>
+            
+/* ============================================================
+   v7.3 — correzioni di layout sopra il merge (verificate col browser)
+   1) pesi uguali ai tasti: le righe F1-F12 e frecce andavano a capo
+      perché flex-basis in % con flex-shrink:0 superava la larghezza.
+   2) orizzontale: nascosta davvero la versione "solo verticale"
+      (.estesa-row{display:flex} più in basso vinceva su display:none)
+      e dato al touchpad centrale un'altezza reale.
+   ============================================================ */
+#estesaGrid .estesa-row { flex-wrap: nowrap; }
+#estesaGrid .estesa-row .ek { min-width: 0; flex: 1 1 0 !important; }
+#estesaGrid .estesa-row .ek.wide { flex: 1.5 1 0 !important; }
+#estesaGrid .estesa-row .ek.space { flex: 4 1 0 !important; }
+@media (orientation: portrait) {
+    #estesaGrid .estesa-row.solo-portrait:first-child .ek { font-size: 10px; padding: 0; }
+}
+@media (orientation: landscape) {
+    .estesa-row.solo-portrait { display: none !important; }
+    #tastieraEstesaOverlay.aperta { display: flex; flex-direction: column; }
+    #estesaGrid { flex: 1; display: flex; flex-direction: column; min-height: 0; gap: 4px; }
+    #estesaGrid > .estesa-row { flex: 1; min-height: 0; }
+    #estesaGrid > .estesa-row .ek { align-self: stretch; }
+    .estesa-landscape-top { flex: 2.4; min-height: 0; }
+    .estesa-landscape-col { min-height: 0; }
+    .estesa-landscape-col .estesa-row { flex: 1; min-height: 0; }
+    .estesa-landscape-col .estesa-row .ek { align-self: stretch; min-height: 0; }
+    .estesa-landscape-touchpad { min-height: 0; }
+    .estesa-landscape-touchpad .estesa-mini-touchpad { flex: 1; min-height: 0; }
+    .estesa-landscape-touchpad .estesa-mini-touchpad-controls { display: flex; gap: 6px; }
+    .estesa-landscape-touchpad .estesa-mini-touchpad-controls .tp-btn {
+        flex: 1; display: flex; align-items: center; justify-content: center; min-height: 30px; border-radius: 8px;
+    }
+}
+</style>
          </head>
          <body>
          <div class="app">
